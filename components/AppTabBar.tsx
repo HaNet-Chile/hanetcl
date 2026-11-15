@@ -40,6 +40,21 @@ type MotionTabIcon = React.ComponentProps<typeof CustomIcon>['name'];
 /** Space a scrolling screen leaves at its end so the floating bar covers nothing. */
 export const TAB_BAR_CLEARANCE = 112;
 
+/**
+ * Distance from the bar to the bottom edge of the screen.
+ *
+ * On an iPhone with a home indicator the floating bar sits inside the safe
+ * area, as the iOS 26 tab bar does: its corners stay concentric with the
+ * screen's (screen corner radius minus the bar's 32), about 24 pt, which also
+ * matches the side margins. It only has to clear the indicator, which takes
+ * the lowest ~13 pt. Without an indicator it keeps 16 pt. Android and the web
+ * clear the whole inset, because three-button navigation fills that strip.
+ */
+export function tabBarBottomGap(bottomInset: number) {
+  if (Platform.OS === 'ios') return Math.max(bottomInset - 10, 16);
+  return Math.max(bottomInset, 12) + 12;
+}
+
 // The bar has a fixed height, so its labels grow with the system text size
 // only up to a point (as the iOS tab bar does).
 const TAB_TEXT_MAX_SCALE = 1.3;
@@ -319,7 +334,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
   const [centerFrame, setCenterFrame] = React.useState({ x: 0, width: 0 });
   const morph = useSharedValue(open ? 1 : 0);
   const keyboard = useKeyboardLift(open);
-  const restingBottom = Math.max(insets.bottom, 12) + 12;
+  const restingBottom = tabBarBottomGap(insets.bottom);
 
   React.useEffect(() => {
     morph.value = reduceMotion

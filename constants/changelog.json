@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "0.10.1-beta",
+      "date": "2026-11-15",
+      "title": "",
+      "items": [
+        "En iPhone, la barra de abajo queda más cerca del borde de la pantalla, alineada con sus esquinas."
+      ]
+    },
+    {
       "version": "0.10.0-beta",
       "date": "2026-11-14",
       "title": "Días sin clases y salidas anticipadas",
