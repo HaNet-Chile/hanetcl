@@ -1,12 +1,22 @@
 {
   "releases": [
     {
-      "version": "0.10.1-beta",
+      "version": "0.10.2-beta",
       "date": "2026-11-16",
       "title": "",
       "items": [
         "En el test de HaNet Electividad, si tocas una opción y te arrepientes, puedes cambiarla antes de que pase a la siguiente pregunta.",
         "Notas, Herramientas y Configuraciones se ven y responden igual en todas sus páginas, y el botón “Administrar” de los días sin clases es más fácil de tocar."
+      ]
+    },
+    {
+      "version": "0.10.1-beta",
+      "date": "2026-11-14",
+      "title": "",
+      "items": [
+        "Si suscribiste el calendario de tu curso (iCal), las pruebas y eventos ahora salen a su hora. Antes aparecían 3 horas más tarde.",
+        "En Android, \"Suscribir mi calendario\" ahora agrega el calendario de tu curso a Google Calendar.",
+        "Los eventos cancelados salen como \"Cancelado\" en el calendario suscrito."
       ]
     },
     {
