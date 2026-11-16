@@ -4,6 +4,8 @@ import { TopNotice } from '@/components/system/top-notice';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { MessageCard } from '@/components/ui/message-card';
 import { PageHeader } from '@/components/ui/page-header';
+import { SearchPill } from '@/components/ui/search-pill';
+import { SearchRow } from '@/components/search/search-row';
 import { t } from '@/i18n';
 import React, { useState } from 'react';
 
@@ -67,6 +69,29 @@ export function StructureGroup() {
           variant="surface"
           onPress={() => overlay(<TopNotice icon="sparkles-outline" text={t('components.system.updatePrompt.hayUnaVersionNuevaDe')} action={{ label: t('components.system.updatePrompt.actualizar'), onPress: () => overlay(null) }} />, 6000)}
         />
+      </Section>
+
+      <Section
+        title="Buscador"
+        description="El buscador del Inicio es una píldora que abre la búsqueda. Mientras nadie la toca va pasando lo que se puede encontrar (la próxima evaluación, una clase, una herramienta), una línea cada 3 segundos: la que está sale hacia arriba y la siguiente sube. Se detiene con la pantalla atrás y, con “Reducir movimiento”, solo cambia con un fundido. La variante de vidrio va sobre la foto del Inicio de escritorio."
+        source="components/ui/search-pill.tsx · SearchPill (lo usan TopHeader y el Inicio de escritorio)"
+      >
+        <Stage canvas>
+          <SearchPill label="Buscar en HaNet" shortLabel="Buscar" suggestions={['Matemática', 'Feria científica', 'Horario', 'Escala de notas']} onPress={() => setNote('En el Inicio esto abre la búsqueda.')} />
+          <SearchPill label="Buscar en HaNet" suggestions={['Horario']} still tone="glass" onPress={() => setNote('En el Inicio esto abre la búsqueda.')} />
+        </Stage>
+      </Section>
+
+      <Section
+        title="Resultado de búsqueda"
+        description="Una fila de la búsqueda, dentro de un grupo de ajustes: ícono, título con lo que coincide en negrita y una línea de contexto. El ícono rosado marca la mejor respuesta, la que abre la tecla “Buscar” del teclado, o lo que viene entre las sugerencias."
+        source="components/search/search-row.tsx · SearchRow · services/search.ts"
+      >
+        <SettingsGroup title="Tus clases (ejemplo, buscando “mate”)">
+          <SearchRow top query="mate" item={{ key: 'a', kind: 'hall', title: 'Matemática', subtitle: 'Docente de ejemplo', icon: 'school-outline', href: '/classhall' }} onPress={() => {}} />
+          <SearchRow query="mate" item={{ key: 'b', kind: 'calendar', title: 'Prueba de Matemática: funciones', subtitle: 'Mié 18 nov. · Evaluación sumativa', icon: 'calendar-outline', href: '/calendar' }} onPress={() => {}} />
+          <SearchRow query="mate" item={{ key: 'c', kind: 'section', title: 'ClassHall', subtitle: 'Tus clases, tareas y materiales', icon: 'school-outline', href: '/classhall' }} onPress={() => {}} />
+        </SettingsGroup>
       </Section>
 
       <Section

@@ -51,6 +51,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `withSheetFrame` · `useSheetGuard` | `sheet-frame.tsx` | La hoja de HaNet en Android y la web (el `formSheet` nativo de Android se abre sin altura). `useSheetGuard` la retiene con cambios sin guardar. |
 | `KeyboardScroll` · `useKeyboardOverlap` · `KeyboardDismissButton` | `keyboard.tsx` | Formularios en hojas y diálogos: el campo activo queda sobre el teclado y hay un botón para guardarlo. |
 | `FrostedScreen` · `withTopInset` · `useFrostedInset` · `FrostedFill` | `frosted-screen.tsx` | Toda pantalla completa. De borde a borde bajo la barra de estado; con `header`, ese encabezado fijo flota con vidrio esmerilado (Calendar). |
+| `SearchPill` | `search-pill.tsx` | Un buscador que en realidad es un botón: una píldora que abre la búsqueda y, mientras nadie la toca, va pasando lo que se puede encontrar (una línea cada 3 s; se detiene con la pantalla atrás y con "Reducir movimiento" solo funde). `tone="glass"` sobre una foto. El Inicio, en el teléfono y en escritorio. |
 | `PageHeader` | `page-header.tsx` | Arriba de una página que se desplaza: `eyebrow` (dónde vive), `title` e `intro`. `above` para un chip de estado. Herramientas, Notas, Novedades, Licencias, Compartir. |
 | `MessageCard` | `message-card.tsx` | En lugar de una sección: no cargó (`onRetry` agrega "Reintentar" y lo anuncia), no hay nada todavía, o el módulo está apagado. Gris, nunca rosado. |
 | `Stripes` · `StripedBanner` · `StripedPill` | `stripes.tsx` | Las rayas de HaNet: solo para lo que apunta a una nota tapada. `StripedBanner` ("Tienes N notas nuevas · Destapar") y `StripedPill` ("2 nuevas") dentro de una fila. |
@@ -66,7 +67,8 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `GlobalTabBar` | `AppTabBar.tsx` | La única barra inferior, en la raíz. Sus botones se transforman entre pantallas (Inicio ⇄ Volver). Separación de 46 pt en iPhone, a propósito. |
 | `SideNav` | `SideNav.tsx` | La navegación de una ventana ancha de la web: con textos desde 1024 px, solo íconos entre 768 y 1024. Se oscurece con `AppColors.scrim` cuando hay una hoja abierta. |
 | `EntryAside` · `useEntryAsideWidth` | `EntryAside.tsx` | El panel izquierdo de la entrada (registro, código, vínculo) en la web ancha, con los pasos y el actual en rosado. |
-| `TopHeader` | `TopHeader.tsx` | El encabezado del Inicio. |
+| `TopHeader` · `HomeTitle` | `TopHeader.tsx` | El encabezado del Inicio: "HaNet Beta" con los números de la versión arriba (tocarlos abre Novedades) y el buscador (`SearchPill`). La pantalla de búsqueda (`app/search.tsx`) parte dibujada igual, para que la píldora parezca crecer hasta ser el campo. |
+| `SearchRow` | `search/search-row.tsx` | Un resultado o una sugerencia de la búsqueda, dentro de un `SettingsGroup`: título con lo que coincide en negrita y una línea de contexto. `top` (ícono rosado) para la mejor respuesta o lo que viene. El índice y el orden están en `services/search.ts`. |
 | `GridMenu` | `GridMenu.tsx` | La grilla de tiles del Inicio en el teléfono. |
 | `DesktopHome` (y sus tarjetas) | `home/desktop-home.tsx` | El Inicio de escritorio: foto de la institución, la fila de lo urgente y el tablero. Gris, rosado solo para lo de ahora. |
 | `TopNotice` | `system/top-notice.tsx` | Píldora flotante arriba de todo, que no tapa la pantalla: "Sin conexión" y "Hay una versión nueva". |

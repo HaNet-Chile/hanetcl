@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "0.10.3-beta",
+      "date": "2026-11-16",
+      "title": "Buscador",
+      "items": [
+        "El Inicio ya tiene buscador: encuentra tus clases, las pruebas y tareas del Calendar, eventos, publicaciones del Feed y cualquier sección o herramienta de HaNet.",
+        "Mientras no lo usas, el buscador te va mostrando sugerencias: tu próxima evaluación, tus clases y herramientas.",
+        "Junto a “HaNet Beta” ahora aparece el número de versión. Tócalo para ver las novedades."
+      ]
+    },
+    {
       "version": "0.10.2-beta",
       "date": "2026-11-16",
       "title": "",

@@ -6,6 +6,8 @@ import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import { SearchPill } from '@/components/ui/search-pill';
+import { SEARCH_PLACEHOLDER, pillSuggestions, useSearchIndex } from '@/services/search';
 import { ThemedText } from '@/components/themed-text';
 import { FeaturedEventCard } from '@/components/events/event-ui';
 import { OfficialSeal, SpaceAvatar } from '@/components/feed/feed-ui';
@@ -168,14 +170,12 @@ function Greeting({ institution, now }: { institution: HomeInstitution | null; n
   );
 }
 
-/** Search does not exist yet: the pill says so instead of taking input. */
-function SearchSoon() {
-  return (
-    <View style={styles.search} accessible accessibilityLabel={t('components.topHeader.buscarEnHanetProximamente')} accessibilityState={{ disabled: true }}>
-      <Ionicons name="search" size={18} color={AppColors.textSecondary} />
-      <ThemedText style={styles.searchText}>{t('components.topHeader.buscarProximamente')}</ThemedText>
-    </View>
-  );
+/** The search, over the header's photo: the same pill as the phone's Home. */
+function HomeSearch() {
+  const router = useRouter();
+  const index = useSearchIndex();
+  const suggestions = React.useMemo(() => pillSuggestions(index), [index]);
+  return <SearchPill label={SEARCH_PLACEHOLDER} suggestions={suggestions} tone="glass" onPress={() => router.push('/search')} style={styles.search} />;
 }
 
 type Stat = { key: string; icon: IconName; value: string; label: string; href: Href; hot?: boolean };
@@ -511,7 +511,7 @@ export function DesktopHome({ institution, promoted, anniversary }: Props) {
     <View onLayout={(event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width)}>
       {width > 0 && <HeroBackdrop bannerUrl={institution?.bannerUrl ?? null} width={width} />}
       <View style={styles.content}>
-        <View style={styles.searchRow}><SearchSoon /></View>
+        <View style={styles.searchRow}><HomeSearch /></View>
         <Greeting institution={institution} now={now} />
         <StatRow stats={stats} />
         {width > 0 && (columns === 3 ? (
@@ -553,21 +553,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   search: {
-    width: 260,
-    height: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    borderRadius: AppRadii.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-    backgroundColor: 'rgba(40, 40, 41, 0.6)',
-  },
-  searchText: {
-    ...AppType.callout,
-    color: AppColors.textSecondary,
-    opacity: 0.8,
+    width: 300,
   },
   greetingRow: {
     flexDirection: 'row',

@@ -13,6 +13,21 @@ const PREFIX = 'hn-cache:';
 type Entry = { uid: string; value: unknown };
 
 const memory = new Map<string, Entry>();
+const watchers = new Set<(key: string) => void>();
+
+/**
+ * Tells when an answer is kept or replaced, for what reads several lists at
+ * once and wants the fresh ones as they arrive (the search).
+ */
+export function watchCached(listener: (key: string) => void) {
+  watchers.add(listener);
+  return () => { watchers.delete(listener); };
+}
+
+function keep(uid: string, key: string, value: unknown) {
+  memory.set(key, { uid, value });
+  watchers.forEach(listener => listener(key));
+}
 const inflight = new Map<string, { uid: string; promise: Promise<unknown> }>();
 
 function currentUid() {
@@ -62,7 +77,7 @@ export function cached<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
   const promise = fetcher().then(value => {
     if (__DEV__) console.log(`[carga] ${key}: ${Date.now() - started} ms`);
     if (currentUid() === uid) {
-      memory.set(key, { uid, value });
+      keep(uid, key, value);
       AsyncStorage.setItem(storageKey(uid, key), JSON.stringify(value)).catch(() => undefined);
     }
     return value;
@@ -77,7 +92,7 @@ export function cached<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
 export function putCached<T>(key: string, value: T) {
   const uid = currentUid();
   if (!uid) return;
-  memory.set(key, { uid, value });
+  keep(uid, key, value);
   AsyncStorage.setItem(storageKey(uid, key), JSON.stringify(value)).catch(() => undefined);
 }
 
