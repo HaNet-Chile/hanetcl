@@ -26,6 +26,8 @@ const catalogPath = path.join(root, 'i18n', 'locales', 'es.json');
 const SOURCE_DIRS = ['app', 'components', 'hooks', 'services'];
 // Screens that only the team sees with sample data.
 const SKIP_FILES = new Set(['app/ui-showcase.tsx']);
+// Sistema HaNet UI's groups (components/showcase/), like the screen itself.
+const SKIP_DIRS = ['components/showcase/'];
 
 // Props and object keys whose string value is shown to people.
 const TEXT_KEYS = new Set([
@@ -624,7 +626,10 @@ function main() {
   const args = process.argv.slice(2);
   const write = args.includes('--write');
   const only = args.filter(a => !a.startsWith('--')).map(a => path.resolve(root, a));
-  const files = (only.length ? only : SOURCE_DIRS.flatMap(d => listFiles(path.join(root, d)))).filter(f => !SKIP_FILES.has(path.relative(root, f).replace(/\\/g, '/')));
+  const files = (only.length ? only : SOURCE_DIRS.flatMap(d => listFiles(path.join(root, d)))).filter(f => {
+    const rel = path.relative(root, f).replace(/\\/g, '/');
+    return !SKIP_FILES.has(rel) && !SKIP_DIRS.some(dir => rel.startsWith(dir));
+  });
 
   const results = files.map(file => ({ file, ...analyze(file) })).filter(r => r.found.length);
   const report = [];

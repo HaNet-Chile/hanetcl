@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "0.10.1-beta",
+      "date": "2026-11-16",
+      "title": "",
+      "items": [
+        "En el test de HaNet Electividad, si tocas una opción y te arrepientes, puedes cambiarla antes de que pase a la siguiente pregunta.",
+        "Notas, Herramientas y Configuraciones se ven y responden igual en todas sus páginas, y el botón “Administrar” de los días sin clases es más fácil de tocar."
+      ]
+    },
+    {
       "version": "0.10.0-beta",
       "date": "2026-11-14",
       "title": "Días sin clases y salidas anticipadas",

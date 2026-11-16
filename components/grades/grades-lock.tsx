@@ -9,17 +9,18 @@ import { t } from '@/i18n';
 
 // What shows in place of the grades while Notas is locked on this phone.
 // `auto` asks right away (the Notas screens); without it, only the button
-// asks, so opening a Hall never pops Face ID by itself.
+// asks, so opening a Hall never pops Face ID by itself. `onUnlock` replaces
+// the real unlock (Sistema HaNet UI): then it never asks by itself.
 
-export function GradesLocked({ auto = false }: { auto?: boolean }) {
+export function GradesLocked({ auto = false, onUnlock }: { auto?: boolean; onUnlock?: () => void }) {
   const { ready, enabled } = useGradesLock();
   const prompt = t('components.grades.gradesLock.desbloqueaParaVerTusNotas');
 
   useEffect(() => {
-    if (auto && ready && enabled) void unlockGrades(prompt);
-  }, [auto, ready, enabled, prompt]);
+    if (auto && !onUnlock && ready && enabled) void unlockGrades(prompt);
+  }, [auto, onUnlock, ready, enabled, prompt]);
 
-  if (!ready) return null;
+  if (!ready && !onUnlock) return null;
   return (
     <View style={styles.card}>
       <View style={styles.icon}>
@@ -29,7 +30,7 @@ export function GradesLocked({ auto = false }: { auto?: boolean }) {
         <ThemedText style={styles.title}>{t('components.grades.gradesLock.tusNotasEstanProtegidas')}</ThemedText>
         <ThemedText style={styles.body}>{t('components.grades.gradesLock.desbloqueaConFaceIdTu')}</ThemedText>
       </View>
-      <HanetButton label={t('components.admin.institutionMembers.desbloquear')} onPress={() => void unlockGrades(prompt)} />
+      <HanetButton label={t('components.admin.institutionMembers.desbloquear')} onPress={() => (onUnlock ? onUnlock() : void unlockGrades(prompt))} />
     </View>
   );
 }

@@ -74,16 +74,20 @@ function stepsFor(kind: InstallGuideKind): Step[] {
  * How to add HaNet to the home screen (or the Dock, or as a computer app),
  * with the steps of the browser in use. Where the browser has its own
  * install prompt, "Instalar" opens it directly.
+ *
+ * `preview` (Sistema HaNet UI) shows the steps of another browser and
+ * remembers nothing.
  */
-export function InstallGuideDialog({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const kind = installGuideKind();
-  const canPrompt = useCanPromptInstall();
+export function InstallGuideDialog({ visible, onClose, preview }: { visible: boolean; onClose: () => void; preview?: InstallGuideKind }) {
+  const kind = preview ?? installGuideKind();
+  const livePrompt = useCanPromptInstall();
+  const canPrompt = !preview && livePrompt;
   const [installing, setInstalling] = useState(false);
   const iphone = kind === 'ios-safari' || kind === 'ios-other';
   const computer = kind === 'desktop-chrome' || kind === 'desktop-edge' || kind === 'mac-safari';
 
   const close = () => {
-    markInstallGuideSeen();
+    if (!preview) markInstallGuideSeen();
     onClose();
   };
 

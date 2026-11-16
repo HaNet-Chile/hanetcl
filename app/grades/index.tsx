@@ -1,11 +1,12 @@
 import { GradesLocked } from '@/components/grades/grades-lock';
-import { Stripes } from '@/components/grades/stripes';
+import { StripedBanner, StripedPill } from '@/components/ui/stripes';
+import { MessageCard } from '@/components/ui/message-card';
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
 import { HanetSegmented } from '@/components/ui/hanet-auth-fields';
 import { HanetAvatar } from '@/components/ui/hanet-avatar';
-import { HanetButton } from '@/components/ui/hanet-button';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
-import { AppColors, AppDisplay, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
+import { AppColors, AppDisplay, AppRadii, AppRowPressed, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError, useSession } from '@/services/auth-service';
 import type { MyProfile } from '@/services/auth-service';
 import { cached, useCached } from '@/services/cache';
@@ -75,10 +76,7 @@ export default function GradesScreen() {
   return (
     <FrostedScreen style={styles.screen}>
       <ScrollView ref={pageScroll} contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <ThemedText style={styles.eyebrow}>ClassHall</ThemedText>
-          <ThemedText accessibilityRole="header" style={styles.title}>{t('classhall.evaluation.notas')}</ThemedText>
-        </View>
+        <PageHeader eyebrow="ClassHall" title={t('classhall.evaluation.notas')} />
 
         {!!book?.on && (
           <View style={styles.identity}>
@@ -93,33 +91,20 @@ export default function GradesScreen() {
         {locked && <GradesLocked auto />}
         {!locked && !book && !error && <ActivityIndicator color={AppColors.textSecondary} style={styles.loading} />}
         {!locked && !book && !!error && (
-          <View style={styles.card}>
-            <ThemedText accessibilityLiveRegion="polite" style={styles.body}>{error}</ThemedText>
-            <HanetButton label={t('common.reintentar')} variant="surface" onPress={() => { setError(null); setAttempt(value => value + 1); }} />
-          </View>
+          <MessageCard message={error} onRetry={() => { setError(null); setAttempt(value => value + 1); }} />
         )}
         {book && !book.on && (
-          <View style={styles.card}>
-            <ThemedText style={styles.body}>{t('grades.notasNoEstaActivoEn')}</ThemedText>
-          </View>
+          <MessageCard message={t('grades.notasNoEstaActivoEn')} />
         )}
 
         {pendingCount > 0 && (
-          <Pressable
-            accessibilityRole="button"
+          <StripedBanner
+            title={t('grades.tienesCountNotasPorDestapar2', { count: pendingCount })}
+            subtitle={pending.map(subject => subject.subject).join(', ')}
+            actionLabel={t('grades.destapar')}
             accessibilityLabel={t('grades.tienesCountNotasPorDestapar', { count: pendingCount, subject: pending[0].subject })}
             onPress={() => router.push('/grades/reveal')}
-            style={({ pressed }) => [styles.banner, pressed && styles.pressed]}
-          >
-            <Stripes />
-            <View style={styles.bannerText}>
-              <ThemedText style={styles.bannerTitle}>{t('grades.tienesCountNotasPorDestapar2', { count: pendingCount })}</ThemedText>
-              <ThemedText numberOfLines={1} style={styles.bannerSub}>{pending.map(subject => subject.subject).join(', ')}</ThemedText>
-            </View>
-            <View style={styles.bannerButton}>
-              <ThemedText style={styles.bannerButtonText}>{t('grades.destapar')}</ThemedText>
-            </View>
-          </Pressable>
+          />
         )}
 
         {!!book?.on && (
@@ -150,9 +135,7 @@ export default function GradesScreen() {
             />
 
             {subjects.length === 0 ? (
-              <View style={styles.card}>
-                <ThemedText style={styles.body}>{t('grades.todaviaNoTienesClasesEn')}</ThemedText>
-              </View>
+              <MessageCard message={t('grades.todaviaNoTienesClasesEn')} />
             ) : (
               <View style={styles.list}>
                 <View style={styles.listHead}>
@@ -171,18 +154,13 @@ export default function GradesScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={`${subject.subject}: ${value === null ? t('grades.sinPromedio') : `promedio ${formatGrade(value)}`}${covered ? t('grades.coveredPorDestapar', { covered }) : ''}`}
                       onPress={() => open(subject)}
-                      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                      style={({ pressed }) => [styles.row, pressed && AppRowPressed]}
                     >
                       <View style={styles.rowText}>
                         <ThemedText style={styles.rowTitle}>{subject.subject}</ThemedText>
                         <View style={styles.rowMetaLine}>
                           <ThemedText style={styles.muted}>{none ? t('grades.sinNotasEnHanet') : t('grades.countNotas', { count: seenCount })}</ThemedText>
-                          {covered > 0 && (
-                            <View style={styles.newPill}>
-                              <Stripes />
-                              <ThemedText style={styles.newPillText}>{t('grades.countNuevas', { count: covered })}</ThemedText>
-                            </View>
-                          )}
+                          {covered > 0 && <StripedPill label={t('grades.countNuevas', { count: covered })} />}
                         </View>
                       </View>
                       <View style={[styles.gradePill, value === null && styles.gradePillEmpty]}>
@@ -205,24 +183,12 @@ export default function GradesScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 520, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.lg },
-  header: { paddingTop: AppSpacing.lg, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
   loading: { marginTop: AppSpacing.xxl },
   identity: { flexDirection: 'row', alignItems: 'center', gap: AppSpacing.md },
   identityText: { flex: 1, gap: 2 },
   course: { ...AppType.headline, fontSize: 17, color: AppColors.textPrimary },
   muted: { ...AppType.footnote, color: AppColors.textSecondary },
-  body: { ...AppType.callout, color: AppColors.textPrimary },
   hint: { ...AppType.footnote, color: AppColors.textSecondary, paddingHorizontal: AppSpacing.xs },
-  card: { gap: AppSpacing.md, padding: AppSpacing.lg, borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface },
-  pressed: { opacity: AppPressed.opacity, transform: [{ scale: 0.98 }] },
-  banner: { minHeight: 84, paddingVertical: 16, paddingLeft: 18, paddingRight: 14, borderRadius: AppRadii.lg, borderCurve: 'continuous', overflow: 'hidden', flexDirection: 'row', alignItems: 'center', gap: AppSpacing.md },
-  bannerText: { flex: 1, gap: 2 },
-  bannerTitle: { ...AppType.title3, fontSize: 19, lineHeight: 24, color: AppColors.textPrimary },
-  bannerSub: { ...AppType.callout, fontFamily: 'DMSans_700Bold', color: AppColors.textPrimary },
-  bannerButton: { height: 44, paddingHorizontal: 18, borderRadius: AppRadii.pill, backgroundColor: AppColors.textPrimary, alignItems: 'center', justifyContent: 'center' },
-  bannerButtonText: { ...AppType.headline, color: AppColors.textOnLight },
   summary: { gap: AppSpacing.sm, paddingVertical: 18, paddingHorizontal: 20, borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface },
   summaryTop: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: AppSpacing.md },
   big: { ...AppDisplay.number, fontSize: 64, lineHeight: 68, color: AppColors.textPrimary, fontVariant: ['tabular-nums'] },
@@ -234,8 +200,6 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, gap: 3 },
   rowTitle: { ...AppType.body, fontFamily: 'DMSans_500Medium', lineHeight: 20, color: AppColors.textPrimary },
   rowMetaLine: { flexDirection: 'row', alignItems: 'center', gap: AppSpacing.sm },
-  newPill: { height: 22, paddingHorizontal: 9, borderRadius: AppRadii.pill, overflow: 'hidden', justifyContent: 'center' },
-  newPillText: { ...AppType.caption, fontFamily: 'DMSans_700Bold', color: AppColors.textPrimary },
   gradePill: { minWidth: 56, height: 40, paddingHorizontal: 10, borderRadius: AppRadii.pill, backgroundColor: AppColors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
   gradePillEmpty: { backgroundColor: 'transparent' },
   gradeText: { ...AppType.headline, fontSize: 18, color: AppColors.textPrimary, fontVariant: ['tabular-nums'] },

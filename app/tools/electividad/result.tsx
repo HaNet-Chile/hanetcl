@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
 import { AreaIcon, FIELD_AREA, KnowledgeIcon } from '@/components/tools/area-icon';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { HanetButton } from '@/components/ui/hanet-button';
@@ -16,7 +17,7 @@ import { t } from '@/i18n';
 // The full result of HaNet Electividad: the top three, how the answers split,
 // every area by group, related careers and the most telling comparisons.
 
-const TINT = 'rgba(239,34,116,0.18)';
+const TINT = AppColors.accentTint;
 const FIELD_COLORS = ['#EF2274', '#DDDDE2', '#7D7C82'];
 const GROUPS: { id: AreaScore['group']; label: string; color: string }[] = [
   { id: 'alto', label: t('tools.electividad.result.mayorInteres'), color: '#EF2274' },
@@ -281,16 +282,16 @@ export default function ElectividadResultScreen() {
   return (
     <FrostedScreen style={styles.screen}>
       <ScrollView contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          {!isCurrent && (
+        <PageHeader
+          above={!isCurrent && (
             <View style={styles.pastChip}>
               <Ionicons name="time-outline" size={13} color={AppColors.textPrimary} />
               <ThemedText style={styles.pastChipText}>{t('tools.electividad.result.intentoAnterior')}</ThemedText>
             </View>
           )}
-          <ThemedText style={styles.eyebrow}>{answeredText(result.answeredAt)}</ThemedText>
-          <ThemedText accessibilityRole="header" style={styles.title}>{headline(result)}</ThemedText>
-        </View>
+          eyebrow={answeredText(result.answeredAt)}
+          title={headline(result)}
+        />
 
         <View style={styles.hero}>
           <View style={styles.heroChip}>
@@ -352,9 +353,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.xl },
   empty: { alignItems: 'center', gap: AppSpacing.lg, paddingHorizontal: AppSpacing.lg },
-  header: { paddingTop: AppSpacing.lg, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
   hero: { padding: 18, borderRadius: AppRadii.lg, backgroundColor: AppColors.accent, gap: AppSpacing.md },
   heroChip: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 5, height: 26, paddingHorizontal: 10, borderRadius: AppRadii.pill, backgroundColor: 'rgba(40,40,41,0.22)' },
   heroChipText: { ...AppType.caption, fontFamily: 'DMSans_700Bold', color: AppColors.textPrimary },
@@ -373,7 +371,7 @@ const styles = StyleSheet.create({
   sectionHead: { gap: 2 },
   sectionTitle: { ...AppType.title3, color: AppColors.textPrimary },
   sectionSubtitle: { ...AppType.footnote, color: AppColors.textSecondary, textAlign: 'left' },
-  card: { padding: 16, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: AppSpacing.md },
+  card: { padding: 16, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: AppColors.hairline, gap: AppSpacing.md },
   stack: { flexDirection: 'row', height: 14, borderRadius: AppRadii.pill, overflow: 'hidden', gap: 2 },
   legendRow: { flexDirection: 'row', gap: AppSpacing.md, alignItems: 'center' },
   legendIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: AppColors.canvas, alignItems: 'center', justifyContent: 'center' },

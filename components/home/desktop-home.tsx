@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.surfaceMuted,
   },
   statIconHot: {
-    backgroundColor: 'rgba(239, 34, 116, 0.18)',
+    backgroundColor: AppColors.accentTint,
   },
   statText: {
     flex: 1,
@@ -946,7 +946,7 @@ const styles = StyleSheet.create({
   postDivider: {
     paddingTop: 4,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: AppColors.hairline,
   },
   post: {
     gap: 8,

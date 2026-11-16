@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetChip } from '@/components/ui/hanet-chip';
 import { HanetDialog, HanetDialogActions, dialogStyles } from '@/components/ui/hanet-dialog';
@@ -103,11 +104,7 @@ export default function GradesScreen() {
   return (
     <FrostedScreen style={styles.screen}>
       <KeyboardScroll contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <ThemedText style={styles.eyebrow}>{t('common.herramientas')}</ThemedText>
-          <ThemedText accessibilityRole="header" style={styles.title}>{t('tools.grades.calculadoraDeNotas')}</ThemedText>
-          <ThemedText style={styles.intro}>{t('tools.grades.tuPromedioYLaNota')}</ThemedText>
-        </View>
+        <PageHeader eyebrow={t('common.herramientas')} title={t('tools.grades.calculadoraDeNotas')} intro={t('tools.grades.tuPromedioYLaNota')} />
 
         <View style={styles.modes}>
           <HanetChip label={t('tools.grades.mismoPeso')} selected={!state.weighted} onPress={() => change({ weighted: false })} />
@@ -260,10 +257,6 @@ export default function GradesScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.lg },
-  header: { paddingTop: AppSpacing.lg, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
-  intro: { ...AppType.footnote, color: AppColors.textSecondary, marginTop: AppSpacing.xs },
   modes: { flexDirection: 'row', gap: AppSpacing.sm },
   card: { padding: 18, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, gap: AppSpacing.md },
   entry: { flexDirection: 'row', alignItems: 'center', gap: AppSpacing.sm },

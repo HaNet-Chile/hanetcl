@@ -32,6 +32,15 @@ export const AppColors = {
   // Accents of HaNet Eventos (Figma "Accents/Mint" and "Accents/Yellow"): perks and featured lines.
   accentMint: '#00C8B3',
   accentYellow: '#FFCC00',
+  // The scratch card's darker stripe over the accent (see `Stripes`).
+  stripe: '#D81D68',
+  // The accent at 18 %: the square behind a pink icon, a "done" status.
+  accentTint: 'rgba(239,34,116,0.18)',
+  // A barely-there line around a card on the canvas, or between columns.
+  hairline: 'rgba(255,255,255,0.08)',
+  // The dividers between rows of a grouped list, and the dimming behind a sheet.
+  separator: 'rgba(249,249,250,0.12)',
+  scrim: 'rgba(0,0,0,0.55)',
 } as const;
 
 export const AppSpacing = {
@@ -106,3 +115,9 @@ export const AppDisplay = {
 
 /** Press feedback shared by every tappable surface: a light dip and press-in. */
 export const AppPressed = { opacity: 0.84, transform: [{ scale: 0.97 }] } as const;
+/**
+ * Press feedback for a row inside a list or a grouped card: the row lights
+ * up in place, as in the phone's own lists, instead of shrinking (a row that
+ * shrinks pulls away from its dividers).
+ */
+export const AppRowPressed = { backgroundColor: 'rgba(249,249,250,0.06)' } as const;

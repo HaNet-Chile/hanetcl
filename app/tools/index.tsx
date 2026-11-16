@@ -1,4 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
+import { MessageCard } from '@/components/ui/message-card';
 import { AreaIcon } from '@/components/tools/area-icon';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
@@ -39,18 +41,12 @@ export default function ToolsScreen() {
   return (
     <FrostedScreen style={styles.screen}>
       <ScrollView contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <ThemedText style={styles.eyebrow}>HaNet</ThemedText>
-          <ThemedText accessibilityRole="header" style={styles.title}>{t('common.herramientas')}</ThemedText>
-          <ThemedText style={styles.intro}>{t('tools.recursosParaTusDecisionesDel')}</ThemedText>
-        </View>
+        <PageHeader eyebrow="HaNet" title={t('common.herramientas')} intro={t('tools.recursosParaTusDecisionesDel')} />
 
         {state === undefined && <ActivityIndicator color={AppColors.textSecondary} style={styles.loading} />}
 
         {state === null && (
-          <View style={styles.empty}>
-            <ThemedText style={styles.emptyText}>{error}</ThemedText>
-          </View>
+          <MessageCard message={error} live />
         )}
 
         {!!state && (
@@ -120,19 +116,13 @@ export default function ToolsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.lg },
-  header: { paddingTop: AppSpacing.lg, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
-  intro: { ...AppType.footnote, color: AppColors.textSecondary, marginTop: AppSpacing.xs },
   loading: { marginTop: AppSpacing.xxl },
-  empty: { padding: AppSpacing.lg, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface },
-  emptyText: { ...AppType.callout, color: AppColors.textSecondary },
-  card: { padding: 18, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: AppSpacing.sm },
+  card: { padding: 18, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: AppColors.hairline, gap: AppSpacing.sm },
   cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: AppSpacing.xs },
   iconRow: { flexDirection: 'row', gap: 6 },
-  iconTile: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(239,34,116,0.18)', alignItems: 'center', justifyContent: 'center' },
+  iconTile: { width: 40, height: 40, borderRadius: 12, backgroundColor: AppColors.accentTint, alignItems: 'center', justifyContent: 'center' },
   status: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 26, paddingHorizontal: 10, borderRadius: AppRadii.pill, backgroundColor: AppColors.surfaceMuted },
-  statusDone: { backgroundColor: 'rgba(239,34,116,0.18)', paddingLeft: 7 },
+  statusDone: { backgroundColor: AppColors.accentTint, paddingLeft: 7 },
   statusText: { ...AppType.caption, fontFamily: 'DMSans_700Bold', color: AppColors.textPrimary },
   cardTitle: { ...AppType.title3, color: AppColors.textPrimary },
   cardText: { ...AppType.footnote, color: AppColors.textSecondary },

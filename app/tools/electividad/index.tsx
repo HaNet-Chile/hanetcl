@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
 import { AreaIcon } from '@/components/tools/area-icon';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { HanetButton } from '@/components/ui/hanet-button';
@@ -79,11 +80,7 @@ export default function ElectividadScreen() {
   return (
     <FrostedScreen style={styles.screen}>
       <ScrollView contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <ThemedText style={styles.eyebrow}>{t('common.herramientas')}</ThemedText>
-          <ThemedText accessibilityRole="header" style={styles.title}>{t('tools.electividad.hanetElectividad')}</ThemedText>
-          <ThemedText style={styles.intro}>{t('tools.electividad.unTestDeInteresesPara')}</ThemedText>
-        </View>
+        <PageHeader eyebrow={t('common.herramientas')} title={t('tools.electividad.hanetElectividad')} intro={t('tools.electividad.unTestDeInteresesPara')} />
 
         <View style={styles.iconGrid} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {(['bio', 'qui', 'mat', 'fis', 'soc', 'len', 'mus', 'vis', 'mov'] as const).map(area => (
@@ -175,14 +172,10 @@ export default function ElectividadScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.lg },
-  header: { paddingTop: AppSpacing.lg, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
-  intro: { ...AppType.callout, color: AppColors.textSecondary, marginTop: AppSpacing.xs },
   iconGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   iconTile: { width: 44, height: 44, borderRadius: 14, backgroundColor: AppColors.surface, alignItems: 'center', justifyContent: 'center' },
   error: { ...AppType.callout, color: AppColors.errorText },
-  card: { padding: 18, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: AppSpacing.md },
+  card: { padding: 18, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: AppColors.hairline, gap: AppSpacing.md },
   cardEyebrow: { ...AppType.callout, color: AppColors.textSecondary },
   cardTitle: { ...AppType.title2, color: AppColors.textPrimary, marginBottom: AppSpacing.xs },
   fact: { flexDirection: 'row', gap: AppSpacing.md, alignItems: 'flex-start' },

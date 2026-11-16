@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.surface,
   },
   blockLive: {
-    backgroundColor: 'rgba(239, 34, 116, 0.18)',
+    backgroundColor: AppColors.accentTint,
   },
   blockTime: {
     width: 48,

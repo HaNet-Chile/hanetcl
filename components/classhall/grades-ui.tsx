@@ -1,6 +1,7 @@
 import { hallDay } from '@/components/classhall/hall-ui';
 import { GradesLocked } from '@/components/grades/grades-lock';
-import { Stripes } from '@/components/grades/stripes';
+import { StripedBanner } from '@/components/ui/stripes';
+import { MessageCard } from '@/components/ui/message-card';
 import { ThemedText } from '@/components/themed-text';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppRadii, AppSpacing } from '@/constants/design-tokens';
@@ -12,7 +13,7 @@ import { formatGrade } from '@/services/grades';
 import { useGradesLock } from '@/services/grades-lock';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { t } from '@/i18n';
 
 // Notas in a Hall, for the student: each new grade comes covered, to scratch
@@ -29,18 +30,12 @@ export function NewGradesBanner({ hallId, subject, count }: { hallId: string; su
   const router = useRouter();
   if (!count) return null;
   return (
-    <Pressable
-      accessibilityRole="button"
+    <StripedBanner
+      title={t('components.classhall.gradesUi.tienesCountNotasNuevas', { count })}
+      actionLabel={t('grades.destapar')}
       accessibilityLabel={t('components.classhall.gradesUi.tienesCountNotasNuevasDestapar', { count })}
       onPress={() => router.push({ pathname: '/grades/reveal', params: { hallId, subject } })}
-      style={({ pressed }) => [styles.banner, pressed && styles.bannerPressed]}
-    >
-      <Stripes />
-      <ThemedText style={styles.bannerTitle}>{t('components.classhall.gradesUi.tienesCountNotasNuevas', { count })}</ThemedText>
-      <View style={styles.bannerButton}>
-        <ThemedText style={styles.bannerButtonText}>{t('grades.destapar')}</ThemedText>
-      </View>
-    </Pressable>
+    />
   );
 }
 
@@ -72,18 +67,13 @@ export function StudentGrades({ hallId, subject, expected }: { hallId: string; s
   if (error && !grades) {
     if (!expected) return null;
     return (
-      <View style={styles.card}>
-        <ThemedText accessibilityLiveRegion="polite" style={styles.body}>{error}</ThemedText>
-        <HanetButton label={t('common.reintentar')} variant="surface" onPress={() => { setError(null); setAttempt(count => count + 1); }} />
-      </View>
+      <MessageCard message={error} onRetry={() => { setError(null); setAttempt(count => count + 1); }} />
     );
   }
   if (!grades) {
     if (!expected) return null;
     return (
-      <View style={styles.card}>
-        <ThemedText style={styles.body}>{t('components.classhall.gradesUi.cargandoTusNotas')}</ThemedText>
-      </View>
+      <MessageCard message={t('components.classhall.gradesUi.cargandoTusNotas')} />
     );
   }
   if (!grades.length) return null;
@@ -133,11 +123,6 @@ export function StudentGrades({ hallId, subject, expected }: { hallId: string; s
 }
 
 const styles = StyleSheet.create({
-  banner: { minHeight: 72, paddingVertical: 14, paddingLeft: 18, paddingRight: 12, borderRadius: AppRadii.lg, borderCurve: 'continuous', overflow: 'hidden', flexDirection: 'row', alignItems: 'center', gap: AppSpacing.md },
-  bannerPressed: { opacity: 0.86, transform: [{ scale: 0.98 }] },
-  bannerTitle: { flex: 1, fontFamily: 'DMSans_700Bold', fontSize: 18, lineHeight: 23, letterSpacing: -0.4, color: AppColors.textPrimary },
-  bannerButton: { height: 44, paddingHorizontal: 18, borderRadius: AppRadii.pill, backgroundColor: AppColors.textPrimary, alignItems: 'center', justifyContent: 'center' },
-  bannerButtonText: { fontFamily: 'DMSans_700Bold', fontSize: 16, lineHeight: 20, color: AppColors.textOnLight },
   wrap: {
     gap: AppSpacing.md,
   },
@@ -148,64 +133,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: AppColors.textSecondary,
-  },
-  card: {
-    gap: AppSpacing.md,
-    padding: AppSpacing.lg,
-    borderRadius: AppRadii.lg,
-    borderCurve: 'continuous',
-    backgroundColor: AppColors.surface,
-  },
-  cardHead: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    gap: AppSpacing.sm,
-    paddingHorizontal: AppSpacing.xs,
-  },
-  cardTitle: {
-    flex: 1,
-    fontFamily: 'DMSans_700Bold',
-    fontSize: 17,
-    lineHeight: 22,
-    letterSpacing: -0.4,
-    color: AppColors.textPrimary,
-  },
-  cardMeta: {
-    fontFamily: 'DMSans_500Medium',
-    fontSize: 13,
-    lineHeight: 18,
-    color: AppColors.textSecondary,
-  },
-  corrected: {
-    paddingHorizontal: AppSpacing.xs,
-    marginTop: -AppSpacing.xs,
-    fontFamily: 'DMSans_400Regular',
-    fontSize: 13,
-    lineHeight: 18,
-    color: AppColors.textSecondary,
-  },
-  grade: {
-    fontFamily: 'DMSans_700Bold',
-    fontSize: 72,
-    lineHeight: 80,
-    letterSpacing: -4,
-    color: AppColors.textPrimary,
-    fontVariant: ['tabular-nums'],
-  },
-  gradeNote: {
-    minHeight: 18,
-    fontFamily: 'DMSans_400Regular',
-    fontSize: 13,
-    lineHeight: 18,
-    color: AppColors.textSecondary,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: AppSpacing.sm,
-  },
-  action: {
-    flex: 1,
   },
   list: {
     paddingHorizontal: AppSpacing.lg,
@@ -260,18 +187,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     color: AppColors.textSecondary,
-  },
-  body: {
-    fontFamily: 'DMSans_400Regular',
-    fontSize: 14,
-    lineHeight: 21,
-    color: AppColors.textPrimary,
-  },
-  emptyTitle: {
-    fontFamily: 'DMSans_600SemiBold',
-    fontSize: 18,
-    lineHeight: 24,
-    letterSpacing: -0.5,
-    color: AppColors.textPrimary,
   },
 });

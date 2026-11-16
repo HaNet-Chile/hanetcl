@@ -52,16 +52,24 @@ export function PushPermissionDialog({ ready }: { ready: boolean }) {
     void dismissPushPrompt();
   };
 
+  return <PushPermissionPrompt visible={visible} busy={asking} onAllow={() => void allow()} onNotNow={notNow} />;
+}
+
+/**
+ * The question itself, without deciding when it shows (Sistema HaNet UI
+ * opens it with its own buttons).
+ */
+export function PushPermissionPrompt({ visible, busy = false, onAllow, onNotNow }: { visible: boolean; busy?: boolean; onAllow: () => void; onNotNow: () => void }) {
   return (
     <HanetDialog
       visible={visible}
-      onRequestClose={notNow}
+      onRequestClose={onNotNow}
       title={t('components.pushPermission.activaLasNotificaciones')}
       body={t('components.pushPermission.teAvisamosDeLoNuevo')}
     >
       <HanetDialogActions>
-        <HanetButton label={t('components.pushPermission.ahoraNo')} variant="surface" disabled={asking} onPress={notNow} style={dialogStyles.action} />
-        <HanetButton label={t('components.pushPermission.activar')} variant="accent" disabled={asking} onPress={() => void allow()} style={dialogStyles.action} />
+        <HanetButton label={t('components.pushPermission.ahoraNo')} variant="surface" disabled={busy} onPress={onNotNow} style={dialogStyles.action} />
+        <HanetButton label={t('components.pushPermission.activar')} variant="accent" disabled={busy} onPress={onAllow} style={dialogStyles.action} />
       </HanetDialogActions>
     </HanetDialog>
   );

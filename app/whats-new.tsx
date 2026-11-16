@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
 import { APP_VERSION_LABEL } from '@/constants/app-version';
 import CHANGELOG from '@/constants/changelog.json';
 import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
@@ -28,11 +29,7 @@ export default function WhatsNewScreen() {
         contentContainerStyle={withTopInset(styles.page, insets.top)}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <View style={styles.header}>
-            <ThemedText style={styles.eyebrow}>{t('common.configuraciones')}</ThemedText>
-            <ThemedText accessibilityRole="header" style={styles.title}>{t('settings.novedades')}</ThemedText>
-            <ThemedText style={styles.intro}>{t('whatsNew.tienesHanetAppversionlabelEstoEs', { appVersionLabel: APP_VERSION_LABEL })}</ThemedText>
-          </View>
+          <PageHeader eyebrow={t('common.configuraciones')} title={t('settings.novedades')} intro={t('whatsNew.tienesHanetAppversionlabelEstoEs', { appVersionLabel: APP_VERSION_LABEL })} style={styles.header} />
         }
         ItemSeparatorComponent={Separator}
         renderItem={({ item, index }) => <ReleaseCard release={item} current={index === 0} />}
@@ -74,10 +71,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150 },
 
-  header: { paddingTop: AppSpacing.lg, paddingBottom: AppSpacing.xl, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
-  intro: { ...AppType.footnote, color: AppColors.textSecondary, marginTop: AppSpacing.sm },
+  header: { paddingBottom: AppSpacing.xl },
 
   card: { gap: AppSpacing.md, padding: AppSpacing.lg, borderRadius: AppRadii.xl, borderCurve: 'continuous', backgroundColor: AppColors.surface },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: AppSpacing.sm },
