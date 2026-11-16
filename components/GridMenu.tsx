@@ -20,7 +20,7 @@ import { anniversaryDay, daysTo, formatPoints, phaseOf, ranking, todaysActivitie
 import { useWelcomeSeen } from '@/services/anniversary-welcome';
 import type { AnniversaryState } from '@/services/anniversary-service';
 import { t } from '@/i18n';
-import { Stripes } from '@/components/grades/stripes';
+import { Stripes } from '@/components/ui/stripes';
 import { useGradesBadge } from '@/components/grades/grades-tile';
 
 type SideBadge = { main: string; sub: string; label: string; onPress: () => void };

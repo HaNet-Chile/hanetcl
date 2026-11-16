@@ -10,7 +10,7 @@ import type { ScratchCardProps } from './scratch-coverage';
 // drawn on an HTML canvas because Skia needs CanvasKit on the web. Mouse,
 // touch and pen all scratch.
 
-const STRIPE = '#D81D68';
+const STRIPE = AppColors.stripe;
 const STRIPE_GAP = 18;
 const FADE_MS = 260;
 
@@ -156,9 +156,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Web-only CSS, which React Native's style types don't list.
   cover: {
     transitionProperty: 'opacity',
-  },
+  } as object,
   gone: {
     opacity: 0,
     pointerEvents: 'none',

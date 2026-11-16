@@ -235,6 +235,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     // Over the border too, so the dimming meets the content's.
     right: -1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: AppColors.scrim,
   },
 });

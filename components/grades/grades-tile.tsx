@@ -1,6 +1,6 @@
-import { Stripes } from '@/components/grades/stripes';
+import { Stripes } from '@/components/ui/stripes';
 import { ThemedText } from '@/components/themed-text';
-import { AppColors, AppType } from '@/constants/design-tokens';
+import { AppColors, AppPressed, AppType } from '@/constants/design-tokens';
 import { useRole, useSession } from '@/services/auth-service';
 import { cached, useCached } from '@/services/cache';
 import { getMyNewGradesCount } from '@/services/classhall-service';
@@ -62,14 +62,20 @@ export function GradesTile({ style }: { style?: StyleProp<ViewStyle> }) {
   const router = useRouter();
   const badge = useGradesBadge();
   if (!badge) return null;
-  const count = badge.newGrades;
+  return <GradesTileView count={badge.newGrades} onPress={() => router.push('/grades')} style={style} />;
+}
 
+/**
+ * How the tile looks, without loading anything: `count` grades still covered
+ * (0 hides the striped badge). Sistema HaNet UI shows it with sample counts.
+ */
+export function GradesTileView({ count, onPress, style }: { count: number; onPress: () => void; style?: StyleProp<ViewStyle> }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={count === 0 ? t('classhall.evaluation.notas') : t('components.grades.gradesTile.notasTienesCountNotasNuevas', { count })}
-      onPress={() => router.push('/grades')}
-      style={({ pressed }) => [styles.tile, style, pressed && styles.pressed]}
+      onPress={onPress}
+      style={({ pressed }) => [styles.tile, style, pressed && AppPressed]}
     >
       <GradesIcon />
       <View style={styles.text}>
@@ -99,10 +105,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-  },
-  pressed: {
-    opacity: 0.86,
-    transform: [{ scale: 0.98 }],
   },
   text: {
     flex: 1,

@@ -1,5 +1,5 @@
 import { ThemedText } from '@/components/themed-text';
-import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
+import { AppColors, AppRadii, AppRowPressed, AppSpacing, AppType } from '@/constants/design-tokens';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   groupTitle: { ...AppType.footnote, fontFamily: 'DMSans_700Bold', color: AppColors.textSecondary, paddingHorizontal: AppSpacing.sm },
   card: { borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface, overflow: 'hidden' },
   // Starts after the badge, as in the phone's settings.
-  divider: { height: StyleSheet.hairlineWidth, marginLeft: 58, backgroundColor: 'rgba(249,249,250,0.12)' },
+  divider: { height: StyleSheet.hairlineWidth, marginLeft: 58, backgroundColor: AppColors.separator },
   footer: { ...AppType.caption, color: AppColors.textSecondary, opacity: 0.8, paddingHorizontal: AppSpacing.sm },
   error: { ...AppType.footnote, fontFamily: 'DMSans_700Bold', color: AppColors.errorText, opacity: 1 },
 
@@ -120,6 +120,6 @@ const styles = StyleSheet.create({
   label: { ...AppType.callout, fontSize: 15, color: AppColors.textPrimary },
   rowDetail: { ...AppType.caption, color: AppColors.textSecondary, opacity: 0.8 },
   detail: { ...AppType.footnote, color: AppColors.textSecondary, opacity: 0.8, maxWidth: '45%' },
-  pressed: { backgroundColor: 'rgba(249,249,250,0.06)' },
+  pressed: AppRowPressed,
   disabled: { opacity: 0.55 },
 });

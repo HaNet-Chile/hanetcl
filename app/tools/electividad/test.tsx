@@ -47,6 +47,10 @@ export default function ElectividadTestScreen() {
   const [error, setError] = useState('');
   const lastTick = useRef(0);
   const advancing = useRef(false);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tickBeforePick = useRef(0);
+  // Leaving mid-pause drops the pending step (the answer is already saved).
+  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
 
   useEffect(() => {
     let alive = true;
@@ -93,9 +97,20 @@ export default function ElectividadTestScreen() {
     }
   }, [router]);
 
+  // A pick shows for a moment before the next question. Until then a tap on
+  // the other option changes it (nothing is locked while it waits), and the
+  // wait starts again from the new pick.
   const choose = (choice: Choice) => {
-    if (!progress || !questions || !question || advancing.current || sending) return;
+    if (!progress || !questions || !question || sending) return;
+    if (advancing.current) {
+      if (picked === choice) return;
+      advancing.current = false;
+      if (advanceTimer.current) clearTimeout(advanceTimer.current);
+      // The time on this question counts from before the first pick.
+      lastTick.current = tickBeforePick.current;
+    }
     advancing.current = true;
+    tickBeforePick.current = lastTick.current;
     setPicked(choice);
     if (Platform.OS === 'ios') void Haptics.selectionAsync();
     const now = clock();
@@ -108,7 +123,8 @@ export default function ElectividadTestScreen() {
     const nextIndex = index + 1 < questions.length ? index + 1 : firstOpen >= 0 ? firstOpen : index;
     const next: Progress = { answers, index: nextIndex, activeMs };
     saveProgress(next);
-    setTimeout(() => {
+    advanceTimer.current = setTimeout(() => {
+      advanceTimer.current = null;
       advancing.current = false;
       setPicked(null);
       setProgress(next);
@@ -265,7 +281,7 @@ const styles = StyleSheet.create({
     borderRadius: AppRadii.lg,
     backgroundColor: AppColors.surface,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: AppColors.hairline,
   },
   optionSelected: { borderColor: AppColors.accent, backgroundColor: 'rgba(239,34,116,0.12)' },
   bubble: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: AppColors.surfaceSoft, alignItems: 'center', justifyContent: 'center' },

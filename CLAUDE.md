@@ -31,6 +31,7 @@ App de Expo/React Native para liceos chilenos. Piloto: Liceo Camilo Henríquez d
 - Botones y chips siempre con forma de píldora.
 - Selectores como diálogo tipo alerta, no en línea. Hora con ruedas desplazables. Marcar "hoy" en las fechas.
 - Animaciones breves (unos 120 ms al abrir).
+- **HaNet UI:** el catálogo de componentes está en `components/README.md` y los componentes reales se ven en Sistema HaNet UI (Panel HNT, `app/ui-showcase.tsx`, grupos en `components/showcase/`). Un componente compartido nuevo entra a los dos en el mismo PR; lo que se repite en dos pantallas se vuelve componente. Encabezado de página `PageHeader`, mensajes `MessageCard`, rayas de nota tapada `Stripes`/`StripedBanner`/`StripedPill`; colores y presión desde los tokens (`accentTint`, `hairline`, `separator`, `scrim`, `AppPressed`, `AppRowPressed`), sin rgba sueltos.
 - Formularios secundarios en hoja deslizable (`formSheet`). En Android la hoja la dibuja la app (`components/ui/sheet-frame.tsx`), porque el `formSheet` nativo de react-native-screens 4.26 se abre sin altura.
 - La barra inferior es una sola, en la raíz (`GlobalTabBar` en `components/AppTabBar.tsx`). Las pantallas no dibujan la suya.
 - No mostrar datos falsos como si fueran reales. Lo que no existe va como "Próximamente".

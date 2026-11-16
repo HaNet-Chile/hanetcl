@@ -2,9 +2,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Stripes } from '@/components/grades/stripes';
+import { Stripes } from '@/components/ui/stripes';
 import { ThemedText } from '@/components/themed-text';
-import { AppColors } from '@/constants/design-tokens';
+import { AppColors, AppRowPressed } from '@/constants/design-tokens';
 import { notificationAge } from '@/services/notifications-service';
 import type { HnNotification, NotificationKind } from '@/services/notifications-service';
 import { t } from '@/i18n';
@@ -52,7 +52,7 @@ export function NotificationRow({ item, unread, now, compact, onOpen }: Props) {
       accessibilityLabel={[unread ? t('components.notifications.notificationRow.nueva') : null, item.title, item.body, age].filter(Boolean).join('. ')}
       disabled={!item.url}
       onPress={open}
-      style={({ pressed }) => [styles.row, compact && styles.compact, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.row, compact && styles.compact, pressed && AppRowPressed]}
     >
       <View style={[styles.icon, grade && styles.gradeIcon]}>
         {grade && <Stripes />}
@@ -79,13 +79,13 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 12,
     paddingHorizontal: 4,
+    // Rounds the light a press leaves on the row.
+    borderRadius: 14,
+    borderCurve: 'continuous',
   },
   compact: {
     paddingVertical: 10,
     paddingHorizontal: 0,
-  },
-  pressed: {
-    opacity: 0.72,
   },
   icon: {
     width: 40,

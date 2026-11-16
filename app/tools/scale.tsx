@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetChip } from '@/components/ui/hanet-chip';
 import { HanetDialog, HanetDialogActions, dialogStyles } from '@/components/ui/hanet-dialog';
@@ -90,11 +91,7 @@ export default function ScaleScreen() {
   return (
     <FrostedScreen style={styles.screen}>
       <KeyboardScroll contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <ThemedText style={styles.eyebrow}>{t('common.herramientas')}</ThemedText>
-          <ThemedText accessibilityRole="header" style={styles.title}>{t('tools.scale.escalaDeNotas')}</ThemedText>
-          <ThemedText style={styles.intro}>{t('tools.scale.convierteLosPuntosDeUna')}</ThemedText>
-        </View>
+        <PageHeader eyebrow={t('common.herramientas')} title={t('tools.scale.escalaDeNotas')} intro={t('tools.scale.convierteLosPuntosDeUna')} />
 
         <View style={styles.card}>
           <View style={styles.field}>
@@ -229,10 +226,6 @@ const styles = StyleSheet.create({
   chipIdle: { backgroundColor: AppColors.canvas },
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.lg },
-  header: { paddingTop: AppSpacing.lg, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
-  intro: { ...AppType.footnote, color: AppColors.textSecondary, marginTop: AppSpacing.xs },
   card: { padding: 18, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, gap: AppSpacing.lg },
   field: { gap: AppSpacing.sm },
   label: { ...AppType.headline, color: AppColors.textPrimary },
@@ -269,7 +262,7 @@ const styles = StyleSheet.create({
   tableHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: -AppSpacing.sm },
   table: { flexDirection: 'row', borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, paddingVertical: AppSpacing.sm, paddingHorizontal: AppSpacing.xs },
   column: { flex: 1, paddingHorizontal: AppSpacing.xs },
-  columnDivider: { borderLeftWidth: 1, borderLeftColor: 'rgba(255,255,255,0.08)' },
+  columnDivider: { borderLeftWidth: 1, borderLeftColor: AppColors.hairline },
   cell: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 7, paddingHorizontal: 10 },
   cellPoints: { ...AppType.callout, fontFamily: 'DMSans_400Regular', color: AppColors.textSecondary },
   cellGrade: { ...AppType.headline, color: AppColors.textPrimary },

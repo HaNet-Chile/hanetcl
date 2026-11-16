@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
@@ -93,11 +94,7 @@ export default function ShareScreen() {
       </View>
 
       <ScrollView contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + AppSpacing.xl }]} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <ThemedText style={styles.eyebrow}>{t('share.compartirAHanet')}</ThemedText>
-          <ThemedText accessibilityRole="header" style={styles.title}>{t('share.agregarUnaTablaDeEspecificaciones')}</ThemedText>
-          <ThemedText style={styles.intro}>{t('share.eligeLaClaseHanetLee')}</ThemedText>
-        </View>
+        <PageHeader eyebrow={t('share.compartirAHanet')} title={t('share.agregarUnaTablaDeEspecificaciones')} intro={t('share.eligeLaClaseHanetLee')} />
 
         {picked && (
           <View style={styles.file} accessible accessibilityLabel={t('share.archivoName', { name: picked.name })}>
@@ -171,12 +168,8 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', paddingHorizontal: AppSpacing.lg, width: '100%', maxWidth: 430, alignSelf: 'center' },
   round: { width: 40, height: 40, borderRadius: AppRadii.pill, backgroundColor: AppColors.surface, alignItems: 'center', justifyContent: 'center' },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, gap: AppSpacing.lg },
-  header: { paddingTop: AppSpacing.lg, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
-  intro: { ...AppType.callout, fontFamily: 'DMSans_400Regular', color: AppColors.textSecondary, marginTop: AppSpacing.xs },
-  file: { flexDirection: 'row', alignItems: 'center', gap: AppSpacing.md, padding: 14, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  fileIcon: { width: 44, height: 44, borderRadius: 13, backgroundColor: 'rgba(239,34,116,0.18)', alignItems: 'center', justifyContent: 'center' },
+  file: { flexDirection: 'row', alignItems: 'center', gap: AppSpacing.md, padding: 14, borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, borderWidth: 1, borderColor: AppColors.hairline },
+  fileIcon: { width: 44, height: 44, borderRadius: 13, backgroundColor: AppColors.accentTint, alignItems: 'center', justifyContent: 'center' },
   fileBody: { flex: 1, gap: 2 },
   fileName: { ...AppType.headline, color: AppColors.textPrimary },
   fileMeta: { ...AppType.caption, fontFamily: 'DMSans_400Regular', color: AppColors.textSecondary },

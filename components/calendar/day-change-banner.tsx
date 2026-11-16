@@ -65,6 +65,7 @@ export function DayChangeBanner({ change, canManage }: { change: DayChange; canM
         <Pressable
           accessibilityRole="button"
           accessibilityHint={t('components.calendar.dayChangeBanner.abreLosCambiosDeDias')}
+          hitSlop={8}
           onPress={() => router.push({ pathname: '/day-change', params: { date: change.from } })}
           style={({ pressed }) => [styles.manage, pressed && AppPressed]}
         >
@@ -145,6 +146,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginTop: AppSpacing.sm,
+    // With the hitSlop, a 44 pt target.
+    minHeight: 32,
     paddingHorizontal: AppSpacing.md,
     paddingVertical: 6,
     borderRadius: AppRadii.pill,

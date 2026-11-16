@@ -33,7 +33,7 @@ import type { Pieces } from './scratch-particles';
 // only a high grade (`celebrate`) gets a burst once it is already showing.
 // Reduce Motion keeps the haptics and drops the motion.
 
-const STRIPE = '#D81D68';
+const STRIPE = AppColors.stripe;
 const STRIPE_GAP = 18;
 // Room around the card for flakes and shards to fly into.
 const SPILL_X = 40;

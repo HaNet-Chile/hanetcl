@@ -27,17 +27,28 @@ import type { ScheduleBlock } from '@/services/schedule-service';
 import { widgetsAvailable, widgetsShareData } from '@/services/widget-service';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import React, { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import Animated, { FadeIn, FadeInRight, FadeOutLeft, useReducedMotion } from 'react-native-reanimated';
 import { EASE_OUT_CUBIC } from '@/constants/motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { GroupTitle, Note, OverlayContext, Section } from '@/components/showcase/showcase-ui';
+import { StructureGroup } from '@/components/showcase/structure-group';
+import { GradesGroup } from '@/components/showcase/grades-group';
+import { NotificationsGroup } from '@/components/showcase/notifications-group';
+import { CalendarGroup, ToolsGroup } from '@/components/showcase/calendar-tools-group';
+import { WebGroup } from '@/components/showcase/web-group';
 
 // Sistema HaNet UI (Panel HNT): the app's real components with example data,
 // to check how they look and behave. Nothing here reads or writes real data:
-// every example says so on screen.
+// every example says so on screen. The groups added since PR #25 live in
+// components/showcase/; the catalog with every component is
+// components/README.md. A new shared component gets a Section here.
+
+const GROUPS = ['Feed', 'Eventos', 'Tu día', 'Estructura', 'Notas', 'Notificaciones', 'Calendar', 'Herramientas', 'Web', 'Base'] as const;
+type Group = (typeof GROUPS)[number];
 
 type PreviewMode = 'Inicio' | 'Eventos' | 'Calendario';
 
@@ -136,24 +147,9 @@ const CHECKINS: CheckInResult[] = [
 ];
 const CHECKIN_LABELS = ['Llegó', 'Repetido', 'Sin inscripción', 'Error'];
 
-function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <ThemedText accessibilityRole="header" style={styles.sectionTitle}>{title}</ThemedText>
-      <ThemedText style={styles.sectionDescription}>{description}</ThemedText>
-      {children}
-    </View>
-  );
-}
-
-function GroupTitle({ children }: { children: string }) {
-  return <ThemedText accessibilityRole="header" style={styles.groupTitle}>{children}</ThemedText>;
-}
-
-/** A line under a test button: what happened, or why it cannot run here. */
-function Note({ children }: { children: string | null }) {
-  if (!children) return null;
-  return <ThemedText style={styles.note} accessibilityLiveRegion="polite">{children}</ThemedText>;
+/** A group of sections; it tells the screen where it starts, for the index on top. */
+function Anchor({ group, onY, children }: { group: Group; onY: (group: Group, y: number) => void; children: React.ReactNode }) {
+  return <View onLayout={event => onY(group, event.nativeEvent.layout.y)} style={styles.group}>{children}</View>;
 }
 
 /** The HN-QR with an example key: it changes every 30 seconds, like the real one. */
@@ -215,6 +211,22 @@ export default function UiShowcaseScreen() {
   const [checkin, setCheckin] = useState(0);
   const [notice, setNotice] = useState<{ key: string; text: string } | null>(null);
   const stopActivity = useRef<(() => void) | null>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const groupY = useRef<Partial<Record<Group, number>>>({});
+  const [scratching, setScratching] = useState(false);
+  const [overlay, setOverlay] = useState<React.ReactNode>(null);
+  const overlayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showOverlay = useCallback((node: React.ReactNode, ms = 4000) => {
+    if (overlayTimer.current) clearTimeout(overlayTimer.current);
+    setOverlay(node);
+    if (node) overlayTimer.current = setTimeout(() => setOverlay(null), ms);
+  }, []);
+  useEffect(() => () => { if (overlayTimer.current) clearTimeout(overlayTimer.current); }, []);
+  const recordGroup = useCallback((group: Group, y: number) => { groupY.current[group] = y; }, []);
+  const jump = (group: Group) => {
+    const y = groupY.current[group];
+    if (y !== undefined) scrollRef.current?.scrollTo({ y: Math.max(0, y - insets.top - AppSpacing.md), animated: !reducedMotion });
+  };
 
   useEffect(() => {
     let active = true;
@@ -278,8 +290,9 @@ export default function UiShowcaseScreen() {
   const entering = reducedMotion ? undefined : FadeInRight.duration(220).easing(EASE_OUT_CUBIC);
   const exiting = reducedMotion ? undefined : FadeOutLeft.duration(130).easing(EASE_OUT_CUBIC);
   return (
+    <OverlayContext.Provider value={showOverlay}>
     <FrostedScreen style={styles.container}>
-      <ScrollView contentContainerStyle={withTopInset(styles.content, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} scrollEnabled={!scratching} contentContainerStyle={withTopInset(styles.content, insets.top)} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Pressable
             accessibilityRole="button"
@@ -295,6 +308,11 @@ export default function UiShowcaseScreen() {
           </View>
         </View>
 
+        <View style={styles.index} accessibilityRole="menu" accessibilityLabel="Ir a un grupo">
+          {GROUPS.map(group => <HanetChip key={group} label={group} compact onPress={() => jump(group)} />)}
+        </View>
+
+        <Anchor group="Feed" onY={recordGroup}>
         <GroupTitle>Feed</GroupTitle>
 
         <Section title="Votación anónima" description="Elige una opción y vota. Con resultados “al cierre” nadie ve los conteos hasta que termina.">
@@ -315,7 +333,9 @@ export default function UiShowcaseScreen() {
           </View>
           <Note>{notice?.key === 'event' ? notice.text : null}</Note>
         </Section>
+        </Anchor>
 
+        <Anchor group="Eventos" onY={recordGroup}>
         <GroupTitle>Eventos</GroupTitle>
 
         <Section title="Reacciones" description="Las mismas del Feed. Toca una para sumarte o quitarte, o abre la lista con el botón de la carita.">
@@ -345,7 +365,9 @@ export default function UiShowcaseScreen() {
           </View>
           <CheckInResultCard result={CHECKINS[checkin]} />
         </Section>
+        </Anchor>
 
+        <Anchor group="Tu día" onY={recordGroup}>
         <GroupTitle>Tu día</GroupTitle>
 
         <Section title="Horario: ahora y después" description="La tarjeta de arriba del Horario, con la clase en curso y la siguiente.">
@@ -372,7 +394,16 @@ export default function UiShowcaseScreen() {
                 ? null
                 : 'Esta build no llega a su App Group, así que el widget no se actualiza y la Live Activity sale vacía. Fírmala con un certificado que tenga App Groups.'}</Note>
         </Section>
+        </Anchor>
 
+        <Anchor group="Estructura" onY={recordGroup}><StructureGroup /></Anchor>
+        <Anchor group="Notas" onY={recordGroup}><GradesGroup onScratching={setScratching} /></Anchor>
+        <Anchor group="Notificaciones" onY={recordGroup}><NotificationsGroup /></Anchor>
+        <Anchor group="Calendar" onY={recordGroup}><CalendarGroup /></Anchor>
+        <Anchor group="Herramientas" onY={recordGroup}><ToolsGroup /></Anchor>
+        <Anchor group="Web" onY={recordGroup}><WebGroup /></Anchor>
+
+        <Anchor group="Base" onY={recordGroup}>
         <GroupTitle>Base</GroupTitle>
 
         <Section title="Acciones" description="Botones largos, con radio completo y variantes del tema.">
@@ -475,6 +506,7 @@ export default function UiShowcaseScreen() {
             <View style={[styles.swatch, { backgroundColor: AppColors.accent }]}><ThemedText style={[styles.swatchText, styles.swatchTextDark]}>Accent</ThemedText></View>
           </View>
         </Section>
+        </Anchor>
       </ScrollView>
 
       <StoryShareSheet item={story} onClose={() => setStory(null)} />
@@ -491,7 +523,9 @@ export default function UiShowcaseScreen() {
           <FatalScreen preview onDismiss={() => setFatalVisible(false)} />
         </Animated.View>
       )}
+      {overlay}
     </FrostedScreen>
+    </OverlayContext.Provider>
   );
 }
 
@@ -507,11 +541,8 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1 },
   title: { color: AppColors.textPrimary, fontFamily: 'DMSans_700Bold', fontSize: 28, lineHeight: 34, letterSpacing: -0.7 },
   subtitle: { color: AppColors.textSecondary, fontFamily: 'DMSans_500Medium', fontSize: 14, lineHeight: 20 },
-  groupTitle: { marginBottom: -AppSpacing.md, color: AppColors.accent, fontFamily: 'DMSans_700Bold', fontSize: 13, lineHeight: 18, letterSpacing: 0.4, textTransform: 'uppercase' },
-  section: { gap: AppSpacing.md },
-  sectionTitle: { color: AppColors.textPrimary, fontFamily: 'DMSans_700Bold', fontSize: 20, lineHeight: 26, letterSpacing: -0.4 },
-  sectionDescription: { color: AppColors.textSecondary, fontFamily: 'DMSans_400Regular', fontSize: 14, lineHeight: 20 },
-  note: { color: AppColors.textSecondary, fontFamily: 'DMSans_500Medium', fontSize: 13, lineHeight: 18 },
+  group: { gap: AppSpacing.xxl },
+  index: { flexDirection: 'row', flexWrap: 'wrap', gap: AppSpacing.sm },
   card: { gap: AppSpacing.md, paddingVertical: AppSpacing.lg, borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface },
   cardTitle: { paddingHorizontal: AppSpacing.lg, color: AppColors.textPrimary, fontFamily: 'DMSans_700Bold', fontSize: 17, lineHeight: 23 },
   // The feed's components keep their own side margins; here they sit flush.

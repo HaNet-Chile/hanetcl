@@ -1,6 +1,8 @@
 import { gradeMeta, NewGradesBanner } from '@/components/classhall/grades-ui';
 import { GradesLocked } from '@/components/grades/grades-lock';
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
+import { MessageCard } from '@/components/ui/message-card';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { AppColors, AppDisplay, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
@@ -76,19 +78,16 @@ export default function SubjectGradesScreen() {
   return (
     <FrostedScreen style={styles.screen}>
       <ScrollView contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <ThemedText style={styles.eyebrow}>{t('classhall.evaluation.notas')}</ThemedText>
-          <ThemedText accessibilityRole="header" style={styles.title}>{subject || 'Asignatura'}</ThemedText>
-          {!!teacher && <ThemedText style={styles.muted}>{t('grades.subject.docenteTeacher', { teacher })}</ThemedText>}
-        </View>
+        <PageHeader
+          eyebrow={t('classhall.evaluation.notas')}
+          title={subject || 'Asignatura'}
+          intro={teacher ? t('grades.subject.docenteTeacher', { teacher }) : undefined}
+        />
 
         {locked && <GradesLocked auto />}
         {!locked && !grades && !error && <ActivityIndicator color={AppColors.textSecondary} style={styles.loading} />}
         {!locked && !grades && !!error && (
-          <View style={styles.card}>
-            <ThemedText accessibilityLiveRegion="polite" style={styles.body}>{error}</ThemedText>
-            <HanetButton label={t('common.reintentar')} variant="surface" onPress={() => { setError(null); setAttempt(value => value + 1); }} />
-          </View>
+          <MessageCard message={error} onRetry={() => { setError(null); setAttempt(value => value + 1); }} />
         )}
 
         {!!grades && (
@@ -109,9 +108,7 @@ export default function SubjectGradesScreen() {
             <NewGradesBanner hallId={hallId} subject={subject ?? ''} count={covered.length} />
 
             {grades.length === 0 && (
-              <View style={styles.card}>
-                <ThemedText style={styles.body}>{t('grades.subject.todaviaNoHayNotasDe')}</ThemedText>
-              </View>
+              <MessageCard message={t('grades.subject.todaviaNoHayNotasDe')} />
             )}
 
             {semesters.map(semester => {
@@ -148,15 +145,10 @@ export default function SubjectGradesScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 520, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.lg },
-  header: { paddingTop: AppSpacing.lg, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
   loading: { marginTop: AppSpacing.xxl },
   muted: { ...AppType.footnote, color: AppColors.textSecondary },
-  body: { ...AppType.callout, color: AppColors.textPrimary },
   hint: { ...AppType.footnote, color: AppColors.textSecondary, paddingHorizontal: AppSpacing.xs },
   label: { ...AppType.callout, fontFamily: 'DMSans_700Bold', color: AppColors.textSecondary, paddingHorizontal: AppSpacing.xs },
-  card: { gap: AppSpacing.md, padding: AppSpacing.lg, borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface },
   section: { gap: AppSpacing.md },
   pair: { flexDirection: 'row', gap: AppSpacing.md },
   stat: { flex: 1, gap: 2, paddingVertical: 16, paddingHorizontal: 18, borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface },

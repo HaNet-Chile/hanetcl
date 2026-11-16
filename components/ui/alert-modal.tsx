@@ -1,12 +1,13 @@
 import { KeyboardDismissButton, useKeyboardOverlap } from '@/components/ui/keyboard';
 import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
+import { AppColors } from '@/constants/design-tokens';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 const OPEN_MS = 120;
 const CLOSE_MS = 100;
-const SCRIM = 'rgba(0, 0, 0, 0.55)';
+const SCRIM = AppColors.scrim;
 
 type Props = {
   visible: boolean;

@@ -31,7 +31,7 @@ import { t } from '@/i18n';
 // podium before the full result. With reduced motion it opens on the podium.
 
 const GRID: AreaId[] = ['bio', 'qui', 'mat', 'fis', 'soc', 'len', 'mus', 'vis', 'mov'];
-const TINT = 'rgba(239,34,116,0.18)';
+const TINT = AppColors.accentTint;
 
 /** When each phase starts (ms): 0 calculating, 1 top three lit, 2–4 third to first, 5 podium. */
 const PHASES = [0, 1900, 3000, 5200, 7400, 10000];

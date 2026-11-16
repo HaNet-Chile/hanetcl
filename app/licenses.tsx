@@ -1,4 +1,5 @@
 import { ThemedText } from '@/components/themed-text';
+import { PageHeader } from '@/components/ui/page-header';
 import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import LICENSES from '@/constants/open-source-licenses.json';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,13 +27,7 @@ export default function LicensesScreen() {
         showsVerticalScrollIndicator={false}
         initialNumToRender={20}
         ListHeaderComponent={
-          <View style={styles.header}>
-            <ThemedText style={styles.eyebrow}>{t('common.configuraciones')}</ThemedText>
-            <ThemedText accessibilityRole="header" style={styles.title}>{t('licenses.licenciasDeCodigoAbierto')}</ThemedText>
-            <ThemedText style={styles.intro}>
-              {t('licenses.hanetEstaHechaConPackagescount', { packagesCount: LICENSES.packages.length })}
-            </ThemedText>
-          </View>
+          <PageHeader eyebrow={t('common.configuraciones')} title={t('licenses.licenciasDeCodigoAbierto')} intro={t('licenses.hanetEstaHechaConPackagescount', { packagesCount: LICENSES.packages.length })} style={styles.header} />
         }
         ItemSeparatorComponent={Separator}
         renderItem={({ item }) => {
@@ -85,10 +80,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150 },
 
-  header: { paddingTop: AppSpacing.lg, paddingBottom: AppSpacing.xl, gap: AppSpacing.xs },
-  eyebrow: { ...AppType.caption, color: AppColors.textSecondary },
-  title: { ...AppType.title1, color: AppColors.textPrimary },
-  intro: { ...AppType.footnote, color: AppColors.textSecondary, marginTop: AppSpacing.sm },
+  header: { paddingBottom: AppSpacing.xl },
 
   row: { borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface, overflow: 'hidden' },
   rowHead: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: AppSpacing.md, paddingHorizontal: AppSpacing.lg, paddingVertical: AppSpacing.sm },
