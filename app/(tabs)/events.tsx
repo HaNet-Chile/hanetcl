@@ -22,6 +22,8 @@ import { FlatList, Platform, Pressable, RefreshControl, StyleSheet, View, useWin
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WIDE_PAGE, useWideLayout, widePageStyle } from '@/components/ui/wide-page';
+import { useContentWidth } from '@/hooks/use-desktop-layout';
 import { t } from '@/i18n';
 
 const TABS: { value: EventKind; label: string; accessibilityLabel: string }[] = [
@@ -37,6 +39,11 @@ export default function EventsScreen() {
   const router = useRouter();
   const { user } = useSession();
   const { width } = useWindowDimensions();
+  // Beside the side navigation (wide web window): the events in a grid and
+  // two featured cards at a time.
+  const layout = useWideLayout();
+  const contentWidth = useContentWidth();
+  const columns = layout.wide ? (layout.columns ? 3 : 2) : 1;
 
   const [kind, setKind] = useState<EventKind>('regional');
   const [lists, setLists] = useState<Partial<Record<EventKind, EventList>>>({});
@@ -81,7 +88,9 @@ export default function EventsScreen() {
     return (sponsored.length ? sponsored : events).slice(0, 5);
   }, [events, kind]);
   const soonest = events.find(event => eventSoon(event.startsAt, now));
-  const featuredWidth = Math.min(width, 480) - AppSpacing.md * 2;
+  const featuredWidth = layout.wide
+    ? (Math.min(contentWidth, WIDE_PAGE.maxWidth) - WIDE_PAGE.gutter * 2 - AppSpacing.sm) / 2
+    : Math.min(width, 480) - AppSpacing.md * 2;
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -132,7 +141,7 @@ export default function EventsScreen() {
   const header = (
     <View style={styles.header}>
       <View style={styles.topBar}>
-        <ThemedText accessibilityRole="header" style={styles.title}>{t('common.hanetEventos')}</ThemedText>
+        <ThemedText accessibilityRole="header" style={[styles.title, layout.wide && styles.titleWide]}>{t('common.hanetEventos')}</ThemedText>
         <Pressable accessibilityRole="button" accessibilityLabel={t('events.cambiarCiudad')} onPress={() => setDialog('city')} style={({ pressed }) => [styles.globe, pressed && AppPressed]}>
           <Image source={HNE_ICONS.globe} style={styles.icon24} contentFit="contain" tintColor={AppColors.textPrimary} />
         </Pressable>
@@ -167,8 +176,8 @@ export default function EventsScreen() {
       {!term && featured.length > 0 && (
         <View style={styles.featuredWrap}>
           {/* The cards behind are only depth, as in the design. */}
-          {featured.length > 1 && <View style={[styles.stackCard, styles.stackCard2]} />}
-          {featured.length > 2 && <View style={[styles.stackCard, styles.stackCard3]} />}
+          {featured.length > 1 && !layout.wide && <View style={[styles.stackCard, styles.stackCard2]} />}
+          {featured.length > 2 && !layout.wide && <View style={[styles.stackCard, styles.stackCard3]} />}
           <FlatList
             horizontal
             data={featured}
@@ -219,27 +228,33 @@ export default function EventsScreen() {
   return (
     <FrostedScreen style={styles.container}>
       <FlatList
+        // A list can't change its columns once drawn: a new one per count.
+        key={`columns-${columns}`}
+        numColumns={columns}
+        columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
         data={visible}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <EventCard
-            event={item}
-            onPress={() => openEvent(item)}
-            action={item.kind === 'institution' && item.signupMode !== 'none'
-              ? {
-                label: item.signedUp ? (item.signupMode === 'list' ? t('events.inscrito') : t('events.voy')) : item.signupMode === 'list' ? t('events.inscribirme') : t('events.participo'),
-                onPress: () => void signup(item),
-                busy: busyId === item.id,
-                active: item.signedUp,
-              }
-              : undefined}
-          />
+          <View style={columns > 1 && styles.gridCell}>
+            <EventCard
+              event={item}
+              onPress={() => openEvent(item)}
+              action={item.kind === 'institution' && item.signupMode !== 'none'
+                ? {
+                  label: item.signedUp ? (item.signupMode === 'list' ? t('events.inscrito') : t('events.voy')) : item.signupMode === 'list' ? t('events.inscribirme') : t('events.participo'),
+                  onPress: () => void signup(item),
+                  busy: busyId === item.id,
+                  active: item.signedUp,
+                }
+                : undefined}
+            />
+          </View>
         )}
         ListHeaderComponent={header}
         ListEmptyComponent={empty ?? undefined}
         ListFooterComponent={<ThemedText style={styles.disclaimer}>{EVENTS_DISCLAIMER}</ThemedText>}
         ItemSeparatorComponent={() => <View style={{ height: AppSpacing.lg }} />}
-        contentContainerStyle={withTopInset(styles.content, insets.top)}
+        contentContainerStyle={withTopInset([styles.content, widePageStyle(layout.wide)], insets.top)}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={AppColors.accent} progressViewOffset={insets.top} />}
       />
@@ -300,6 +315,20 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     letterSpacing: -0.8,
     color: AppColors.textPrimary,
+  },
+  // Wide web window: the desktop title, and the events in a grid.
+  titleWide: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 40,
+    lineHeight: 46,
+    letterSpacing: -1.6,
+  },
+  gridRow: {
+    gap: WIDE_PAGE.gap,
+  },
+  gridCell: {
+    flex: 1,
+    minWidth: 0,
   },
   globe: {
     height: 40,

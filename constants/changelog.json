@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "0.11.0-beta",
+      "date": "2026-11-16",
+      "title": "HaNet en el computador",
+      "items": [
+        "En el computador, todas las páginas de HaNet aprovechan la pantalla: Calendar, Eventos, Feed, Notas, Herramientas, Aniversario, ClassHall, Perfil y Configuraciones ya no se ven como un teléfono angosto al medio.",
+        "La semana del Calendar y el Horario muestran los días uno al lado del otro, como un calendario de escritorio.",
+        "En el Aniversario, el marcador y las actividades quedan al lado de tu alianza, los avisos y los plazos.",
+        "En ClassHall, la tabla de especificaciones queda junto a los objetivos y cómo prepararse, y tu entrega junto a la tarea.",
+        "El botón “Unirse a un Hall” ya no sale aplastado en el computador."
+      ]
+    },
+    {
       "version": "0.10.3-beta",
       "date": "2026-11-16",
       "title": "Buscador",

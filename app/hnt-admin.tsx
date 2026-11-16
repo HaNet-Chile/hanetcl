@@ -24,6 +24,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useWide, widePageStyle } from '@/components/ui/wide-page';
 import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
@@ -44,6 +45,7 @@ function formatDate(millis: number) {
 
 export default function HntAdminScreen() {
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const router = useRouter();
   const { user, initializing } = useSession();
 
@@ -267,7 +269,7 @@ export default function HntAdminScreen() {
   return (
     <FrostedScreen style={styles.container} bottom>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={withTopInset(styles.scrollContent, insets.top)} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={withTopInset([styles.scrollContent, widePageStyle(wide, 'reading')], insets.top)} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.topBar}>
             <ThemedText accessibilityRole="header" style={styles.topBarTitle}>{t('index.panelHnt')}</ThemedText>
           </View>

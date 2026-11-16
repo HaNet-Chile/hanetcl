@@ -1,0 +1,25 @@
+name: Vista de escritorio
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Cada pantalla tiene su vista de escritorio
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Fails if a screen in app/ is missing from constants/desktop-screens.ts,
+      # or if the layout it says doesn't match the screen.
+      - name: Check the list of screens
+        run: npm run desktop:check -- --list

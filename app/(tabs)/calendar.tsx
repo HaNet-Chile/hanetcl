@@ -30,6 +30,7 @@ import {
 } from '@/services/ical-service';
 import { EVENT_EDITOR_ROLES, ensureClaims, useRole, useSession } from '@/services/auth-service';
 import { useContentWidth } from '@/hooks/use-desktop-layout';
+import { WIDE_PAGE, useWide } from '@/components/ui/wide-page';
 import { sameSubject, subjectName } from '@/constants/subjects';
 import { useCached } from '@/services/cache';
 import { blockFate, blocksOn, changeOn, classesOn, dateKey, getCourseSchedule, isBreak, minutesOf, myWeek, scheduleDay } from '@/services/schedule-service';
@@ -68,6 +69,10 @@ const LEVEL: Record<CalendarView, number> = { day: 0, week: 1, month: 2, year: 3
 const isSameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
+// A wide web window has room for the whole week, so the Calendar opens there
+// the first time in each visit; after that it stays where the person left it.
+let openedWide = false;
+
 const formatShortDate = (date: Date) => `${date.getDate()} ${MONTH_NAMES[date.getMonth()].slice(0, 3).toLowerCase()}`;
 
 export default function CalendarScreen() {
@@ -103,6 +108,12 @@ export default function CalendarScreen() {
   // the bar's store, since the bar's center pill names it and changes it.
   const { view } = useCalendarBar();
   const setView = calendarBar.setView;
+  const wide = useWide();
+  useEffect(() => {
+    if (!wide || openedWide) return;
+    openedWide = true;
+    if (view === 'day') setView('week');
+  }, [setView, view, wide]);
   // `origin` is the tapped point inside the body, where the zoom is anchored.
   const [zoom, setZoom] = useState<{ direction: 'in' | 'out' | 'fade'; origin: [number, number] } | null>(null);
   const zoomMotion = !zoom ? undefined : reduceMotion || zoom.direction === 'fade' ? CROSSFADE : zoom.direction === 'out' ? ZOOM_OUT : ZOOM_IN;
@@ -469,13 +480,13 @@ export default function CalendarScreen() {
     <>
       {/* Header */}
       {view === 'schedule' ? (
-        <View style={styles.header}>
+        <View style={[styles.header, wide && styles.headerWide]}>
           <View style={styles.headerCenter}>
             <ThemedText accessibilityRole="header" style={styles.headerTitle}>{t('common.horario')}</ThemedText>
           </View>
         </View>
       ) : view === 'week' ? (
-        <View style={styles.header}>
+        <View style={[styles.header, wide && styles.headerWide]}>
           <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaAnterior')} style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]} onPress={goToPrevWeek}>
             <CustomIcon name="chevron-left" size={20} color={AppColors.textSecondary} />
           </Pressable>
@@ -1057,6 +1068,11 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 760,
     alignSelf: 'center',
+  },
+  // The week and Horario spread their days across a wide window: the header follows.
+  headerWide: {
+    maxWidth: WIDE_PAGE.maxWidth,
+    paddingHorizontal: WIDE_PAGE.gutter,
   },
   arrowButton: {
     width: 44,

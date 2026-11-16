@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HanetSegmented } from '@/components/ui/hanet-auth-fields';
 import { HanetAvatar } from '@/components/ui/hanet-avatar';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { AppColors, AppDisplay, AppRadii, AppRowPressed, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError, useSession } from '@/services/auth-service';
 import type { MyProfile } from '@/services/auth-service';
@@ -71,11 +72,15 @@ export default function GradesScreen() {
   const count = subjects.reduce((sum, subject) => sum + gradesIn(subject.grades, period).filter(grade => grade.seen).length, 0);
   const periodName = choice === 's1' ? t('grades.n1erSemestre') : choice === 's2' ? t('grades.n2Semestre') : t('grades.anual');
 
+  // Beside the side navigation (wide web window) the average and the period
+  // stay on the left and the subjects take the rest.
+  const wide = useWide();
+
   const open = (subject: GradeBookSubject) => router.push({ pathname: '/grades/subject', params: { hallId: subject.hallId, subject: subject.subject, teacher: subject.teacherName ?? '' } });
 
   return (
     <FrostedScreen style={styles.screen}>
-      <ScrollView ref={pageScroll} contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={pageScroll} contentContainerStyle={withTopInset([styles.page, widePageStyle(wide)], insets.top)} showsVerticalScrollIndicator={false}>
         <PageHeader eyebrow="ClassHall" title={t('classhall.evaluation.notas')} />
 
         {!!book?.on && (
@@ -97,7 +102,7 @@ export default function GradesScreen() {
           <MessageCard message={t('grades.notasNoEstaActivoEn')} />
         )}
 
-        {pendingCount > 0 && (
+        {pendingCount > 0 && !wide && (
           <StripedBanner
             title={t('grades.tienesCountNotasPorDestapar2', { count: pendingCount })}
             subtitle={pending.map(subject => subject.subject).join(', ')}
@@ -109,70 +114,92 @@ export default function GradesScreen() {
 
         {!!book?.on && (
           <>
-            <View style={styles.summary} accessible accessibilityLabel={average === null ? t('grades.periodnameTodaviaNoHayNotas', { periodName }) : t('grades.promedioAproximadoDelPeriodnameGrade', { periodName, grade: formatGrade(average), countValue: count })}>
-              <View style={styles.summaryTop}>
-                <View>
-                  <ThemedText style={styles.muted}>{t('grades.promedioAproximadoPeriodname', { periodName })}</ThemedText>
-                  <ThemedText style={styles.big}>{average === null ? '—' : formatGrade(average)}</ThemedText>
-                </View>
-                <View style={styles.summaryCount}>
-                  <ThemedText style={styles.countNumber}>{count}</ThemedText>
-                  <ThemedText style={styles.muted}>{t('grades.notasEnHanet', { count })}</ThemedText>
-                </View>
-              </View>
-              <ThemedText style={styles.muted}>{t('grades.calculadoConLasNotasQue')}</ThemedText>
-            </View>
+            <WideColumns
+              asideLeft
+              asideFirstOnPhone
+              asideWidth={360}
+              stickyAside
+              aside={(
+                <>
+                  <View style={styles.summary} accessible accessibilityLabel={average === null ? t('grades.periodnameTodaviaNoHayNotas', { periodName }) : t('grades.promedioAproximadoDelPeriodnameGrade', { periodName, grade: formatGrade(average), countValue: count })}>
+                    <View style={styles.summaryTop}>
+                      <View>
+                        <ThemedText style={styles.muted}>{t('grades.promedioAproximadoPeriodname', { periodName })}</ThemedText>
+                        <ThemedText style={styles.big}>{average === null ? '—' : formatGrade(average)}</ThemedText>
+                      </View>
+                      <View style={styles.summaryCount}>
+                        <ThemedText style={styles.countNumber}>{count}</ThemedText>
+                        <ThemedText style={styles.muted}>{t('grades.notasEnHanet', { count })}</ThemedText>
+                      </View>
+                    </View>
+                    <ThemedText style={styles.muted}>{t('grades.calculadoConLasNotasQue')}</ThemedText>
+                  </View>
 
-            <HanetSegmented<Choice>
-              accessibilityLabel={t('grades.periodo')}
-              value={choice}
-              onChange={setChoice}
-              options={[
-                { value: 's1', label: t('grades.n1erSemestre'), accessibilityLabel: t('grades.primerSemestre') },
-                { value: 's2', label: t('grades.n2Semestre'), accessibilityLabel: t('grades.segundoSemestre') },
-                { value: 'year', label: t('grades.anual'), accessibilityLabel: t('grades.anual') },
-              ]}
+                  <HanetSegmented<Choice>
+                    accessibilityLabel={t('grades.periodo')}
+                    value={choice}
+                    onChange={setChoice}
+                    options={[
+                      { value: 's1', label: t('grades.n1erSemestre'), accessibilityLabel: t('grades.primerSemestre') },
+                      { value: 's2', label: t('grades.n2Semestre'), accessibilityLabel: t('grades.segundoSemestre') },
+                      { value: 'year', label: t('grades.anual'), accessibilityLabel: t('grades.anual') },
+                    ]}
+                  />
+                </>
+              )}
+              main={(
+                <>
+                  {pendingCount > 0 && wide && (
+                    <StripedBanner
+                      title={t('grades.tienesCountNotasPorDestapar2', { count: pendingCount })}
+                      subtitle={pending.map(subject => subject.subject).join(', ')}
+                      actionLabel={t('grades.destapar')}
+                      accessibilityLabel={t('grades.tienesCountNotasPorDestapar', { count: pendingCount, subject: pending[0].subject })}
+                      onPress={() => router.push('/grades/reveal')}
+                    />
+                  )}
+                          {subjects.length === 0 ? (
+                            <MessageCard message={t('grades.todaviaNoTienesClasesEn')} />
+                          ) : (
+                            <View style={styles.list}>
+                              <View style={styles.listHead}>
+                                <ThemedText style={styles.muted}>{t('classhall.create.asignatura')}</ThemedText>
+                                <ThemedText style={styles.muted}>{t('tools.grades.promedio')}</ThemedText>
+                              </View>
+                              {subjects.map(subject => {
+                                const value = subjectAverage(subject.grades, period);
+                                const shown = gradesIn(subject.grades, period);
+                                const seenCount = shown.filter(grade => grade.seen).length;
+                                const covered = shown.filter(grade => !grade.seen).length;
+                                const none = subject.grades.length === 0;
+                                return (
+                                  <Pressable
+                                    key={subject.hallId}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`${subject.subject}: ${value === null ? t('grades.sinPromedio') : `promedio ${formatGrade(value)}`}${covered ? t('grades.coveredPorDestapar', { covered }) : ''}`}
+                                    onPress={() => open(subject)}
+                                    style={({ pressed }) => [styles.row, pressed && AppRowPressed]}
+                                  >
+                                    <View style={styles.rowText}>
+                                      <ThemedText style={styles.rowTitle}>{subject.subject}</ThemedText>
+                                      <View style={styles.rowMetaLine}>
+                                        <ThemedText style={styles.muted}>{none ? t('grades.sinNotasEnHanet') : t('grades.countNotas', { count: seenCount })}</ThemedText>
+                                        {covered > 0 && <StripedPill label={t('grades.countNuevas', { count: covered })} />}
+                                      </View>
+                                    </View>
+                                    <View style={[styles.gradePill, value === null && styles.gradePillEmpty]}>
+                                      <ThemedText style={[styles.gradeText, value === null && styles.gradeTextEmpty]}>{value === null ? '—' : formatGrade(value)}</ThemedText>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={16} color={AppColors.surfaceSoft} />
+                                  </Pressable>
+                                );
+                              })}
+                            </View>
+                          )}
+                          <ThemedText style={styles.hint}>{t('grades.lasAsignaturasSinNotasEn')}</ThemedText>
+                </>
+              )}
             />
-
-            {subjects.length === 0 ? (
-              <MessageCard message={t('grades.todaviaNoTienesClasesEn')} />
-            ) : (
-              <View style={styles.list}>
-                <View style={styles.listHead}>
-                  <ThemedText style={styles.muted}>{t('classhall.create.asignatura')}</ThemedText>
-                  <ThemedText style={styles.muted}>{t('tools.grades.promedio')}</ThemedText>
-                </View>
-                {subjects.map(subject => {
-                  const value = subjectAverage(subject.grades, period);
-                  const shown = gradesIn(subject.grades, period);
-                  const seenCount = shown.filter(grade => grade.seen).length;
-                  const covered = shown.filter(grade => !grade.seen).length;
-                  const none = subject.grades.length === 0;
-                  return (
-                    <Pressable
-                      key={subject.hallId}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${subject.subject}: ${value === null ? t('grades.sinPromedio') : `promedio ${formatGrade(value)}`}${covered ? t('grades.coveredPorDestapar', { covered }) : ''}`}
-                      onPress={() => open(subject)}
-                      style={({ pressed }) => [styles.row, pressed && AppRowPressed]}
-                    >
-                      <View style={styles.rowText}>
-                        <ThemedText style={styles.rowTitle}>{subject.subject}</ThemedText>
-                        <View style={styles.rowMetaLine}>
-                          <ThemedText style={styles.muted}>{none ? t('grades.sinNotasEnHanet') : t('grades.countNotas', { count: seenCount })}</ThemedText>
-                          {covered > 0 && <StripedPill label={t('grades.countNuevas', { count: covered })} />}
-                        </View>
-                      </View>
-                      <View style={[styles.gradePill, value === null && styles.gradePillEmpty]}>
-                        <ThemedText style={[styles.gradeText, value === null && styles.gradeTextEmpty]}>{value === null ? '—' : formatGrade(value)}</ThemedText>
-                      </View>
-                      <Ionicons name="chevron-forward" size={16} color={AppColors.surfaceSoft} />
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
-            <ThemedText style={styles.hint}>{t('grades.lasAsignaturasSinNotasEn')}</ThemedText>
           </>
         )}
       </ScrollView>

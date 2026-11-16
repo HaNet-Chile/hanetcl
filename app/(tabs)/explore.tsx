@@ -22,6 +22,7 @@ import QRCode from 'react-native-qrcode-svg';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { months, t } from '@/i18n';
 import { useDocumentScroll } from '@/hooks/use-document-scroll';
 
@@ -52,6 +53,8 @@ export default function ProfileScreen() {
   // On a phone's browser the page scrolls with it, so the browser's bars shrink.
   const pageScroll = useDocumentScroll();
   const insets = useSafeAreaInsets();
+  // Beside the side navigation (wide web window): two columns.
+  const wide = useWide();
   const router = useRouter();
   const { user, initializing, signOut } = useSession();
 
@@ -123,7 +126,7 @@ export default function ProfileScreen() {
 
   const skeleton = (
     <FrostedScreen style={styles.screen}>
-      <View style={withTopInset(styles.page, insets.top)}>
+      <View style={withTopInset([styles.page, widePageStyle(wide)], insets.top)}>
         <ProfileSkeleton />
       </View>
     </FrostedScreen>
@@ -179,7 +182,7 @@ export default function ProfileScreen() {
 
   return (
     <FrostedScreen style={styles.screen}>
-      <ScrollView ref={pageScroll} contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={pageScroll} contentContainerStyle={withTopInset([styles.page, widePageStyle(wide)], insets.top)} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.brand} accessible accessibilityRole="header" accessibilityLabel="HaNet ID">
             <Image source={ICONS.logo} style={styles.brandMark} contentFit="contain" />
@@ -191,83 +194,96 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.identityCard}>
-          <Image source={ICONS.mark} style={styles.cardMark} tintColor={AppColors.textOnLight} contentFit="contain" />
+        {/* Beside the side navigation (wide web window) the card stands on the
+            left and what can be done with it beside it. */}
+        <WideColumns
+          asideLeft
+          asideFirstOnPhone
+          asideWidth={400}
+          style={styles.columnsWide}
+          aside={(
+            <View style={styles.identityCard}>
+              <Image source={ICONS.mark} style={styles.cardMark} tintColor={AppColors.textOnLight} contentFit="contain" />
 
-          {showQr ? (
-            <Animated.View key="qr" entering={swap} style={styles.qrWrap} accessible accessibilityLabel={t('explore.codigoQrDeTuHanet', { value: handle ? `, ${handle}` : '' })}>
-              <QRCode
-                value={qrValue ?? `hanet://id/${current.username ?? user.uid}`}
-                size={236}
-                color={AppColors.surface}
-                backgroundColor="transparent"
-              />
-              <ThemedText style={styles.qrHandle}>{handle ?? 'Tu HaNet ID'}</ThemedText>
-            </Animated.View>
-          ) : (
-            // Without a photo, the account's blobatar stands in for the picture.
-            <Animated.View key="portrait" entering={swap} style={[styles.portrait, myAlliance && [styles.portraitAlliance, { borderColor: allianceColor(myAlliance).fill }]]} accessible accessibilityLabel={photoUrl ? t('explore.fotoDePerfilDeName', { name }) : t('explore.blobatarDeName', { name })}>
-              {photoUrl ? (
-                <Image source={{ uri: photoUrl }} style={styles.portraitPhoto} contentFit="cover" transition={150} />
-              ) : photoChecked && current.avatarSeed ? (
-                <Blobatar name={current.avatarSeed} size={208} tone={0.5} background={false} normalize={false} />
-              ) : photoChecked ? (
-                <ThemedText style={styles.initials}>{initials || '·'}</ThemedText>
-              ) : null}
-            </Animated.View>
+              {showQr ? (
+                <Animated.View key="qr" entering={swap} style={styles.qrWrap} accessible accessibilityLabel={t('explore.codigoQrDeTuHanet', { value: handle ? `, ${handle}` : '' })}>
+                  <QRCode
+                    value={qrValue ?? `hanet://id/${current.username ?? user.uid}`}
+                    size={236}
+                    color={AppColors.surface}
+                    backgroundColor="transparent"
+                  />
+                  <ThemedText style={styles.qrHandle}>{handle ?? 'Tu HaNet ID'}</ThemedText>
+                </Animated.View>
+              ) : (
+                // Without a photo, the account's blobatar stands in for the picture.
+                <Animated.View key="portrait" entering={swap} style={[styles.portrait, myAlliance && [styles.portraitAlliance, { borderColor: allianceColor(myAlliance).fill }]]} accessible accessibilityLabel={photoUrl ? t('explore.fotoDePerfilDeName', { name }) : t('explore.blobatarDeName', { name })}>
+                  {photoUrl ? (
+                    <Image source={{ uri: photoUrl }} style={styles.portraitPhoto} contentFit="cover" transition={150} />
+                  ) : photoChecked && current.avatarSeed ? (
+                    <Blobatar name={current.avatarSeed} size={208} tone={0.5} background={false} normalize={false} />
+                  ) : photoChecked ? (
+                    <ThemedText style={styles.initials}>{initials || '·'}</ThemedText>
+                  ) : null}
+                </Animated.View>
+              )}
+
+              <View style={styles.identityInfo}>
+                <ThemedText
+                  style={[
+                    styles.name,
+                    // The chosen typeface arrives a moment after the screen: the
+                    // name waits for it rather than showing in one and jumping to another.
+                    nameFontReady
+                      ? { fontFamily: nameFont.fontFamily, fontSize: 34 * nameFont.scale, letterSpacing: nameFont.letterSpacing }
+                      : styles.nameWaiting,
+                  ]}
+                  numberOfLines={2}
+                  adjustsFontSizeToFit
+                >
+                  {name}
+                </ThemedText>
+                {!!current.institutionFullName && <ThemedText style={styles.institution}>{current.institutionFullName}</ThemedText>}
+                {!!current.courseId && <ThemedText style={styles.detail}>{current.courseId}</ThemedText>}
+                {!!role && <ThemedText style={styles.detail}>{role}{handle ? ` · ${handle}` : ''}</ThemedText>}
+                {!role && !!handle && <ThemedText style={styles.detail}>{handle}</ThemedText>}
+                {!!since && <ThemedText style={styles.accountAge}>{t('explore.enHanetDesdeMonthsDe', { months: MONTHS[since.getMonth()], fullYear: since.getFullYear() })}</ThemedText>}
+              </View>
+            </View>
           )}
+          main={(
+            <>
+              <View style={styles.actionPanel}>
+                <ProfileAction label={t('common.compartir')} icon="share-outline" onPress={shareProfile} />
+                <ProfileAction label={t('common.editar')} icon="pencil-outline" onPress={() => router.push('/edit-profile')} />
+                <ProfileAction label={t('explore.miHnQr')} icon="qr-code-outline" selected={showQr} onPress={() => setShowQr(value => !value)} />
+              </View>
 
-          <View style={styles.identityInfo}>
-            <ThemedText
-              style={[
-                styles.name,
-                // The chosen typeface arrives a moment after the screen: the
-                // name waits for it rather than showing in one and jumping to another.
-                nameFontReady
-                  ? { fontFamily: nameFont.fontFamily, fontSize: 34 * nameFont.scale, letterSpacing: nameFont.letterSpacing }
-                  : styles.nameWaiting,
-              ]}
-              numberOfLines={2}
-              adjustsFontSizeToFit
-            >
-              {name}
-            </ThemedText>
-            {!!current.institutionFullName && <ThemedText style={styles.institution}>{current.institutionFullName}</ThemedText>}
-            {!!current.courseId && <ThemedText style={styles.detail}>{current.courseId}</ThemedText>}
-            {!!role && <ThemedText style={styles.detail}>{role}{handle ? ` · ${handle}` : ''}</ThemedText>}
-            {!role && !!handle && <ThemedText style={styles.detail}>{handle}</ThemedText>}
-            {!!since && <ThemedText style={styles.accountAge}>{t('explore.enHanetDesdeMonthsDe', { months: MONTHS[since.getMonth()], fullYear: since.getFullYear() })}</ThemedText>}
-          </View>
-        </View>
-
-        <View style={styles.actionPanel}>
-          <ProfileAction label={t('common.compartir')} icon="share-outline" onPress={shareProfile} />
-          <ProfileAction label={t('common.editar')} icon="pencil-outline" onPress={() => router.push('/edit-profile')} />
-          <ProfileAction label={t('explore.miHnQr')} icon="qr-code-outline" selected={showQr} onPress={() => setShowQr(value => !value)} />
-        </View>
-
-        {current.linked ? (
-          <View style={styles.linkCard} accessible accessibilityLabel={t('explore.vinculadoAInstitutionfullname', { institutionFullName: current.institutionFullName ?? 'tu institución' })}>
-            <View style={styles.linkBadge}>
-              <Ionicons name="school-outline" size={20} color={AppColors.controlOnActive} />
-            </View>
-            <View style={styles.linkCopy}>
-              <ThemedText style={styles.linkEyebrow}>{t('explore.vinculadoA')}</ThemedText>
-              <ThemedText style={styles.linkTitle}>{current.institutionFullName ?? 'Tu institución'}</ThemedText>
-            </View>
-          </View>
-        ) : (
-          <Pressable accessibilityRole="button" onPress={finishJoining} style={({ pressed }) => [styles.linkCard, pressed && styles.pressed]}>
-            <View style={styles.linkBadge}>
-              <Ionicons name="school-outline" size={20} color={AppColors.controlOnActive} />
-            </View>
-            <View style={styles.linkCopy}>
-              <ThemedText style={styles.linkEyebrow}>{t('explore.aunSinInstitucion')}</ThemedText>
-              <ThemedText style={styles.linkTitle}>{t('explore.terminaDeUnirte')}</ThemedText>
-            </View>
-            <Ionicons name="arrow-forward" size={20} color={AppColors.textSecondary} />
-          </Pressable>
-        )}
+              {current.linked ? (
+                <View style={styles.linkCard} accessible accessibilityLabel={t('explore.vinculadoAInstitutionfullname', { institutionFullName: current.institutionFullName ?? 'tu institución' })}>
+                  <View style={styles.linkBadge}>
+                    <Ionicons name="school-outline" size={20} color={AppColors.controlOnActive} />
+                  </View>
+                  <View style={styles.linkCopy}>
+                    <ThemedText style={styles.linkEyebrow}>{t('explore.vinculadoA')}</ThemedText>
+                    <ThemedText style={styles.linkTitle}>{current.institutionFullName ?? 'Tu institución'}</ThemedText>
+                  </View>
+                </View>
+              ) : (
+                <Pressable accessibilityRole="button" onPress={finishJoining} style={({ pressed }) => [styles.linkCard, pressed && styles.pressed]}>
+                  <View style={styles.linkBadge}>
+                    <Ionicons name="school-outline" size={20} color={AppColors.controlOnActive} />
+                  </View>
+                  <View style={styles.linkCopy}>
+                    <ThemedText style={styles.linkEyebrow}>{t('explore.aunSinInstitucion')}</ThemedText>
+                    <ThemedText style={styles.linkTitle}>{t('explore.terminaDeUnirte')}</ThemedText>
+                  </View>
+                  <Ionicons name="arrow-forward" size={20} color={AppColors.textSecondary} />
+                </Pressable>
+              )}
+            </>
+          )}
+        />
 
         {!!error && <ThemedText accessibilityLiveRegion="polite" style={styles.staleNote}>{t('explore.noPudimosActualizarTuPerfil')}</ThemedText>}
 
@@ -297,6 +313,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   centered: { alignItems: 'center', justifyContent: 'center', padding: AppSpacing.xl, gap: AppSpacing.sm },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.md },
+  columnsWide: { maxWidth: 900 },
 
   emptyLogo: { width: 47, height: 43, marginBottom: AppSpacing.sm },
   emptyTitle: { color: AppColors.textPrimary, fontFamily: 'DMSans_700Bold', fontSize: 24, lineHeight: 30, letterSpacing: -0.9 },

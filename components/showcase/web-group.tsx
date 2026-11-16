@@ -1,11 +1,13 @@
 import { GradientCard } from '@/components/anniversary/gradient-card';
 import { WideHallCard } from '@/components/classhall/hall-grid';
-import { GroupTitle, Note, Section, showcaseStyles } from '@/components/showcase/showcase-ui';
+import { GroupTitle, Note, Section, Stage, showcaseStyles } from '@/components/showcase/showcase-ui';
 import { ThemedText } from '@/components/themed-text';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetChip } from '@/components/ui/hanet-chip';
+import { PageHeader } from '@/components/ui/page-header';
+import { WideColumns, WideGrid, useWideLayout } from '@/components/ui/wide-page';
 import { InstallGuideDialog } from '@/components/web/install-guide';
-import { AppColors, AppDisplay, AppSpacing } from '@/constants/design-tokens';
+import { AppColors, AppDisplay, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import type { Hall } from '@/services/classhall-service';
 import type { InstallGuideKind } from '@/services/web-install';
 import React, { useState } from 'react';
@@ -40,6 +42,7 @@ export function WebGroup() {
   const [guide, setGuide] = useState<InstallGuideKind>('ios-safari');
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const layout = useWideLayout();
 
   return (
     <>
@@ -71,6 +74,35 @@ export function WebGroup() {
         <Note>La barra lateral (SideNav), el panel de entrada (EntryAside) y el Inicio de escritorio (desktop-home) solo aparecen en una ventana ancha: míralos en hanet-app.web.app desde el computador.</Note>
       </Section>
 
+      <Section
+        title="Página de escritorio"
+        description="Cómo se arma una página en una ventana ancha: el encabezado con sus botones al lado, una columna principal con otra angosta y tarjetas en filas iguales. En el teléfono queda todo apilado, como siempre."
+        source="components/ui/wide-page.tsx · WideColumns, WideGrid, widePageStyle; components/ui/page-header.tsx · actions"
+      >
+        <Stage canvas>
+          <PageHeader
+            eyebrow="Ejemplo"
+            title="Página"
+            intro="Una línea sobre para qué sirve."
+            actions={<HanetButton label="Acción" variant="surface" onPress={() => setNote('El botón va junto al título en la web ancha.')} />}
+            style={styles.demoHeader}
+          />
+          <WideColumns
+            asideWidth={200}
+            columnStyle={styles.demoColumn}
+            main={<View style={[styles.demoBox, styles.demoMain]}><ThemedText style={styles.demoText}>Columna principal</ThemedText></View>}
+            aside={<View style={styles.demoBox}><ThemedText style={styles.demoText}>Aside</ThemedText></View>}
+          />
+          <WideGrid columns={3} gap={AppSpacing.sm}>
+            {['Tarjeta 1', 'Tarjeta 2', 'Tarjeta 3'].map(label => (
+              <View key={label} style={styles.demoBox}><ThemedText style={styles.demoText}>{label}</ThemedText></View>
+            ))}
+          </WideGrid>
+        </Stage>
+        <Note>{layout.wide ? (layout.columns ? 'Ventana ancha: columnas lado a lado.' : 'Ventana ancha pero angosta: las columnas se apilan y la grilla queda en 2.') : 'En el teléfono: todo apilado. Ábrelo en hanet-app.web.app desde el computador para ver las columnas.'}</Note>
+        <Note>Cada pantalla y su vista de escritorio están en constants/desktop-screens.ts; npm run desktop:check revisa que estén todas.</Note>
+      </Section>
+
       <GroupTitle>Aniversario</GroupTitle>
 
       <Section
@@ -89,6 +121,11 @@ export function WebGroup() {
 
 const styles = StyleSheet.create({
   wideCard: { maxWidth: 360 },
+  demoHeader: { paddingTop: 0 },
+  demoColumn: { gap: AppSpacing.sm },
+  demoBox: { minHeight: 56, padding: AppSpacing.md, borderRadius: AppRadii.md, borderCurve: 'continuous', backgroundColor: AppColors.surface, justifyContent: 'center' },
+  demoMain: { minHeight: 96 },
+  demoText: { ...AppType.footnote, color: AppColors.textSecondary },
   flag: { minHeight: 140, padding: AppSpacing.lg, justifyContent: 'flex-end', gap: 2 },
   flagLabel: { color: AppColors.textPrimary, fontFamily: 'DMSans_700Bold', fontSize: 15, lineHeight: 20 },
   flagScore: { ...AppDisplay.number, color: AppColors.textPrimary },

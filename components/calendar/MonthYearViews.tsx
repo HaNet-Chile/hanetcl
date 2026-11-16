@@ -8,6 +8,7 @@ import type { ScheduleBlock } from '@/services/schedule-service';
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useFrostedInset, withTopInset } from '@/components/ui/frosted-screen';
+import { useWideLayout, widePageStyle } from '@/components/ui/wide-page';
 import { capitalize, months, t, weekdayLetters, weekdays, weekdaysShort } from '@/i18n';
 
 export const MONTH_NAMES = months().map(capitalize);
@@ -155,13 +156,16 @@ type WeekViewProps = {
  */
 export function WeekView({ days, events, blocksOn, selectedDate, bottomInset, onPickDay, onOpenEvent }: WeekViewProps) {
   const top = useFrostedInset();
+  // With room on a wide window the days stand side by side, like a desk calendar.
+  const layout = useWideLayout();
+  const wide = layout.columns;
   const today = new Date();
   const rows = days
     .map((date, index) => ({ date, index, events: getEventsForDate(events, date), classes: blocksOn(date).filter(block => !isBreak(block)) }))
     .filter(row => row.index < 5 || row.events.length > 0);
 
   return (
-    <ScrollView contentContainerStyle={withTopInset([styles.scroll, styles.week, { paddingBottom: bottomInset }], top)} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={withTopInset([styles.scroll, styles.week, widePageStyle(layout.wide), wide && styles.weekWide, { paddingBottom: bottomInset }], top)} showsVerticalScrollIndicator={false}>
       {rows.map(row => {
         const isToday = isSameDay(row.date, today);
         const selected = isSameDay(row.date, selectedDate);
@@ -169,19 +173,19 @@ export function WeekView({ days, events, blocksOn, selectedDate, bottomInset, on
           ? null
           : t('components.calendar.monthYearViews.countClasesStartAEnd', { count: row.classes.length, start: row.classes[0].start, end: row.classes[row.classes.length - 1].end });
         return (
-          <View key={dayKey(row.date)} style={styles.weekRow}>
+          <View key={dayKey(row.date)} style={[styles.weekRow, wide && styles.weekColumn]}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`${WEEKDAY_NAMES[row.index]} ${row.date.getDate()}${isToday ? t('common.hoy') : ''}, ${row.events.length === 0 ? t('components.calendar.monthYearViews.sinEventos') : t('components.calendar.monthYearViews.countEventos2', { count: row.events.length })}`}
               accessibilityHint={t('components.calendar.monthYearViews.abreEseDia')}
               accessibilityState={{ selected }}
               onPress={event => onPickDay(row.date, { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY })}
-              style={({ pressed }) => [styles.weekDate, isToday && styles.dayToday, selected && styles.daySelected, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.weekDate, wide && styles.weekDateWide, isToday && styles.dayToday, selected && styles.daySelected, pressed && styles.pressed]}
             >
               <ThemedText style={[styles.agendaWeekday, selected && styles.onActive]}>{WEEKDAY_SHORT[row.index]}</ThemedText>
               <ThemedText style={[styles.agendaDay, selected && styles.onActive]}>{row.date.getDate()}</ThemedText>
             </Pressable>
-            <View style={styles.weekItems}>
+            <View style={[styles.weekItems, wide && styles.weekItemsWide]}>
               {!!classes && <ThemedText style={styles.weekClasses}>{classes}</ThemedText>}
               {row.events.length === 0 ? (
                 <ThemedText style={styles.weekEmpty}>{t('calendar.sinEventos')}</ThemedText>
@@ -391,6 +395,29 @@ const styles = StyleSheet.create({
     borderRadius: AppRadii.md,
     borderCurve: 'continuous',
     backgroundColor: AppColors.surface,
+  },
+  // Wide window: one column per day.
+  weekWide: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: AppSpacing.sm,
+  },
+  weekColumn: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: AppSpacing.sm,
+  },
+  weekDateWide: {
+    width: 'auto',
+    minHeight: 48,
+    flexDirection: 'row',
+    gap: 6,
+  },
+  weekItemsWide: {
+    minHeight: 0,
+    justifyContent: 'flex-start',
   },
   weekItems: {
     flex: 1,

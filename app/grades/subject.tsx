@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { MessageCard } from '@/components/ui/message-card';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { AppColors, AppDisplay, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
 import { getMyGrades } from '@/services/classhall-service';
@@ -74,14 +75,19 @@ export default function SubjectGradesScreen() {
   const semesters = (now === 2 ? [2, 1] : [1]) as (1 | 2)[];
   const current = subjectAverage(all, now);
   const year = subjectAverage(all, 'year');
+  // Beside the side navigation (wide web window): the averages on the left,
+  // the grades beside them and "Abrir el Hall" next to the title.
+  const wide = useWide();
+  const openHall = () => router.push({ pathname: '/classhall/hall', params: { id: hallId } });
 
   return (
     <FrostedScreen style={styles.screen}>
-      <ScrollView contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withTopInset([styles.page, widePageStyle(wide)], insets.top)} showsVerticalScrollIndicator={false}>
         <PageHeader
           eyebrow={t('classhall.evaluation.notas')}
           title={subject || 'Asignatura'}
           intro={teacher ? t('grades.subject.docenteTeacher', { teacher }) : undefined}
+          actions={wide && <HanetButton label={t('components.schedule.scheduleView.abrirElHall')} variant="surface" onPress={openHall} />}
         />
 
         {locked && <GradesLocked auto />}
@@ -92,49 +98,66 @@ export default function SubjectGradesScreen() {
 
         {!!grades && (
           <>
-            <View style={styles.pair}>
-              <View style={styles.stat} accessible accessibilityLabel={t('grades.subject.n2SemestreValueAproximado', { count: now, value: current === null ? t('grades.sinPromedio') : formatGrade(current) })}>
-                <ThemedText style={styles.muted}>{t('grades.subject.n2Semestre', { count: now })}</ThemedText>
-                <ThemedText style={styles.big}>{current === null ? '—' : formatGrade(current)}</ThemedText>
-                <ThemedText style={styles.muted}>{'aproximado'}</ThemedText>
-              </View>
-              <View style={styles.stat} accessible accessibilityLabel={t('grades.subject.anualValueAproximado', { value: year === null ? t('grades.sinPromedio') : formatGrade(year) })}>
-                <ThemedText style={styles.muted}>{t('grades.anual')}</ThemedText>
-                <ThemedText style={styles.big}>{year === null ? '—' : formatGrade(year)}</ThemedText>
-                <ThemedText style={styles.muted}>{'aproximado'}</ThemedText>
-              </View>
-            </View>
+            <WideColumns
+              asideLeft
+              asideFirstOnPhone
+              asideWidth={360}
+              stickyAside
+              aside={(
+                <>
+                  <View style={styles.pair}>
+                    <View style={styles.stat} accessible accessibilityLabel={t('grades.subject.n2SemestreValueAproximado', { count: now, value: current === null ? t('grades.sinPromedio') : formatGrade(current) })}>
+                      <ThemedText style={styles.muted}>{t('grades.subject.n2Semestre', { count: now })}</ThemedText>
+                      <ThemedText style={styles.big}>{current === null ? '—' : formatGrade(current)}</ThemedText>
+                      <ThemedText style={styles.muted}>{'aproximado'}</ThemedText>
+                    </View>
+                    <View style={styles.stat} accessible accessibilityLabel={t('grades.subject.anualValueAproximado', { value: year === null ? t('grades.sinPromedio') : formatGrade(year) })}>
+                      <ThemedText style={styles.muted}>{t('grades.anual')}</ThemedText>
+                      <ThemedText style={styles.big}>{year === null ? '—' : formatGrade(year)}</ThemedText>
+                      <ThemedText style={styles.muted}>{'aproximado'}</ThemedText>
+                    </View>
+                  </View>
+                    {wide && <ThemedText style={styles.hint}>{t('grades.subject.promedioPonderadoCuandoCadaEvaluacion')}</ThemedText>}
+                </>
+              )}
+              main={(
+                <>
+                  <NewGradesBanner hallId={hallId} subject={subject ?? ''} count={covered.length} />
 
-            <NewGradesBanner hallId={hallId} subject={subject ?? ''} count={covered.length} />
-
-            {grades.length === 0 && (
-              <MessageCard message={t('grades.subject.todaviaNoHayNotasDe')} />
-            )}
-
-            {semesters.map(semester => {
-              const list = inSemester(seen, semester);
-              if (!list.length) return null;
-              const name = t('grades.subject.n2Semestre', { count: semester });
-              const average = subjectAverage(all, semester);
-              const folded = semester === 1 && now === 2 && !showFirst;
-              return (
-                <View key={semester} style={styles.section}>
-                  <ThemedText style={styles.label}>{name}</ThemedText>
-                  {folded ? (
-                    <HanetButton
-                      label={t('grades.subject.countNotasValueVer', { count: list.length, value: average === null ? '' : t('grades.subject.promedioGrade', { grade: formatGrade(average) }) })}
-                      variant="surface"
-                      onPress={() => setShowFirst(true)}
-                    />
-                  ) : (
-                    <GradeList grades={list} />
+                  {grades.length === 0 && (
+                    <MessageCard message={t('grades.subject.todaviaNoHayNotasDe')} />
                   )}
-                </View>
-              );
-            })}
 
-            <HanetButton label={t('components.schedule.scheduleView.abrirElHall')} onPress={() => router.push({ pathname: '/classhall/hall', params: { id: hallId } })} />
-            <ThemedText style={styles.hint}>{t('grades.subject.promedioPonderadoCuandoCadaEvaluacion')}</ThemedText>
+                  {semesters.map(semester => {
+                    const list = inSemester(seen, semester);
+                    if (!list.length) return null;
+                    const name = t('grades.subject.n2Semestre', { count: semester });
+                    const average = subjectAverage(all, semester);
+                    const folded = semester === 1 && now === 2 && !showFirst;
+                    return (
+                      <View key={semester} style={styles.section}>
+                        <ThemedText style={styles.label}>{name}</ThemedText>
+                        {folded ? (
+                          <HanetButton
+                            label={t('grades.subject.countNotasValueVer', { count: list.length, value: average === null ? '' : t('grades.subject.promedioGrade', { grade: formatGrade(average) }) })}
+                            variant="surface"
+                            onPress={() => setShowFirst(true)}
+                          />
+                        ) : (
+                          <GradeList grades={list} />
+                        )}
+                      </View>
+                    );
+                  })}
+                </>
+              )}
+            />
+            {!wide && (
+              <>
+                <HanetButton label={t('components.schedule.scheduleView.abrirElHall')} onPress={openHall} />
+                <ThemedText style={styles.hint}>{t('grades.subject.promedioPonderadoCuandoCadaEvaluacion')}</ThemedText>
+              </>
+            )}
           </>
         )}
       </ScrollView>

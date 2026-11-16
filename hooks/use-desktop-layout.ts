@@ -1,6 +1,7 @@
 import { usePathname } from 'expo-router';
 import { Platform, useWindowDimensions } from 'react-native';
 
+import { NO_SIDE_NAV_ROUTES } from '@/constants/desktop-screens';
 import { useSession } from '@/services/auth-service';
 
 /** From this width the web swaps the floating bar for a side navigation (icons only). */
@@ -9,15 +10,6 @@ export const RAIL_MIN_WIDTH = 768;
 export const SIDEBAR_MIN_WIDTH = 1024;
 export const RAIL_WIDTH = 84;
 export const SIDEBAR_WIDTH = 248;
-
-/**
- * Screens drawn without the side navigation: the way in (welcome pages,
- * sign-in, joining an institution) and the full-screen moments.
- */
-const NO_SIDE_NAV_ROUTES = [
-  '/onboarding', '/auth', '/verify-email', '/join-beta', '/link-institution',
-  '/anniversary/welcome', '/tools/electividad/test', '/tools/electividad/reveal', '/event-checkin', '/grades/reveal',
-];
 
 export type DesktopNav = 'bar' | 'rail' | 'sidebar';
 

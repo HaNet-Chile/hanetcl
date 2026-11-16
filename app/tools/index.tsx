@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { MessageCard } from '@/components/ui/message-card';
 import { AreaIcon } from '@/components/tools/area-icon';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WideGrid, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
 import { getElectividad, peekElectividad } from '@/services/electividad-service';
@@ -37,10 +38,41 @@ export default function ToolsScreen() {
   }, []);
 
   const done = !!state?.result;
+  // Beside the side navigation (wide web window) the three tools share a row.
+  const wide = useWide();
+
+  const scaleCard = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('tools.escalaDeNotasPuntosANotas')}
+      onPress={() => router.push('/tools/scale')}
+      style={({ pressed }) => [styles.card, styles.small, wide && styles.fill, pressed && AppPressed]}
+    >
+      <View style={styles.iconTile}>
+        <Ionicons name="list-outline" size={22} color={AppColors.accent} />
+      </View>
+      <ThemedText style={styles.smallTitle}>{t('tools.scale.escalaDeNotas')}</ThemedText>
+      <ThemedText style={styles.cardText}>{t('tools.dePuntosANotasDe')}</ThemedText>
+    </Pressable>
+  );
+  const calcCard = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('tools.calculadoraDeNotasPromedioYLo')}
+      onPress={() => router.push('/tools/grades')}
+      style={({ pressed }) => [styles.card, styles.small, wide && styles.fill, pressed && AppPressed]}
+    >
+      <View style={styles.iconTile}>
+        <Ionicons name="calculator-outline" size={22} color={AppColors.accent} />
+      </View>
+      <ThemedText style={styles.smallTitle}>{t('tools.grades.calculadoraDeNotas')}</ThemedText>
+      <ThemedText style={styles.cardText}>{t('tools.tuPromedioYCuantoNecesitas')}</ThemedText>
+    </Pressable>
+  );
 
   return (
     <FrostedScreen style={styles.screen}>
-      <ScrollView contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withTopInset([styles.page, widePageStyle(wide)], insets.top)} showsVerticalScrollIndicator={false}>
         <PageHeader eyebrow="HaNet" title={t('common.herramientas')} intro={t('tools.recursosParaTusDecisionesDel')} />
 
         {state === undefined && <ActivityIndicator color={AppColors.textSecondary} style={styles.loading} />}
@@ -49,12 +81,13 @@ export default function ToolsScreen() {
           <MessageCard message={error} live />
         )}
 
+        <WideGrid columns={3}>
         {!!state && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t('tools.hanetElectividadValue', { value: done ? t('tools.respondidoVerTuResultado') : t('tools.testDeInteresesParaElegir') })}
             onPress={() => router.push('/tools/electividad')}
-            style={({ pressed }) => [styles.card, pressed && AppPressed]}
+            style={({ pressed }) => [styles.card, wide && styles.fill, pressed && AppPressed]}
           >
             <View style={styles.cardTop}>
               <View style={styles.iconRow}>
@@ -78,32 +111,15 @@ export default function ToolsScreen() {
           </Pressable>
         )}
 
-        <View style={styles.pair}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('tools.escalaDeNotasPuntosANotas')}
-            onPress={() => router.push('/tools/scale')}
-            style={({ pressed }) => [styles.card, styles.small, pressed && AppPressed]}
-          >
-            <View style={styles.iconTile}>
-              <Ionicons name="list-outline" size={22} color={AppColors.accent} />
-            </View>
-            <ThemedText style={styles.smallTitle}>{t('tools.scale.escalaDeNotas')}</ThemedText>
-            <ThemedText style={styles.cardText}>{t('tools.dePuntosANotasDe')}</ThemedText>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('tools.calculadoraDeNotasPromedioYLo')}
-            onPress={() => router.push('/tools/grades')}
-            style={({ pressed }) => [styles.card, styles.small, pressed && AppPressed]}
-          >
-            <View style={styles.iconTile}>
-              <Ionicons name="calculator-outline" size={22} color={AppColors.accent} />
-            </View>
-            <ThemedText style={styles.smallTitle}>{t('tools.grades.calculadoraDeNotas')}</ThemedText>
-            <ThemedText style={styles.cardText}>{t('tools.tuPromedioYCuantoNecesitas')}</ThemedText>
-          </Pressable>
-        </View>
+        {wide && scaleCard}
+        {wide && calcCard}
+        {!wide && (
+          <View style={styles.pair}>
+            {scaleCard}
+            {calcCard}
+          </View>
+        )}
+        </WideGrid>
 
         <View style={styles.soon}>
           <ThemedText style={styles.soonText}>{t('tools.proximamenteMasHerramientas')}</ThemedText>
@@ -129,6 +145,7 @@ const styles = StyleSheet.create({
   cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 2, marginTop: AppSpacing.xs },
   cardLink: { ...AppType.headline, color: AppColors.textPrimary },
   pair: { flexDirection: 'row', gap: AppSpacing.md },
+  fill: { flex: 1 },
   small: { flex: 1, padding: 16 },
   smallTitle: { ...AppType.headline, color: AppColors.textPrimary, marginTop: AppSpacing.xs },
   soon: { alignItems: 'center', paddingVertical: AppSpacing.md },

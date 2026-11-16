@@ -16,6 +16,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { t } from '@/i18n';
+import { useWide, widePageStyle } from '@/components/ui/wide-page';
 
 type Filter = 'open' | 'done';
 
@@ -25,6 +26,7 @@ type Filter = 'open' | 'done';
  */
 export default function TasksScreen() {
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const router = useRouter();
   const { hallId } = useLocalSearchParams<{ hallId: string }>();
   const { user, initializing } = useSession();
@@ -75,7 +77,7 @@ export default function TasksScreen() {
 
   return (
     <FrostedScreen style={styles.container}>
-      <ScrollView contentContainerStyle={withTopInset(styles.content, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withTopInset([styles.content, widePageStyle(wide, 'reading')], insets.top)} showsVerticalScrollIndicator={false}>
         <View style={hallStyles.topBar}>
           <TopBarButton icon={HALL_ICONS.back} label={t('common.volver')} onPress={() => (router.canGoBack() ? router.back() : router.replace({ pathname: '/classhall/hall', params: { id: hallId } }))} />
           <Image source={HALL_ICONS.logotype} style={hallStyles.logotype} contentFit="contain" contentPosition="left" accessibilityLabel={t('common.hanetClasshall')} />
