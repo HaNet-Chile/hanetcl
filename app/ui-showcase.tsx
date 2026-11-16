@@ -29,6 +29,7 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import { useWide, widePageStyle } from '@/components/ui/wide-page';
 import QRCode from 'react-native-qrcode-svg';
 import Animated, { FadeIn, FadeInRight, FadeOutLeft, useReducedMotion } from 'react-native-reanimated';
 import { EASE_OUT_CUBIC } from '@/constants/motion';
@@ -187,6 +188,7 @@ function RotatingQr() {
 
 export default function UiShowcaseScreen() {
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const [selectedFilter, setSelectedFilter] = useState('Todos');
@@ -292,7 +294,7 @@ export default function UiShowcaseScreen() {
   return (
     <OverlayContext.Provider value={showOverlay}>
     <FrostedScreen style={styles.container}>
-      <ScrollView ref={scrollRef} scrollEnabled={!scratching} contentContainerStyle={withTopInset(styles.content, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} scrollEnabled={!scratching} contentContainerStyle={withTopInset([styles.content, widePageStyle(wide, 'reading')], insets.top)} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Pressable
             accessibilityRole="button"

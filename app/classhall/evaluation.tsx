@@ -16,6 +16,7 @@ import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { t } from '@/i18n';
+import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 
 /** For tables with many skills: each value under its column name, scrolling sideways. */
 function PointCells({ labels, values }: { labels: string[]; values: number[] }) {
@@ -47,6 +48,7 @@ function Points({ values, header }: { values: (string | number)[]; header?: bool
 
 export default function HallEvaluationScreen() {
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const router = useRouter();
   const { hallId, id } = useLocalSearchParams<{ hallId: string; id: string }>();
   const { user, initializing } = useSession();
@@ -150,7 +152,7 @@ export default function HallEvaluationScreen() {
 
   return (
     <FrostedScreen style={styles.container}>
-      <ScrollView contentContainerStyle={withTopInset(styles.content, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withTopInset([styles.content, widePageStyle(wide)], insets.top)} showsVerticalScrollIndicator={false}>
         <View style={hallStyles.topBar}>
           <TopBarButton icon={HALL_ICONS.back} label={t('common.volver')} onPress={() => (router.canGoBack() ? router.back() : router.replace('/classhall'))} />
           <ThemedText numberOfLines={1} style={styles.topTitle}>{t('classhall.evaluation.contenidosAEvaluar')}</ThemedText>
@@ -162,165 +164,177 @@ export default function HallEvaluationScreen() {
 
         {hall && evaluation && (
           <>
-            <View style={styles.heading}>
-              <ThemedText accessibilityRole="header" style={styles.subject}>{hall.subject}</ThemedText>
-              <ThemedText style={styles.subjectLight}>{t('common.tablaDeEspecificaciones')}</ThemedText>
-              <ThemedText style={styles.evaluationTitle}>{evaluation.title}</ThemedText>
-            </View>
-
-            <View>
-              <View style={styles.table}>
-                <View style={styles.tableHead}>
-                  <ThemedText style={styles.tableTitle}>{t('classhall.evaluation.contenidos')}</ThemedText>
-                  {total > 0 && <ThemedText style={styles.tableTotal}>{t('classhall.evaluation.totalTotalPts', { total })}</ThemedText>}
+            {/* On a wide window the table stays on the left and the rest beside it. */}
+            <WideColumns
+              columnStyle={styles.column}
+              stickyAside
+              main={(
+                <>
+                <View style={styles.heading}>
+                  <ThemedText accessibilityRole="header" style={styles.subject}>{hall.subject}</ThemedText>
+                  <ThemedText style={styles.subjectLight}>{t('common.tablaDeEspecificaciones')}</ThemedText>
+                  <ThemedText style={styles.evaluationTitle}>{evaluation.title}</ThemedText>
                 </View>
 
-                {evaluation.contents.length === 0 ? (
-                  <ThemedText style={styles.empty}>{t('classhall.evaluation.tuDocenteTodaviaNoHa')}</ThemedText>
-                ) : (
-                  <>
-                    {inline && (
-                      <View style={styles.headerRow} accessibilityLabel={t('classhall.evaluation.columnasJoinYTotal', { join: skills.join(', ') })}>
-                        <Points header values={labels} />
-                      </View>
-                    )}
-                    {evaluation.contents.map((row, index) => (
-                      <View
-                        key={index}
-                        style={[styles.row, !inline && styles.rowStacked]}
-                        accessible
-                        accessibilityLabel={t('classhall.evaluation.nameValueDescribeTotalRowtotal', { name: row.name, value: row.detail ? `${row.detail}. ` : '', describe: describe(row.points), rowTotal: rowTotal(row.points) })}
-                      >
-                        <View style={styles.rowText}>
-                          <ThemedText style={styles.rowName}>{row.name}</ThemedText>
-                          {!!row.detail && <ThemedText numberOfLines={2} style={styles.rowDetail}>{row.detail}</ThemedText>}
+                <View>
+                  <View style={styles.table}>
+                    <View style={styles.tableHead}>
+                      <ThemedText style={styles.tableTitle}>{t('classhall.evaluation.contenidos')}</ThemedText>
+                      {total > 0 && <ThemedText style={styles.tableTotal}>{t('classhall.evaluation.totalTotalPts', { total })}</ThemedText>}
+                    </View>
+
+                    {evaluation.contents.length === 0 ? (
+                      <ThemedText style={styles.empty}>{t('classhall.evaluation.tuDocenteTodaviaNoHa')}</ThemedText>
+                    ) : (
+                      <>
+                        {inline && (
+                          <View style={styles.headerRow} accessibilityLabel={t('classhall.evaluation.columnasJoinYTotal', { join: skills.join(', ') })}>
+                            <Points header values={labels} />
+                          </View>
+                        )}
+                        {evaluation.contents.map((row, index) => (
+                          <View
+                            key={index}
+                            style={[styles.row, !inline && styles.rowStacked]}
+                            accessible
+                            accessibilityLabel={t('classhall.evaluation.nameValueDescribeTotalRowtotal', { name: row.name, value: row.detail ? `${row.detail}. ` : '', describe: describe(row.points), rowTotal: rowTotal(row.points) })}
+                          >
+                            <View style={styles.rowText}>
+                              <ThemedText style={styles.rowName}>{row.name}</ThemedText>
+                              {!!row.detail && <ThemedText numberOfLines={2} style={styles.rowDetail}>{row.detail}</ThemedText>}
+                            </View>
+                            {inline
+                              ? <Points values={[...skills.map((_, column) => row.points[column] ?? 0), rowTotal(row.points)]} />
+                              : <PointCells labels={labels} values={[...skills.map((_, column) => row.points[column] ?? 0), rowTotal(row.points)]} />}
+                          </View>
+                        ))}
+                        <View style={[styles.totalRow, !inline && styles.totalStacked]} accessible accessibilityLabel={t('classhall.evaluation.totalesDescribeTotalPuntos', { describe: describe(sums), total })}>
+                          {inline ? <Points values={[...sums, total]} /> : (
+                            <>
+                              <ThemedText style={styles.rowName}>{t('classhall.evaluation.totales')}</ThemedText>
+                              <PointCells labels={labels} values={[...sums, total]} />
+                            </>
+                          )}
                         </View>
-                        {inline
-                          ? <Points values={[...skills.map((_, column) => row.points[column] ?? 0), rowTotal(row.points)]} />
-                          : <PointCells labels={labels} values={[...skills.map((_, column) => row.points[column] ?? 0), rowTotal(row.points)]} />}
+                        {legend.length > 0 && (
+                          <ThemedText style={styles.legend}>
+                            {legend.map(skill => `${skillAbbreviation(skill)} ${skill}`).join(' · ')}
+                          </ThemedText>
+                        )}
+                      </>
+                    )}
+                  </View>
+
+                  <View style={styles.cta}>
+                    <HallTile
+                      icon={HALL_ICONS.document}
+                      tone="primary"
+                      title={teDocument ? t('classhall.evaluation.abrirTE') : hall.isTeacher ? t('classhall.evaluation.subirTE') : t('classhall.evaluation.abrirTE')}
+                      subtitle={uploading ? t('common.subiendo') : teDocument ? t('classhall.evaluation.verDocumento') : hall.isTeacher ? t('classhall.evaluation.pdfOFoto') : t('classhall.evaluation.sinDocumento')}
+                      compact
+                      accessibilityLabel={teDocument ? t('classhall.evaluation.abrirLaTablaDeEspecificaciones', { name: teDocument.name }) : hall.isTeacher ? t('classhall.evaluation.subirLaTablaDeEspecificaciones') : t('classhall.evaluation.tablaDeEspecificacionesTodaviaSin')}
+                      onPress={uploading ? undefined : teDocument ? () => void openHallDocument(teDocument) : hall.isTeacher ? uploadTe : undefined}
+                      style={styles.openTile}
+                    />
+                    <View style={styles.facts}>
+                      {evaluation.objectives.some(objective => objective.code) && (
+                        <View style={styles.oa}>
+                          <ThemedText numberOfLines={1} style={styles.oaText}>
+                            {evaluation.objectives.filter(objective => objective.code).map(objective => objective.code).join(' · ')}
+                          </ThemedText>
+                        </View>
+                      )}
+                      {evaluation.exigency !== null && (
+                        <View style={[styles.fact, styles.factRule]}>
+                          <ThemedText style={styles.factLabel}>{t('classhall.evaluation.exigenciaAplicada')}</ThemedText>
+                          <ThemedText style={styles.factValue}>{evaluation.exigency}%</ThemedText>
+                        </View>
+                      )}
+                      <View style={styles.fact} accessible accessibilityLabel={t('classhall.evaluation.diaDeLaEvaluacionHalllongdate', { hallLongDate: hallLongDate(evaluation.date) })}>
+                        <ThemedText style={styles.factLabel}>{t('classhall.evaluation.diaDeLaEvaluacion')}</ThemedText>
+                        <ThemedText style={styles.factValue}>{hallShortDate(evaluation.date)}</ThemedText>
                       </View>
+                    </View>
+                  </View>
+                </View>
+                </>
+              )}
+              aside={(
+                <>
+                <ThemedText style={styles.when}>{hallLongDate(evaluation.date)}</ThemedText>
+
+                {evaluation.objectives.some(objective => objective.text) && (
+                  <View style={styles.infoCard}>
+                    <ThemedText style={styles.infoTitle}>{t('classhall.evaluationForm.objetivosDeAprendizaje')}</ThemedText>
+                    {evaluation.objectives.map((objective, index) => (
+                      <ThemedText key={index} selectable style={styles.infoText}>
+                        {!!objective.code && <ThemedText style={styles.infoCode}>{objective.code}{objective.text ? ' ' : ''}</ThemedText>}
+                        {objective.text}
+                      </ThemedText>
                     ))}
-                    <View style={[styles.totalRow, !inline && styles.totalStacked]} accessible accessibilityLabel={t('classhall.evaluation.totalesDescribeTotalPuntos', { describe: describe(sums), total })}>
-                      {inline ? <Points values={[...sums, total]} /> : (
-                        <>
-                          <ThemedText style={styles.rowName}>{t('classhall.evaluation.totales')}</ThemedText>
-                          <PointCells labels={labels} values={[...sums, total]} />
-                        </>
+                  </View>
+                )}
+
+                {!!evaluation.prep && (
+                  <View style={styles.infoCard}>
+                    <ThemedText style={styles.infoTitle}>{t('classhall.evaluationForm.comoPrepararse')}</ThemedText>
+                    <ThemedText selectable style={styles.infoText}>{evaluation.prep}</ThemedText>
+                  </View>
+                )}
+
+                <View style={styles.attribution}>
+                  <Image source={HALL_ICONS.badge} style={styles.badge} contentFit="contain" />
+                  <View style={styles.attributionText}>
+                    <ThemedText style={styles.attributionLabel}>{t('common.verificadoPorUnDocente')}</ThemedText>
+                    <ThemedText style={styles.attributionName}>{evaluation.authorName}</ThemedText>
+                  </View>
+                </View>
+                <ThemedText style={styles.finePrint}>
+                  {t('classhall.evaluation.tambienApareceEnElCalendar')}
+                </ThemedText>
+
+                {hall.isTeacher && hall.gradesOn !== false && (() => {
+                  const count = evaluation.gradesCount ?? 0;
+                  const expected = detail?.expectedSubmissions ?? null;
+                  const published = !!evaluation.gradesPublishedAt;
+                  const status = count === 0 ? t('classhall.evaluation.sinNotas') : published ? t('classhall.evaluation.publicadas') : t('classhall.evaluation.borrador');
+                  return (
+                    <View style={styles.infoCard}>
+                      <View style={styles.gradesHead}>
+                        <ThemedText style={styles.infoTitle}>{t('classhall.evaluation.notas')}</ThemedText>
+                        <View style={[styles.gradesStatus, published && styles.gradesStatusPublished]}>
+                          <ThemedText style={[styles.gradesStatusText, published && styles.gradesStatusTextPublished]}>{status}</ThemedText>
+                        </View>
+                      </View>
+                      <ThemedText style={styles.infoText}>
+                        {count === 0
+                          ? t('classhall.evaluation.escribeLasNotasDeEsta')
+                          : published
+                            ? t('classhall.evaluation.countvalueValueConNotaSi', { countValue: count, value: expected ? ` de ${expected}` : '' })
+                            : t('classhall.evaluation.countvalueValueConNotaLos', { countValue: count, value: expected ? ` de ${expected}` : '' })}
+                      </ThemedText>
+                      <HanetButton
+                        label={count === 0 ? t('classhall.evaluation.ponerNotas') : t('classhall.evaluation.editarNotas')}
+                        onPress={() => router.push({ pathname: '/classhall/grades', params: { hallId, id } })}
+                      />
+                      {count > 0 && !published && (
+                        <HanetButton label={t('classhall.evaluation.publicarNotas')} variant="accent" onPress={() => { setPublishError(null); setConfirmPublish(true); }} />
                       )}
                     </View>
-                    {legend.length > 0 && (
-                      <ThemedText style={styles.legend}>
-                        {legend.map(skill => `${skillAbbreviation(skill)} ${skill}`).join(' · ')}
-                      </ThemedText>
-                    )}
-                  </>
+                  );
+                })()}
+
+                {!!uploadError && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{uploadError}</ThemedText>}
+                {hall.isTeacher && (
+                  <View style={styles.teacherActions}>
+                    <HallPill label={t('classhall.evaluationForm.editarEvaluacion')} tone="light" onPress={() => router.push({ pathname: '/classhall/evaluation-form', params: { hallId, id } })} />
+                    {!!teDocument && <HallPill label={uploading ? t('common.subiendo') : t('classhall.evaluation.cambiarTE')} disabled={uploading} onPress={uploadTe} />}
+                    <HallPill label={t('common.eliminar')} onPress={() => { setDeleteError(null); setConfirming(true); }} />
+                  </View>
                 )}
-              </View>
-
-              <View style={styles.cta}>
-                <HallTile
-                  icon={HALL_ICONS.document}
-                  tone="primary"
-                  title={teDocument ? t('classhall.evaluation.abrirTE') : hall.isTeacher ? t('classhall.evaluation.subirTE') : t('classhall.evaluation.abrirTE')}
-                  subtitle={uploading ? t('common.subiendo') : teDocument ? t('classhall.evaluation.verDocumento') : hall.isTeacher ? t('classhall.evaluation.pdfOFoto') : t('classhall.evaluation.sinDocumento')}
-                  compact
-                  accessibilityLabel={teDocument ? t('classhall.evaluation.abrirLaTablaDeEspecificaciones', { name: teDocument.name }) : hall.isTeacher ? t('classhall.evaluation.subirLaTablaDeEspecificaciones') : t('classhall.evaluation.tablaDeEspecificacionesTodaviaSin')}
-                  onPress={uploading ? undefined : teDocument ? () => void openHallDocument(teDocument) : hall.isTeacher ? uploadTe : undefined}
-                  style={styles.openTile}
-                />
-                <View style={styles.facts}>
-                  {evaluation.objectives.some(objective => objective.code) && (
-                    <View style={styles.oa}>
-                      <ThemedText numberOfLines={1} style={styles.oaText}>
-                        {evaluation.objectives.filter(objective => objective.code).map(objective => objective.code).join(' · ')}
-                      </ThemedText>
-                    </View>
-                  )}
-                  {evaluation.exigency !== null && (
-                    <View style={[styles.fact, styles.factRule]}>
-                      <ThemedText style={styles.factLabel}>{t('classhall.evaluation.exigenciaAplicada')}</ThemedText>
-                      <ThemedText style={styles.factValue}>{evaluation.exigency}%</ThemedText>
-                    </View>
-                  )}
-                  <View style={styles.fact} accessible accessibilityLabel={t('classhall.evaluation.diaDeLaEvaluacionHalllongdate', { hallLongDate: hallLongDate(evaluation.date) })}>
-                    <ThemedText style={styles.factLabel}>{t('classhall.evaluation.diaDeLaEvaluacion')}</ThemedText>
-                    <ThemedText style={styles.factValue}>{hallShortDate(evaluation.date)}</ThemedText>
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            <ThemedText style={styles.when}>{hallLongDate(evaluation.date)}</ThemedText>
-
-            {evaluation.objectives.some(objective => objective.text) && (
-              <View style={styles.infoCard}>
-                <ThemedText style={styles.infoTitle}>{t('classhall.evaluationForm.objetivosDeAprendizaje')}</ThemedText>
-                {evaluation.objectives.map((objective, index) => (
-                  <ThemedText key={index} selectable style={styles.infoText}>
-                    {!!objective.code && <ThemedText style={styles.infoCode}>{objective.code}{objective.text ? ' ' : ''}</ThemedText>}
-                    {objective.text}
-                  </ThemedText>
-                ))}
-              </View>
-            )}
-
-            {!!evaluation.prep && (
-              <View style={styles.infoCard}>
-                <ThemedText style={styles.infoTitle}>{t('classhall.evaluationForm.comoPrepararse')}</ThemedText>
-                <ThemedText selectable style={styles.infoText}>{evaluation.prep}</ThemedText>
-              </View>
-            )}
-
-            <View style={styles.attribution}>
-              <Image source={HALL_ICONS.badge} style={styles.badge} contentFit="contain" />
-              <View style={styles.attributionText}>
-                <ThemedText style={styles.attributionLabel}>{t('common.verificadoPorUnDocente')}</ThemedText>
-                <ThemedText style={styles.attributionName}>{evaluation.authorName}</ThemedText>
-              </View>
-            </View>
-            <ThemedText style={styles.finePrint}>
-              {t('classhall.evaluation.tambienApareceEnElCalendar')}
-            </ThemedText>
-
-            {hall.isTeacher && hall.gradesOn !== false && (() => {
-              const count = evaluation.gradesCount ?? 0;
-              const expected = detail?.expectedSubmissions ?? null;
-              const published = !!evaluation.gradesPublishedAt;
-              const status = count === 0 ? t('classhall.evaluation.sinNotas') : published ? t('classhall.evaluation.publicadas') : t('classhall.evaluation.borrador');
-              return (
-                <View style={styles.infoCard}>
-                  <View style={styles.gradesHead}>
-                    <ThemedText style={styles.infoTitle}>{t('classhall.evaluation.notas')}</ThemedText>
-                    <View style={[styles.gradesStatus, published && styles.gradesStatusPublished]}>
-                      <ThemedText style={[styles.gradesStatusText, published && styles.gradesStatusTextPublished]}>{status}</ThemedText>
-                    </View>
-                  </View>
-                  <ThemedText style={styles.infoText}>
-                    {count === 0
-                      ? t('classhall.evaluation.escribeLasNotasDeEsta')
-                      : published
-                        ? t('classhall.evaluation.countvalueValueConNotaSi', { countValue: count, value: expected ? ` de ${expected}` : '' })
-                        : t('classhall.evaluation.countvalueValueConNotaLos', { countValue: count, value: expected ? ` de ${expected}` : '' })}
-                  </ThemedText>
-                  <HanetButton
-                    label={count === 0 ? t('classhall.evaluation.ponerNotas') : t('classhall.evaluation.editarNotas')}
-                    onPress={() => router.push({ pathname: '/classhall/grades', params: { hallId, id } })}
-                  />
-                  {count > 0 && !published && (
-                    <HanetButton label={t('classhall.evaluation.publicarNotas')} variant="accent" onPress={() => { setPublishError(null); setConfirmPublish(true); }} />
-                  )}
-                </View>
-              );
-            })()}
-
-            {!!uploadError && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{uploadError}</ThemedText>}
-            {hall.isTeacher && (
-              <View style={styles.teacherActions}>
-                <HallPill label={t('classhall.evaluationForm.editarEvaluacion')} tone="light" onPress={() => router.push({ pathname: '/classhall/evaluation-form', params: { hallId, id } })} />
-                {!!teDocument && <HallPill label={uploading ? t('common.subiendo') : t('classhall.evaluation.cambiarTE')} disabled={uploading} onPress={uploadTe} />}
-                <HallPill label={t('common.eliminar')} onPress={() => { setDeleteError(null); setConfirming(true); }} />
-              </View>
-            )}
+                </>
+              )}
+            />
           </>
         )}
       </ScrollView>
@@ -368,6 +382,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: AppSpacing.md,
     paddingBottom: TAB_BAR_CLEARANCE + AppSpacing.xl,
+    gap: AppSpacing.md,
+  },
+  column: {
     gap: AppSpacing.md,
   },
   topTitle: {

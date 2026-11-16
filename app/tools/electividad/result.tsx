@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/themed-text';
 import { PageHeader } from '@/components/ui/page-header';
 import { AreaIcon, FIELD_AREA, KnowledgeIcon } from '@/components/tools/area-icon';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { allAttempts, currentResult, formatDuration, getElectividad, headline, peekElectividad } from '@/services/electividad-service';
@@ -239,6 +240,7 @@ function Duels({ result }: { result: ElectividadResult }) {
 
 export default function ElectividadResultScreen() {
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const router = useRouter();
   // Without `attempt` it shows the current result; with it, an earlier one.
   const { attempt } = useLocalSearchParams<{ attempt?: string }>();
@@ -281,7 +283,7 @@ export default function ElectividadResultScreen() {
 
   return (
     <FrostedScreen style={styles.screen}>
-      <ScrollView contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withTopInset([styles.page, widePageStyle(wide)], insets.top)} showsVerticalScrollIndicator={false}>
         <PageHeader
           above={!isCurrent && (
             <View style={styles.pastChip}>
@@ -293,57 +295,73 @@ export default function ElectividadResultScreen() {
           title={headline(result)}
         />
 
-        <View style={styles.hero}>
-          <View style={styles.heroChip}>
-            <Ionicons name="sparkles" size={13} color={AppColors.textPrimary} />
-            <ThemedText style={styles.heroChipText}>{t('common.tusAreasDeMayorInteres')}</ThemedText>
-          </View>
-          <ThemedText style={styles.heroTitle}>{list(top.map(area => area.name))}</ThemedText>
-          <View style={styles.heroTiles}>
-            {top.map(area => (
-              <View key={area.id} style={styles.heroTile} accessible accessibilityLabel={t('tools.electividad.result.rankNamePercentPorCiento', { rank: area.rank, name: area.name, percent: area.percent })}>
-                <AreaIcon area={area.id} size={24} color={AppColors.textPrimary} />
-                <ThemedText style={styles.heroPercent}>{area.percent}%</ThemedText>
-                <ThemedText style={styles.heroName} numberOfLines={2}>{area.name}</ThemedText>
+        {/* Beside the side navigation (wide web window) the summary stays on
+            the left while the detail scrolls beside it. */}
+        <WideColumns
+          asideLeft
+          asideFirstOnPhone
+          asideWidth={400}
+          stickyAside
+          aside={(
+            <>
+              <View style={styles.hero}>
+                <View style={styles.heroChip}>
+                  <Ionicons name="sparkles" size={13} color={AppColors.textPrimary} />
+                  <ThemedText style={styles.heroChipText}>{t('common.tusAreasDeMayorInteres')}</ThemedText>
+                </View>
+                <ThemedText style={styles.heroTitle}>{list(top.map(area => area.name))}</ThemedText>
+                <View style={styles.heroTiles}>
+                  {top.map(area => (
+                    <View key={area.id} style={styles.heroTile} accessible accessibilityLabel={t('tools.electividad.result.rankNamePercentPorCiento', { rank: area.rank, name: area.name, percent: area.percent })}>
+                      <AreaIcon area={area.id} size={24} color={AppColors.textPrimary} />
+                      <ThemedText style={styles.heroPercent}>{area.percent}%</ThemedText>
+                      <ThemedText style={styles.heroName} numberOfLines={2}>{area.name}</ThemedText>
+                    </View>
+                  ))}
+                </View>
               </View>
-            ))}
-          </View>
-        </View>
 
-        <ThemedText style={styles.explain}>
-          {t('tools.electividad.result.elTestMideTusPreferencias')}
-        </ThemedText>
+              <ThemedText style={styles.explain}>
+                {t('tools.electividad.result.elTestMideTusPreferencias')}
+              </ThemedText>
 
-        <Stats result={result} />
-        <Distribution result={result} />
-        <Groups result={result} previous={previous} />
-        <Careers result={result} />
-        <Duels result={result} />
+              <Stats result={result} />
+              <Distribution result={result} />
+            </>
+          )}
+          main={(
+            <>
+              <Groups result={result} previous={previous} />
+              <Careers result={result} />
+              <Duels result={result} />
 
-        <View style={styles.cta}>
-          <View style={styles.ctaHead}>
-            <Ionicons name="school-outline" size={20} color={AppColors.textPrimary} />
-            <ThemedText style={styles.ctaTitle}>{t('tools.electividad.result.postulacionAElectivos')}</ThemedText>
-            <View style={styles.soonChip}>
-              <ThemedText style={styles.soonChipText}>{t('common.proximamente')}</ThemedText>
-            </View>
-          </View>
-          <ThemedText style={styles.ctaText}>{t('tools.electividad.result.aquiPodrasVerLosElectivos')}</ThemedText>
-        </View>
+              <View style={styles.cta}>
+                <View style={styles.ctaHead}>
+                  <Ionicons name="school-outline" size={20} color={AppColors.textPrimary} />
+                  <ThemedText style={styles.ctaTitle}>{t('tools.electividad.result.postulacionAElectivos')}</ThemedText>
+                  <View style={styles.soonChip}>
+                    <ThemedText style={styles.soonChipText}>{t('common.proximamente')}</ThemedText>
+                  </View>
+                </View>
+                <ThemedText style={styles.ctaText}>{t('tools.electividad.result.aquiPodrasVerLosElectivos')}</ThemedText>
+              </View>
 
-        {isCurrent && (
-          <HanetButton
-            label={t('tools.electividad.repetirElTest')}
-            variant="surface"
-            icon={<Ionicons name="refresh" size={18} color={AppColors.textPrimary} />}
-            onPress={() => router.push('/tools/electividad/test')}
-          />
-        )}
+              {isCurrent && (
+                <HanetButton
+                  label={t('tools.electividad.repetirElTest')}
+                  variant="surface"
+                  icon={<Ionicons name="refresh" size={18} color={AppColors.textPrimary} />}
+                  onPress={() => router.push('/tools/electividad/test')}
+                />
+              )}
 
-        <View style={styles.visibility}>
-          <Ionicons name="eye-outline" size={16} color={AppColors.textSecondary} />
-          <ThemedText style={styles.visibilityText}>{t('tools.electividad.result.resultadoVisibleParaTiY')}</ThemedText>
-        </View>
+              <View style={styles.visibility}>
+                <Ionicons name="eye-outline" size={16} color={AppColors.textSecondary} />
+                <ThemedText style={styles.visibilityText}>{t('tools.electividad.result.resultadoVisibleParaTiY')}</ThemedText>
+              </View>
+            </>
+          )}
+        />
       </ScrollView>
     </FrostedScreen>
   );

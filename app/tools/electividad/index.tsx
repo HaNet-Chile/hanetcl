@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/themed-text';
 import { PageHeader } from '@/components/ui/page-header';
 import { AreaIcon } from '@/components/tools/area-icon';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { useWide, widePageStyle } from '@/components/ui/wide-page';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
@@ -76,10 +77,12 @@ export default function ElectividadScreen() {
 
   const result = state?.result ?? null;
   const answered = progress ? Object.keys(progress.answers).length : 0;
+  // A wide web window keeps this short page at reading width.
+  const wide = useWide();
 
   return (
     <FrostedScreen style={styles.screen}>
-      <ScrollView contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withTopInset([styles.page, widePageStyle(wide, 'reading')], insets.top)} showsVerticalScrollIndicator={false}>
         <PageHeader eyebrow={t('common.herramientas')} title={t('tools.electividad.hanetElectividad')} intro={t('tools.electividad.unTestDeInteresesPara')} />
 
         <View style={styles.iconGrid} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">

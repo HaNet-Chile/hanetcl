@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { WideGrid, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen } from '@/components/ui/frosted-screen';
 import { t } from '@/i18n';
@@ -25,6 +26,7 @@ const byWhen = (a: AnniversaryActivity, b: AnniversaryActivity) =>
 export default function AnniversaryActivities() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const { user } = useSession();
   const state = useAnniversaryState();
   const [group, setGroup] = useState<ActivityGroup | null>(null);
@@ -65,7 +67,7 @@ export default function AnniversaryActivities() {
 
   return (
     <FrostedScreen style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + AppSpacing.xl }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.content, widePageStyle(wide), { paddingTop: insets.top + (wide ? 28 : AppSpacing.xl) }]} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           {!!anniversary && <ThemedText style={styles.kicker}>{anniversary.title}</ThemedText>}
           <FlexText accessibilityRole="header" style={styles.title}>{t('anniversary.activities.actividades')}</FlexText>
@@ -86,7 +88,7 @@ export default function AnniversaryActivities() {
         ) : (
           <>
             {groups.length > 1 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.filters}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={!wide && styles.bleed} contentContainerStyle={[styles.filters, wide && styles.filtersWide]}>
                 <HanetChip label={t('anniversary.activities.todas')} selected={!group} onPress={() => choose(null)} />
                 {groups.map(item => (
                   <HanetChip
@@ -100,6 +102,8 @@ export default function AnniversaryActivities() {
               </ScrollView>
             )}
 
+            {/* On a wide window the groups sit two by two. */}
+            <WideGrid columns={shown.length > 1 ? 2 : 1}>
             {anniversary && shown.map(item => {
               const list = activities.filter(activity => activity.group === item.value).sort(byWhen);
               return (
@@ -109,6 +113,7 @@ export default function AnniversaryActivities() {
                 </View>
               );
             })}
+            </WideGrid>
 
             {anniversary && activities.length === 0 && (
               <ThemedText style={styles.emptyText}>
@@ -117,7 +122,7 @@ export default function AnniversaryActivities() {
             )}
 
             {organizer && anniversary && (
-              <View style={styles.actions}>
+              <View style={[styles.actions, wide && styles.actionsWide]}>
                 <HanetButton label={t('common.nuevaActividad')} variant="accent" onPress={() => router.push('/anniversary/activity')} />
                 <HanetButton
                   label={busy ? t('common.cargando') : activities.length ? t('anniversary.activities.agregarLasTipicasQueFalten') : t('anniversary.activities.cargarActividadesTipicas')}
@@ -178,6 +183,12 @@ const styles = StyleSheet.create({
   filters: {
     gap: AppSpacing.sm,
     paddingHorizontal: AppSpacing.lg,
+  },
+  filtersWide: {
+    paddingHorizontal: 0,
+  },
+  actionsWide: {
+    flexDirection: 'row',
   },
   group: {
     gap: AppSpacing.md,

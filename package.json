@@ -1,7 +1,7 @@
 {
   "name": "hanetcl",
   "main": "expo-router/entry",
-  "version": "0.10.3-beta",
+  "version": "0.11.0-beta",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -13,6 +13,7 @@
     "version:bump": "node ./scripts/version.js bump",
     "version:check": "node ./scripts/version.js check",
     "i18n:check": "node ./scripts/i18n-extract.js",
+    "desktop:check": "node ./scripts/desktop-screens.js",
     "i18n:extract": "node ./scripts/i18n-extract.js --write",
     "postinstall": "node ./scripts/patch-expo-widgets.js && node ./scripts/patch-expo-share-intent.js"
   },

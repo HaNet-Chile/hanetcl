@@ -5,6 +5,7 @@ import { HanetChip } from '@/components/ui/hanet-chip';
 import { HanetDialog, HanetDialogActions, dialogStyles } from '@/components/ui/hanet-dialog';
 import { KeyboardScroll } from '@/components/ui/keyboard';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { averageOf, formatGrade, formatNumber, loadCalculator, neededGrade, parseGrade, saveCalculator, typeGrade } from '@/services/grades';
 import type { CalculatorState, GradeEntry, NeedResult } from '@/services/grades';
@@ -100,148 +101,162 @@ export default function GradesScreen() {
       : need.kind === 'impossible' ? t('tools.grades.tuPromedioQuedaBajoGoal', { goal: goalText }) : '';
   }
   const tone = need?.kind === 'impossible' ? 'low' : need?.kind === 'reached' ? 'done' : 'plain';
+  // Beside the side navigation (wide web window): the grades on the left, the
+  // average and what is needed beside them.
+  const wide = useWide();
 
   return (
     <FrostedScreen style={styles.screen}>
-      <KeyboardScroll contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
+      <KeyboardScroll contentContainerStyle={withTopInset([styles.page, widePageStyle(wide)], insets.top)} showsVerticalScrollIndicator={false}>
         <PageHeader eyebrow={t('common.herramientas')} title={t('tools.grades.calculadoraDeNotas')} intro={t('tools.grades.tuPromedioYLaNota')} />
 
-        <View style={styles.modes}>
-          <HanetChip label={t('tools.grades.mismoPeso')} selected={!state.weighted} onPress={() => change({ weighted: false })} />
-          <HanetChip label={t('tools.grades.conPorcentajes')} selected={state.weighted} onPress={() => change({ weighted: true })} />
-        </View>
+        <WideColumns
+          asideWidth={380}
+          stickyAside
+          main={(
+            <>
+              <View style={styles.modes}>
+                <HanetChip label={t('tools.grades.mismoPeso')} selected={!state.weighted} onPress={() => change({ weighted: false })} />
+                <HanetChip label={t('tools.grades.conPorcentajes')} selected={state.weighted} onPress={() => change({ weighted: true })} />
+              </View>
 
-        <View style={styles.card}>
-          {state.entries.map((entry, index) => {
-            const wrong = invalid.has(entry.id);
-            const gradeWrong = wrong && parseGrade(entry.grade) === null;
-            return (
-              <View key={entry.id} style={styles.entry}>
-                <ThemedText style={styles.entryIndex}>{index + 1}</ThemedText>
-                <TextInput
-                  accessibilityLabel={t('tools.grades.notaN', { n: index + 1 })}
-                  value={entry.grade}
-                  onChangeText={text => updateEntry(entry.id, { grade: typeGrade(text, entry.grade) })}
-                  placeholder={t('tools.grades.nota')}
-                  placeholderTextColor={AppColors.surfaceMuted}
-                  keyboardType="number-pad"
-                  maxLength={3}
-                  selectionColor={AppColors.accent}
-                  style={[styles.input, styles.gradeInput, gradeWrong && styles.inputError]}
-                />
-                {state.weighted && (
-                  <View style={styles.weightBox}>
-                    <TextInput
-                      accessibilityLabel={t('tools.grades.porcentajeDeLaNotaN', { n: index + 1 })}
-                      value={entry.weight}
-                      onChangeText={weight => updateEntry(entry.id, { weight })}
-                      placeholder={t('tools.grades.peso')}
-                      placeholderTextColor={AppColors.surfaceMuted}
-                      keyboardType="decimal-pad"
-                      maxLength={5}
-                      selectionColor={AppColors.accent}
-                      style={[styles.input, styles.weightInput, wrong && !gradeWrong && styles.inputError]}
-                    />
-                    <ThemedText style={styles.weightSign}>%</ThemedText>
+              <View style={styles.card}>
+                {state.entries.map((entry, index) => {
+                  const wrong = invalid.has(entry.id);
+                  const gradeWrong = wrong && parseGrade(entry.grade) === null;
+                  return (
+                    <View key={entry.id} style={styles.entry}>
+                      <ThemedText style={styles.entryIndex}>{index + 1}</ThemedText>
+                      <TextInput
+                        accessibilityLabel={t('tools.grades.notaN', { n: index + 1 })}
+                        value={entry.grade}
+                        onChangeText={text => updateEntry(entry.id, { grade: typeGrade(text, entry.grade) })}
+                        placeholder={t('tools.grades.nota')}
+                        placeholderTextColor={AppColors.surfaceMuted}
+                        keyboardType="number-pad"
+                        maxLength={3}
+                        selectionColor={AppColors.accent}
+                        style={[styles.input, styles.gradeInput, gradeWrong && styles.inputError]}
+                      />
+                      {state.weighted && (
+                        <View style={styles.weightBox}>
+                          <TextInput
+                            accessibilityLabel={t('tools.grades.porcentajeDeLaNotaN', { n: index + 1 })}
+                            value={entry.weight}
+                            onChangeText={weight => updateEntry(entry.id, { weight })}
+                            placeholder={t('tools.grades.peso')}
+                            placeholderTextColor={AppColors.surfaceMuted}
+                            keyboardType="decimal-pad"
+                            maxLength={5}
+                            selectionColor={AppColors.accent}
+                            style={[styles.input, styles.weightInput, wrong && !gradeWrong && styles.inputError]}
+                          />
+                          <ThemedText style={styles.weightSign}>%</ThemedText>
+                        </View>
+                      )}
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('tools.grades.quitarLaNotaN', { n: index + 1 })}
+                        hitSlop={6}
+                        onPress={() => removeEntry(entry.id)}
+                        style={({ pressed }) => [styles.remove, pressed && AppPressed]}
+                      >
+                        <Ionicons name="close" size={18} color={AppColors.textSecondary} />
+                      </Pressable>
+                    </View>
+                  );
+                })}
+                {invalid.size > 0 && (
+                  <ThemedText style={styles.error}>
+                    {state.weighted ? t('tools.grades.revisaLasMarcadasCadaNota') : t('tools.grades.revisaLasMarcadasLasNotas')}
+                  </ThemedText>
+                )}
+                {overWeight && <ThemedText style={styles.error}>{t('tools.grades.losPorcentajesSumanMasDe')}</ThemedText>}
+                {state.entries.length < MAX_ENTRIES && (
+                  <HanetButton label={t('tools.grades.agregarNota')} variant="surface" icon={<Ionicons name="add" size={18} color={AppColors.textPrimary} />} onPress={addEntry} />
+                )}
+              </View>
+            </>
+          )}
+          aside={(
+            <>
+              <View style={styles.average} accessible accessibilityLiveRegion="polite" accessibilityLabel={average.rounded === null ? t('tools.grades.sinNotasTodavia') : t('tools.grades.promedioValue', { value: formatGrade(average.rounded) })}>
+                <View style={styles.averageBody}>
+                  <ThemedText style={styles.averageLabel}>{t('tools.grades.promedio')}</ThemedText>
+                  <ThemedText style={styles.averageMeta}>
+                    {average.raw === null
+                      ? t('tools.grades.escribeTusNotasArriba')
+                      : state.weighted
+                        ? t('tools.grades.conElWeightDeLa', { weight: formatNumber(average.usedWeight) })
+                        : t('tools.grades.countNotasSinRedondearRaw', { count: average.count, raw: (Math.floor(average.raw * 100) / 100).toFixed(2).replace('.', ',') })}
+                  </ThemedText>
+                </View>
+                <ThemedText style={styles.averageValue}>{average.rounded === null ? '–' : formatGrade(average.rounded)}</ThemedText>
+              </View>
+
+              <View style={styles.card}>
+                <ThemedText accessibilityRole="header" style={styles.sectionTitle}>{t('tools.grades.cuantoNecesito')}</ThemedText>
+                <View style={styles.row}>
+                  <ThemedText style={styles.rowLabel}>{t('tools.grades.quieroTerminarCon')}</ThemedText>
+                  <TextInput
+                    accessibilityLabel={t('tools.grades.notaQueQuieresTener')}
+                    value={state.goal}
+                    onChangeText={text => change({ goal: typeGrade(text, state.goal) })}
+                    keyboardType="number-pad"
+                    maxLength={3}
+                    selectionColor={AppColors.accent}
+                    style={[styles.input, styles.goalInput, goal === null && styles.inputError]}
+                  />
+                </View>
+                {state.weighted ? (
+                  <View style={styles.row}>
+                    <ThemedText style={styles.rowLabel}>{t('tools.grades.faltaPorEvaluar')}</ThemedText>
+                    <ThemedText style={styles.rowValue}>{formatNumber(left)} %</ThemedText>
+                  </View>
+                ) : (
+                  <View style={styles.row}>
+                    <ThemedText style={styles.rowLabel}>{t('tools.grades.notasQueFaltan')}</ThemedText>
+                    <View style={styles.stepper}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('tools.grades.unaNotaMenos')}
+                        disabled={state.remaining <= 0}
+                        onPress={() => change({ remaining: state.remaining - 1 })}
+                        style={({ pressed }) => [styles.stepButton, pressed && AppPressed, state.remaining <= 0 && styles.disabled]}
+                      >
+                        <Ionicons name="remove" size={18} color={AppColors.textPrimary} />
+                      </Pressable>
+                      <ThemedText style={styles.stepValue}>{state.remaining}</ThemedText>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('tools.grades.unaNotaMas')}
+                        disabled={state.remaining >= MAX_REMAINING}
+                        onPress={() => change({ remaining: state.remaining + 1 })}
+                        style={({ pressed }) => [styles.stepButton, pressed && AppPressed, state.remaining >= MAX_REMAINING && styles.disabled]}
+                      >
+                        <Ionicons name="add" size={18} color={AppColors.textPrimary} />
+                      </Pressable>
+                    </View>
                   </View>
                 )}
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('tools.grades.quitarLaNotaN', { n: index + 1 })}
-                  hitSlop={6}
-                  onPress={() => removeEntry(entry.id)}
-                  style={({ pressed }) => [styles.remove, pressed && AppPressed]}
-                >
-                  <Ionicons name="close" size={18} color={AppColors.textSecondary} />
-                </Pressable>
+                {goal === null && <ThemedText style={styles.error}>{t('tools.grades.escribeUnaNotaEntre10')}</ThemedText>}
+                {!!message && (
+                  <View style={[styles.verdict, tone === 'low' && styles.verdictLow, tone === 'done' && styles.verdictDone]}>
+                    <Ionicons
+                      name={tone === 'low' ? 'alert-circle-outline' : tone === 'done' ? 'checkmark-circle-outline' : 'flag-outline'}
+                      size={20}
+                      color={tone === 'done' ? AppColors.textOnLight : AppColors.textPrimary}
+                    />
+                    <ThemedText accessibilityLiveRegion="polite" style={[styles.verdictText, tone === 'done' && styles.verdictTextDone]}>{message}</ThemedText>
+                  </View>
+                )}
               </View>
-            );
-          })}
-          {invalid.size > 0 && (
-            <ThemedText style={styles.error}>
-              {state.weighted ? t('tools.grades.revisaLasMarcadasCadaNota') : t('tools.grades.revisaLasMarcadasLasNotas')}
-            </ThemedText>
-          )}
-          {overWeight && <ThemedText style={styles.error}>{t('tools.grades.losPorcentajesSumanMasDe')}</ThemedText>}
-          {state.entries.length < MAX_ENTRIES && (
-            <HanetButton label={t('tools.grades.agregarNota')} variant="surface" icon={<Ionicons name="add" size={18} color={AppColors.textPrimary} />} onPress={addEntry} />
-          )}
-        </View>
 
-        <View style={styles.average} accessible accessibilityLiveRegion="polite" accessibilityLabel={average.rounded === null ? t('tools.grades.sinNotasTodavia') : t('tools.grades.promedioValue', { value: formatGrade(average.rounded) })}>
-          <View style={styles.averageBody}>
-            <ThemedText style={styles.averageLabel}>{t('tools.grades.promedio')}</ThemedText>
-            <ThemedText style={styles.averageMeta}>
-              {average.raw === null
-                ? t('tools.grades.escribeTusNotasArriba')
-                : state.weighted
-                  ? t('tools.grades.conElWeightDeLa', { weight: formatNumber(average.usedWeight) })
-                  : t('tools.grades.countNotasSinRedondearRaw', { count: average.count, raw: (Math.floor(average.raw * 100) / 100).toFixed(2).replace('.', ',') })}
-            </ThemedText>
-          </View>
-          <ThemedText style={styles.averageValue}>{average.rounded === null ? '–' : formatGrade(average.rounded)}</ThemedText>
-        </View>
-
-        <View style={styles.card}>
-          <ThemedText accessibilityRole="header" style={styles.sectionTitle}>{t('tools.grades.cuantoNecesito')}</ThemedText>
-          <View style={styles.row}>
-            <ThemedText style={styles.rowLabel}>{t('tools.grades.quieroTerminarCon')}</ThemedText>
-            <TextInput
-              accessibilityLabel={t('tools.grades.notaQueQuieresTener')}
-              value={state.goal}
-              onChangeText={text => change({ goal: typeGrade(text, state.goal) })}
-              keyboardType="number-pad"
-              maxLength={3}
-              selectionColor={AppColors.accent}
-              style={[styles.input, styles.goalInput, goal === null && styles.inputError]}
-            />
-          </View>
-          {state.weighted ? (
-            <View style={styles.row}>
-              <ThemedText style={styles.rowLabel}>{t('tools.grades.faltaPorEvaluar')}</ThemedText>
-              <ThemedText style={styles.rowValue}>{formatNumber(left)} %</ThemedText>
-            </View>
-          ) : (
-            <View style={styles.row}>
-              <ThemedText style={styles.rowLabel}>{t('tools.grades.notasQueFaltan')}</ThemedText>
-              <View style={styles.stepper}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('tools.grades.unaNotaMenos')}
-                  disabled={state.remaining <= 0}
-                  onPress={() => change({ remaining: state.remaining - 1 })}
-                  style={({ pressed }) => [styles.stepButton, pressed && AppPressed, state.remaining <= 0 && styles.disabled]}
-                >
-                  <Ionicons name="remove" size={18} color={AppColors.textPrimary} />
-                </Pressable>
-                <ThemedText style={styles.stepValue}>{state.remaining}</ThemedText>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('tools.grades.unaNotaMas')}
-                  disabled={state.remaining >= MAX_REMAINING}
-                  onPress={() => change({ remaining: state.remaining + 1 })}
-                  style={({ pressed }) => [styles.stepButton, pressed && AppPressed, state.remaining >= MAX_REMAINING && styles.disabled]}
-                >
-                  <Ionicons name="add" size={18} color={AppColors.textPrimary} />
-                </Pressable>
-              </View>
-            </View>
+              <ThemedText style={styles.note}>{t('tools.grades.tusNotasQuedanSoloEn')}</ThemedText>
+              <HanetButton label={t('tools.grades.borrarTodo')} variant="surface" onPress={() => setClearOpen(true)} />
+            </>
           )}
-          {goal === null && <ThemedText style={styles.error}>{t('tools.grades.escribeUnaNotaEntre10')}</ThemedText>}
-          {!!message && (
-            <View style={[styles.verdict, tone === 'low' && styles.verdictLow, tone === 'done' && styles.verdictDone]}>
-              <Ionicons
-                name={tone === 'low' ? 'alert-circle-outline' : tone === 'done' ? 'checkmark-circle-outline' : 'flag-outline'}
-                size={20}
-                color={tone === 'done' ? AppColors.textOnLight : AppColors.textPrimary}
-              />
-              <ThemedText accessibilityLiveRegion="polite" style={[styles.verdictText, tone === 'done' && styles.verdictTextDone]}>{message}</ThemedText>
-            </View>
-          )}
-        </View>
-
-        <ThemedText style={styles.note}>{t('tools.grades.tusNotasQuedanSoloEn')}</ThemedText>
-        <HanetButton label={t('tools.grades.borrarTodo')} variant="surface" onPress={() => setClearOpen(true)} />
+        />
       </KeyboardScroll>
 
       <HanetDialog visible={clearOpen} onRequestClose={() => setClearOpen(false)} dismissOnBackdrop title={t('tools.grades.borrarLasNotas')} body={t('tools.grades.seBorranLasNotasDe')}>

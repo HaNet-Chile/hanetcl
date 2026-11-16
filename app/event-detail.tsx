@@ -21,6 +21,7 @@ import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, Share, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WideColumns, useWide } from '@/components/ui/wide-page';
 import { FrostedScreen } from '@/components/ui/frosted-screen';
 import { t } from '@/i18n';
 import { pageScrolls, useDocumentScroll } from '@/hooks/use-document-scroll';
@@ -59,6 +60,8 @@ export default function EventDetailScreen() {
   const { user, initializing } = useSession();
   const scroll = useRef<ScrollViewInstance>(null);
   const insets = useSafeAreaInsets();
+  // Beside the side navigation (wide web window): two columns.
+  const wide = useWide();
 
   const [loadedEvent, setEvent] = useState<HnEvent | null>(() => (id ? getLoadedEvent(id) : null));
   // What the phone kept shows until this visit's load answers.
@@ -183,9 +186,19 @@ export default function EventDetailScreen() {
   const canPostToFeed = !!role && FEED_PUBLISHERS.includes(role) && event.status === 'published';
   const reactions = event.reactions ?? [];
 
+  const gallery = event.gallery.length > 0 && (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll} contentContainerStyle={styles.gallery}>
+      {event.gallery.map((uri, index) => (
+        <Pressable key={uri} accessibilityRole="imagebutton" accessibilityLabel={t('eventDetail.fotoNumberDeGallerycount', { number: index + 1, galleryCount: event.gallery.length })} onPress={() => openLink(uri)} style={({ pressed }) => [index % 2 === 0 ? styles.galleryWide : styles.galleryNarrow, pressed && AppPressed]}>
+          <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+
   return (
     <FrostedScreen style={styles.container}>
-      <ScrollView ref={list => { scroll.current = list; pageScroll(list); }} contentContainerStyle={[styles.content, { paddingTop: insets.top }]} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={list => { scroll.current = list; pageScroll(list); }} contentContainerStyle={[styles.content, wide && styles.contentWide, { paddingTop: insets.top }]} showsVerticalScrollIndicator={false}>
         <EventGlow position="top" colors={event.palette} />
         <EventGlow position="bottom" colors={event.palette} />
         <View style={styles.topBar}>
@@ -195,165 +208,175 @@ export default function EventDetailScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.hero}>
-          {event.imageUrl ? (
-            <Image source={{ uri: event.imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} accessibilityLabel={event.title} />
-          ) : (
-            <View style={[StyleSheet.absoluteFill, styles.heroFallback]}><CustomIcon name="calendar" size={48} color={AppColors.textSecondary} /></View>
-          )}
-          {event.sponsored && <ThemedText style={styles.sponsored}>{t('eventDetail.patrocinado')}</ThemedText>}
-          {(!!soon || past) && <ThemedText style={[styles.badge, past && styles.badgePast]}>{past ? t('classhall.hall.yaPaso') : soon}</ThemedText>}
-        </View>
+        {/* Beside the side navigation (wide web window) the cover and what to
+            do with the event stay on the left, and its information beside. */}
+        <WideColumns
+          asideLeft
+          asideFirstOnPhone
+          asideWidth={420}
+          stickyAside
+          columnStyle={styles.columnWide}
+          style={styles.columnsWide}
+          aside={(
+            <>
+              <View style={styles.hero}>
+                {event.imageUrl ? (
+                  <Image source={{ uri: event.imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} accessibilityLabel={event.title} />
+                ) : (
+                  <View style={[StyleSheet.absoluteFill, styles.heroFallback]}><CustomIcon name="calendar" size={48} color={AppColors.textSecondary} /></View>
+                )}
+                {event.sponsored && <ThemedText style={styles.sponsored}>{t('eventDetail.patrocinado')}</ThemedText>}
+                {(!!soon || past) && <ThemedText style={[styles.badge, past && styles.badgePast]}>{past ? t('classhall.hall.yaPaso') : soon}</ThemedText>}
+              </View>
 
-        <View style={styles.heading}>
-          <ThemedText accessibilityRole="header" style={styles.title}>{event.title}</ThemedText>
-          <ThemedText style={styles.when}>{[eventWhen(event), event.venueName].filter(Boolean).join(' - ')}</ThemedText>
-          {institution && <ThemedText style={styles.whenSmall}>{JORNADA_LABELS[event.jornada]}</ThemedText>}
-          {!institution && !!sourceHost && (
-            <Pressable accessibilityRole="link" hitSlop={8} onPress={() => openLink(event.sourceUrl || event.ticketUrl)} style={({ pressed }) => pressed && AppPressed}>
-              <ThemedText style={styles.sourceLink}>{sourceHost}</ThemedText>
-            </Pressable>
-          )}
-        </View>
+              <View style={styles.heading}>
+                <ThemedText accessibilityRole="header" style={styles.title}>{event.title}</ThemedText>
+                <ThemedText style={styles.when}>{[eventWhen(event), event.venueName].filter(Boolean).join(' - ')}</ThemedText>
+                {institution && <ThemedText style={styles.whenSmall}>{JORNADA_LABELS[event.jornada]}</ThemedText>}
+                {!institution && !!sourceHost && (
+                  <Pressable accessibilityRole="link" hitSlop={8} onPress={() => openLink(event.sourceUrl || event.ticketUrl)} style={({ pressed }) => pressed && AppPressed}>
+                    <ThemedText style={styles.sourceLink}>{sourceHost}</ThemedText>
+                  </Pressable>
+                )}
+              </View>
 
-        {!!price && <ThemedText style={styles.price}>{price}</ThemedText>}
-        {!!event.perk && <ThemedText style={styles.perk}>{event.perk}</ThemedText>}
+              {!!price && <ThemedText style={styles.price}>{price}</ThemedText>}
+              {!!event.perk && <ThemedText style={styles.perk}>{event.perk}</ThemedText>}
 
-        {past && <ThemedText style={styles.pastNote}>{t('eventDetail.esteEventoYaPaso')}</ThemedText>}
+              {past && <ThemedText style={styles.pastNote}>{t('eventDetail.esteEventoYaPaso')}</ThemedText>}
 
-        {!institution && !!event.ticketUrl && !past && (
-          <HanetButton label={t('eventDetail.comprarEnSourcename', { sourceName: event.sourceName || sourceHost })} variant="accent" onPress={() => openLink(event.ticketUrl)} style={styles.wide} />
-        )}
+              {!institution && !!event.ticketUrl && !past && (
+                <HanetButton label={t('eventDetail.comprarEnSourcename', { sourceName: event.sourceName || sourceHost })} variant="accent" onPress={() => openLink(event.ticketUrl)} style={styles.wide} />
+              )}
 
-        {institution && event.signupMode !== 'none' && !past && (
-          <View style={styles.signup}>
-            <HanetButton
-              label={busy ? t('common.guardando') : event.signedUp
-                ? (event.signupMode === 'list' ? t('eventDetail.teInscribisteCancelar') : t('eventDetail.vasYaNoVoy'))
-                : full ? t('eventDetail.sinCupos') : event.signupMode === 'list' ? t('events.inscribirme') : t('events.participo')}
-              variant={event.signedUp ? 'surface' : 'accent'}
-              disabled={busy || full}
-              onPress={() => void signup()}
-              style={styles.wide}
-            />
-            <ThemedText style={styles.signupCount}>
-              {event.signupMode === 'list'
-                ? t('eventDetail.countInscritosValue', { count: event.signupCount ?? 0, value: event.capacity ? t('eventDetail.deCapacityCupos', { capacity: event.capacity }) : '' })
-                : t('eventDetail.countPersonasVan', { count: event.signupCount ?? 0 })}
-            </ThemedText>
-          </View>
-        )}
-        {institution && event.checkedIn && <ThemedText style={styles.checkedIn}>{t('eventDetail.tuLlegadaQuedoRegistrada')}</ThemedText>}
-        {institution && event.canEdit && event.canCheckIn && (
-          <HanetButton label={t('eventDetail.pasarListaConHnQr')} variant="primary" onPress={() => router.push({ pathname: '/event-checkin', params: { id: event.id } })} style={styles.wide} />
-        )}
+              {institution && event.signupMode !== 'none' && !past && (
+                <View style={styles.signup}>
+                  <HanetButton
+                    label={busy ? t('common.guardando') : event.signedUp
+                      ? (event.signupMode === 'list' ? t('eventDetail.teInscribisteCancelar') : t('eventDetail.vasYaNoVoy'))
+                      : full ? t('eventDetail.sinCupos') : event.signupMode === 'list' ? t('events.inscribirme') : t('events.participo')}
+                    variant={event.signedUp ? 'surface' : 'accent'}
+                    disabled={busy || full}
+                    onPress={() => void signup()}
+                    style={styles.wide}
+                  />
+                  <ThemedText style={styles.signupCount}>
+                    {event.signupMode === 'list'
+                      ? t('eventDetail.countInscritosValue', { count: event.signupCount ?? 0, value: event.capacity ? t('eventDetail.deCapacityCupos', { capacity: event.capacity }) : '' })
+                      : t('eventDetail.countPersonasVan', { count: event.signupCount ?? 0 })}
+                  </ThemedText>
+                </View>
+              )}
+              {institution && event.checkedIn && <ThemedText style={styles.checkedIn}>{t('eventDetail.tuLlegadaQuedoRegistrada')}</ThemedText>}
+              {institution && event.canEdit && event.canCheckIn && (
+                <HanetButton label={t('eventDetail.pasarListaConHnQr')} variant="primary" onPress={() => router.push({ pathname: '/event-checkin', params: { id: event.id } })} style={styles.wide} />
+              )}
 
-        {!!event.emojis?.length && event.status === 'published' && (
-          <View style={styles.reactionsBlock}>
-            <View style={styles.reactions}>
-              <ReactionChips reactions={reactions} busyEmoji={busyEmoji} open={picker} onToggleOpen={() => setPicker(value => !value)} onReact={emoji => void react(emoji)} />
-            </View>
-            {picker && <ReactionPicker emojis={event.emojis} reactions={reactions} busyEmoji={busyEmoji} onReact={emoji => void react(emoji)} />}
-          </View>
-        )}
-        {!!actionError && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{actionError}</ThemedText>}
+              {!!event.emojis?.length && event.status === 'published' && (
+                <View style={styles.reactionsBlock}>
+                  <View style={styles.reactions}>
+                    <ReactionChips reactions={reactions} busyEmoji={busyEmoji} open={picker} onToggleOpen={() => setPicker(value => !value)} onReact={emoji => void react(emoji)} />
+                  </View>
+                  {picker && <ReactionPicker emojis={event.emojis} reactions={reactions} busyEmoji={busyEmoji} onReact={emoji => void react(emoji)} />}
+                </View>
+              )}
+              {!!actionError && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{actionError}</ThemedText>}
 
-        {event.gallery.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll} contentContainerStyle={styles.gallery}>
-            {event.gallery.map((uri, index) => (
-              <Pressable key={uri} accessibilityRole="imagebutton" accessibilityLabel={t('eventDetail.fotoNumberDeGallerycount', { number: index + 1, galleryCount: event.gallery.length })} onPress={() => openLink(uri)} style={({ pressed }) => [index % 2 === 0 ? styles.galleryWide : styles.galleryNarrow, pressed && AppPressed]}>
-                <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
-              </Pressable>
-            ))}
-          </ScrollView>
-        )}
+              {!wide && gallery}
 
-        <View style={styles.options}>
-          <Pressable accessibilityRole="button" onPress={() => (storyShareAvailable || canPostToFeed ? setSharing(true) : shareEvent(event))} style={({ pressed }) => [styles.option, pressed && AppPressed]}>
-            <Image source={HNE_ICONS.arrowUpRight} style={styles.icon18} contentFit="contain" tintColor={AppColors.textPrimary} />
-            <ThemedText style={styles.optionLabel}>{t('common.compartir')}</ThemedText>
-          </Pressable>
-          {hasPlace && (
-            <Pressable accessibilityRole="button" accessibilityHint={t('eventDetail.abreLaUbicacionEnMapas')} onPress={() => openMaps(event)} style={({ pressed }) => [styles.option, pressed && AppPressed]}>
-              <Image source={HNE_ICONS.location} style={styles.icon18} contentFit="contain" tintColor={AppColors.textPrimary} />
-              <ThemedText style={styles.optionLabel}>{t('eventDetail.comoLlegar')}</ThemedText>
-            </Pressable>
-          )}
-        </View>
+              <View style={styles.options}>
+                <Pressable accessibilityRole="button" onPress={() => (storyShareAvailable || canPostToFeed ? setSharing(true) : shareEvent(event))} style={({ pressed }) => [styles.option, pressed && AppPressed]}>
+                  <Image source={HNE_ICONS.arrowUpRight} style={styles.icon18} contentFit="contain" tintColor={AppColors.textPrimary} />
+                  <ThemedText style={styles.optionLabel}>{t('common.compartir')}</ThemedText>
+                </Pressable>
+                {hasPlace && (
+                  <Pressable accessibilityRole="button" accessibilityHint={t('eventDetail.abreLaUbicacionEnMapas')} onPress={() => openMaps(event)} style={({ pressed }) => [styles.option, pressed && AppPressed]}>
+                    <Image source={HNE_ICONS.location} style={styles.icon18} contentFit="contain" tintColor={AppColors.textPrimary} />
+                    <ThemedText style={styles.optionLabel}>{t('eventDetail.comoLlegar')}</ThemedText>
+                  </Pressable>
+                )}
+              </View>
 
-        {hasPlace && (
-          <Pressable accessibilityRole="button" accessibilityHint={t('eventDetail.abreLaUbicacionEnMapas')} onPress={() => openMaps(event)} style={({ pressed }) => [styles.venue, pressed && AppPressed]}>
-            <View style={styles.venueIcon}><CustomIcon name="map-pin" size={22} color={AppColors.textPrimary} /></View>
-            <View style={styles.venueText}>
-              <ThemedText numberOfLines={1} style={styles.venueName}>{event.venueName || 'Ubicación'}</ThemedText>
-              {!!(event.address || event.city) && <ThemedText numberOfLines={2} style={styles.venueAddress}>{[event.address, event.city].filter(Boolean).join(', ')}</ThemedText>}
-            </View>
-          </Pressable>
-        )}
-
-        <View style={styles.divider} />
-
-        <View style={styles.sectionHeader}>
-          <Image source={HNE_ICONS.location} style={styles.icon24} contentFit="contain" tintColor={AppColors.textPrimary} />
-          <ThemedText style={styles.sectionTitle}>{t('eventDetail.informacionDelEvento')}</ThemedText>
-          <ThemedText style={styles.sectionNote}>
-            {institution ? t('eventDetail.publicadoPorAuthorname', { authorName: event.authorName || 'tu institución' }) : t('eventDetail.informacionProporcionadaPorSourcename', { sourceName: event.sourceName || 'la ticketera' })}
-          </ThemedText>
-        </View>
-        <ThemedText selectable style={styles.body}>{event.description || 'El organizador no agregó más detalles.'}</ThemedText>
-
-        {!!event.editorial && (
-          <>
-            <View style={styles.divider} />
-            <View style={styles.editorial}>
-              <Image source={HNE_ICONS.album} style={styles.icon24} contentFit="contain" tintColor={AppColors.textPrimary} />
-              <ThemedText style={styles.editorialTitle}>{t('eventDetail.sobreSubject', { subject: event.editorial.subject })}</ThemedText>
-              <ThemedText selectable style={styles.body}>{event.editorial.summary}</ThemedText>
-              {!!event.editorial.sourceName && (
-                <Pressable accessibilityRole="link" hitSlop={8} onPress={() => openLink(event.editorial?.sourceUrl ?? '')} disabled={!event.editorial.sourceUrl} style={({ pressed }) => pressed && AppPressed}>
-                  <ThemedText style={styles.attribution}>{t('eventDetail.informacionProporcionadaPorSourcenameValue', { sourceName: event.editorial.sourceName, value: wikipedia ? t('eventDetail.ccBySa40') : '' })}</ThemedText>
+              {hasPlace && (
+                <Pressable accessibilityRole="button" accessibilityHint={t('eventDetail.abreLaUbicacionEnMapas')} onPress={() => openMaps(event)} style={({ pressed }) => [styles.venue, pressed && AppPressed]}>
+                  <View style={styles.venueIcon}><CustomIcon name="map-pin" size={22} color={AppColors.textPrimary} /></View>
+                  <View style={styles.venueText}>
+                    <ThemedText numberOfLines={1} style={styles.venueName}>{event.venueName || 'Ubicación'}</ThemedText>
+                    {!!(event.address || event.city) && <ThemedText numberOfLines={2} style={styles.venueAddress}>{[event.address, event.city].filter(Boolean).join(', ')}</ThemedText>}
+                  </View>
                 </Pressable>
               )}
-            </View>
-          </>
-        )}
+            </>
+          )}
+          main={(
+            <>
+              {!wide && <View style={styles.divider} />}
+              {wide && gallery}
 
-        {!!event.signups && (
-          <>
-            <View style={styles.divider} />
-            <View style={styles.editorial}>
-              <ThemedText style={styles.editorialTitle}>{t('eventDetail.inscritosSignupscount', { signupsCount: event.signups.length })}</ThemedText>
-              <ThemedText style={styles.sectionNote}>{t('eventDetail.soloLoVenQuienesOrganizan')}</ThemedText>
-              {event.signups.length === 0
-                ? <ThemedText style={styles.body}>{t('eventDetail.nadieSeHaInscritoTodavia')}</ThemedText>
-                : event.signups.map((person, index) => (
-                  <ThemedText key={index} style={styles.body}>{index + 1}. {person.name}{person.courseId ? ` · ${person.courseId}` : ''}</ThemedText>
-                ))}
-            </View>
-          </>
-        )}
+              <View style={styles.sectionHeader}>
+                <Image source={HNE_ICONS.location} style={styles.icon24} contentFit="contain" tintColor={AppColors.textPrimary} />
+                <ThemedText style={styles.sectionTitle}>{t('eventDetail.informacionDelEvento')}</ThemedText>
+                <ThemedText style={styles.sectionNote}>
+                  {institution ? t('eventDetail.publicadoPorAuthorname', { authorName: event.authorName || 'tu institución' }) : t('eventDetail.informacionProporcionadaPorSourcename', { sourceName: event.sourceName || 'la ticketera' })}
+                </ThemedText>
+              </View>
+              <ThemedText selectable style={styles.body}>{event.description || 'El organizador no agregó más detalles.'}</ThemedText>
 
-        {!!event.checkins && (
-          <>
-            <View style={styles.divider} />
-            <View style={styles.editorial}>
-              <ThemedText style={styles.editorialTitle}>{t('eventDetail.llegaronCheckinscount', { checkinsCount: event.checkins.length })}</ThemedText>
-              <ThemedText style={styles.sectionNote}>{t('eventDetail.escaneadosEnLaEntradaSolo')}</ThemedText>
-              {event.checkins.length === 0
-                ? <ThemedText style={styles.body}>{event.canCheckIn ? t('eventDetail.todaviaNoHasEscaneadoA') : t('eventDetail.laListaSeAbre3')}</ThemedText>
-                : event.checkins.map((person, index) => (
-                  <ThemedText key={index} style={styles.body}>{index + 1}. {person.name}{person.courseId ? ` · ${person.courseId}` : ''}</ThemedText>
-                ))}
-            </View>
-          </>
-        )}
+              {!!event.editorial && (
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.editorial}>
+                    <Image source={HNE_ICONS.album} style={styles.icon24} contentFit="contain" tintColor={AppColors.textPrimary} />
+                    <ThemedText style={styles.editorialTitle}>{t('eventDetail.sobreSubject', { subject: event.editorial.subject })}</ThemedText>
+                    <ThemedText selectable style={styles.body}>{event.editorial.summary}</ThemedText>
+                    {!!event.editorial.sourceName && (
+                      <Pressable accessibilityRole="link" hitSlop={8} onPress={() => openLink(event.editorial?.sourceUrl ?? '')} disabled={!event.editorial.sourceUrl} style={({ pressed }) => pressed && AppPressed}>
+                        <ThemedText style={styles.attribution}>{t('eventDetail.informacionProporcionadaPorSourcenameValue', { sourceName: event.editorial.sourceName, value: wikipedia ? t('eventDetail.ccBySa40') : '' })}</ThemedText>
+                      </Pressable>
+                    )}
+                  </View>
+                </>
+              )}
 
-        {event.canEdit && (
-          <View style={styles.editRow}>
-            <HanetButton label={t('common.editar')} variant="surface" onPress={() => router.push({ pathname: '/event-form', params: { kind: event.kind, id: event.id } })} style={dialogStyles.action} />
-            <HanetButton label={t('common.eliminar')} variant="surface" onPress={() => setConfirmDelete(true)} style={dialogStyles.action} />
-          </View>
-        )}
+              {!!event.signups && (
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.editorial}>
+                    <ThemedText style={styles.editorialTitle}>{t('eventDetail.inscritosSignupscount', { signupsCount: event.signups.length })}</ThemedText>
+                    <ThemedText style={styles.sectionNote}>{t('eventDetail.soloLoVenQuienesOrganizan')}</ThemedText>
+                    {event.signups.length === 0
+                      ? <ThemedText style={styles.body}>{t('eventDetail.nadieSeHaInscritoTodavia')}</ThemedText>
+                      : event.signups.map((person, index) => (
+                        <ThemedText key={index} style={styles.body}>{index + 1}. {person.name}{person.courseId ? ` · ${person.courseId}` : ''}</ThemedText>
+                      ))}
+                  </View>
+                </>
+              )}
+
+              {!!event.checkins && (
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.editorial}>
+                    <ThemedText style={styles.editorialTitle}>{t('eventDetail.llegaronCheckinscount', { checkinsCount: event.checkins.length })}</ThemedText>
+                    <ThemedText style={styles.sectionNote}>{t('eventDetail.escaneadosEnLaEntradaSolo')}</ThemedText>
+                    {event.checkins.length === 0
+                      ? <ThemedText style={styles.body}>{event.canCheckIn ? t('eventDetail.todaviaNoHasEscaneadoA') : t('eventDetail.laListaSeAbre3')}</ThemedText>
+                      : event.checkins.map((person, index) => (
+                        <ThemedText key={index} style={styles.body}>{index + 1}. {person.name}{person.courseId ? ` · ${person.courseId}` : ''}</ThemedText>
+                      ))}
+                  </View>
+                </>
+              )}
+
+              {event.canEdit && (
+                <View style={styles.editRow}>
+                  <HanetButton label={t('common.editar')} variant="surface" onPress={() => router.push({ pathname: '/event-form', params: { kind: event.kind, id: event.id } })} style={dialogStyles.action} />
+                  <HanetButton label={t('common.eliminar')} variant="surface" onPress={() => setConfirmDelete(true)} style={dialogStyles.action} />
+                </View>
+              )}
+            </>
+          )}
+        />
 
         <Pressable accessibilityRole="button" accessibilityLabel={t('eventDetail.volverArriba')} onPress={() => { scroll.current?.scrollTo({ y: 0, animated: true }); if (pageScrolls()) window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={({ pressed }) => [styles.toTop, pressed && AppPressed]}>
           <Image source={require('@/assets/icons/event/arrow-left-long.svg')} style={[styles.icon24, styles.arrowUp]} contentFit="contain" tintColor={AppColors.textPrimary} />
@@ -414,6 +437,18 @@ const styles = StyleSheet.create({
     gap: AppSpacing.md,
     paddingHorizontal: AppSpacing.md,
     paddingBottom: TAB_BAR_CLEARANCE + AppSpacing.xl,
+  },
+  // Wide web window: the page's desktop width, each column centered like the phone's.
+  contentWide: {
+    maxWidth: 1180,
+    paddingHorizontal: 32,
+  },
+  columnsWide: {
+    alignSelf: 'stretch',
+  },
+  columnWide: {
+    alignItems: 'center',
+    gap: AppSpacing.md,
   },
   topBar: {
     alignSelf: 'stretch',

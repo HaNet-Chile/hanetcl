@@ -1,4 +1,5 @@
 import { TAB_BAR_CLEARANCE } from '@/components/AppTabBar';
+import { useWideLayout, widePageStyle } from '@/components/ui/wide-page';
 import { BlockEditor } from '@/components/schedule/block-editor';
 import type { BlockKind } from '@/components/schedule/block-editor';
 import { NowNextCard } from '@/components/schedule/now-next-card';
@@ -72,7 +73,6 @@ export function ScheduleView({ embedded = false }: { embedded?: boolean }) {
 
   const blocks = edited ?? schedule?.blocks ?? [];
   // While editing, only the course's own blocks; otherwise the whole week.
-  const dayBlocks = blocksOn(edited ? blocks : myWeek(schedule), day);
   const isToday = day === scheduleDay(now);
   const { current, next } = nowAndNext(myWeek(schedule), now, schedule?.changes);
   const days = SCHEDULE_DAYS.filter(item => item.day < 6 || edited || blocks.some(block => block.day === 6));
@@ -116,12 +116,79 @@ export function ScheduleView({ embedded = false }: { embedded?: boolean }) {
     setDraft(null);
   };
 
+  // One day's blocks, as a list (the phone) or as a column of the week (wide).
+  const renderBlocks = (onDay: number, compact = false) => {
+    const list = blocksOn(edited ? blocks : myWeek(schedule), onDay);
+    return (
+      list.length === 0 ? (
+        <ThemedText style={styles.empty}>
+          {blocks.length === 0
+            ? schedule?.canEdit ? t('components.schedule.scheduleView.esteCursoTodaviaNoTiene') : t('components.schedule.scheduleView.tuCursoTodaviaNoTiene')
+            : t('components.schedule.scheduleView.noHayClasesEsteDia')}
+        </ThemedText>
+      ) : (
+        <View style={styles.blocks}>
+          {list.map(block => {
+            const index = blocks.indexOf(block);
+            const live = !edited && onDay === scheduleDay(now) && current?.id === block.id;
+            const pause = isBreak(block);
+            // Every class opens its Hall: electivos and dominios, and the plan común ones that have one.
+            const hallId = block.hallId;
+            return (
+              <Pressable
+                key={`${block.id}-${index}`}
+                accessibilityRole={edited || hallId ? 'button' : undefined}
+                accessibilityLabel={`${block.start} a ${block.end}, ${block.subject}${block.room ? `, ${block.room}` : ''}${live ? t('components.schedule.scheduleView.ahora') : ''}`}
+                accessibilityHint={edited ? t('classhall.hall.editarElBloque') : hallId ? t('components.schedule.scheduleView.abrirElHall') : undefined}
+                disabled={!edited && !hallId}
+                onPress={() => {
+                  if (!edited) {
+                    router.push({ pathname: '/classhall/hall', params: { id: hallId } });
+                    return;
+                  }
+                  setDay(onDay);
+                  setDraft({ index, kind: pause ? 'break' : 'class' });
+                }}
+                style={({ pressed }) => [styles.block, compact && styles.blockCompact, pause && styles.blockBreak, live && styles.blockLive, pressed && AppPressed]}
+              >
+                {compact ? (
+                  <ThemedText style={[styles.blockEnd, live && styles.blockTimeLive]}>{block.start} – {block.end}</ThemedText>
+                ) : (
+                  <>
+                    <View style={styles.blockTime}>
+                      <ThemedText style={styles.blockStart}>{block.start}</ThemedText>
+                      <ThemedText style={styles.blockEnd}>{block.end}</ThemedText>
+                    </View>
+                    <View style={[styles.blockBar, pause && styles.blockBarBreak, live && styles.blockBarLive]} />
+                  </>
+                )}
+                <View style={[styles.blockText, compact && styles.blockTextCompact]}>
+                  <ThemedText style={[styles.blockSubject, pause && styles.blockSubjectBreak]}>{block.subject}</ThemedText>
+                  {(!!block.room || block.kind === 'hall') && (
+                    <ThemedText style={styles.blockRoom}>
+                      {[block.kind === 'hall' ? (block.plan === 'dominio' ? t('common.dominio') : t('common.electivo')) : null, block.room || null].filter(Boolean).join(' · ')}
+                    </ThemedText>
+                  )}
+                </View>
+                {(edited || !!hallId) && !compact && <CustomIcon name="chevron-right" size={18} color={AppColors.textSecondary} />}
+              </Pressable>
+            );
+          })}
+        </View>
+      )
+    );
+  };
+
+  // Beside the side navigation (wide web window) the page widens to the week.
+  const layout = useWideLayout();
+  const weekColumns = layout.columns && !embedded;
+
   const back = () => (router.canGoBack() ? router.back() : router.replace('/calendar'));
 
   return (
     <Screen style={styles.screen}>
       <ScrollView
-        contentContainerStyle={withTopInset(styles.content, top)}
+        contentContainerStyle={withTopInset([styles.content, widePageStyle(layout.wide && !embedded)], top)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} tintColor={AppColors.accent} progressViewOffset={top} />}
         keyboardShouldPersistTaps="handled"
       >
@@ -159,68 +226,51 @@ export function ScheduleView({ embedded = false }: { embedded?: boolean }) {
             {!edited && <NowNextCard current={current} next={next} />}
             {!edited && !!schedule.changes?.length && <DayChangeList changes={schedule.changes} />}
 
-            <View style={styles.days} accessibilityRole="tablist">
-              {days.map(item => (
-                <Pressable
-                  key={item.day}
-                  accessibilityRole="tab"
-                  accessibilityLabel={item.name}
-                  accessibilityState={{ selected: item.day === day }}
-                  onPress={() => { if (Platform.OS === 'ios') void Haptics.selectionAsync(); setDay(item.day); }}
-                  style={({ pressed }) => [styles.day, item.day === day && styles.daySelected, pressed && AppPressed]}
-                >
-                  <ThemedText style={[styles.dayText, item.day === day && styles.dayTextSelected]}>{item.short}</ThemedText>
-                  {item.day === scheduleDay(now) && <View style={[styles.todayDot, item.day === day && styles.todayDotSelected]} />}
-                </Pressable>
-              ))}
-            </View>
-
-            <ThemedText style={styles.dayName}>{SCHEDULE_DAYS.find(item => item.day === day)?.name}{isToday ? t('components.schedule.scheduleView.hoy') : ''}</ThemedText>
-
-            {dayBlocks.length === 0 ? (
-              <ThemedText style={styles.empty}>
-                {blocks.length === 0
-                  ? schedule.canEdit ? t('components.schedule.scheduleView.esteCursoTodaviaNoTiene') : t('components.schedule.scheduleView.tuCursoTodaviaNoTiene')
-                  : t('components.schedule.scheduleView.noHayClasesEsteDia')}
-              </ThemedText>
-            ) : (
-              <View style={styles.blocks}>
-                {dayBlocks.map(block => {
-                  const index = blocks.indexOf(block);
-                  const live = !edited && isToday && current?.id === block.id;
-                  const pause = isBreak(block);
-                  // Every class opens its Hall: electivos and dominios, and the plan común ones that have one.
-                  const hallId = block.hallId;
+            {/* A wide web window shows the whole week side by side; the phone, one day at a time. */}
+            {weekColumns ? (
+              <View style={styles.week}>
+                {days.map(item => {
+                  const today = item.day === scheduleDay(now);
                   return (
-                    <Pressable
-                      key={`${block.id}-${index}`}
-                      accessibilityRole={edited || hallId ? 'button' : undefined}
-                      accessibilityLabel={`${block.start} a ${block.end}, ${block.subject}${block.room ? `, ${block.room}` : ''}${live ? t('components.schedule.scheduleView.ahora') : ''}`}
-                      accessibilityHint={edited ? t('classhall.hall.editarElBloque') : hallId ? t('components.schedule.scheduleView.abrirElHall') : undefined}
-                      disabled={!edited && !hallId}
-                      onPress={() => (edited
-                        ? setDraft({ index, kind: pause ? 'break' : 'class' })
-                        : router.push({ pathname: '/classhall/hall', params: { id: hallId } }))}
-                      style={({ pressed }) => [styles.block, pause && styles.blockBreak, live && styles.blockLive, pressed && AppPressed]}
-                    >
-                      <View style={styles.blockTime}>
-                        <ThemedText style={styles.blockStart}>{block.start}</ThemedText>
-                        <ThemedText style={styles.blockEnd}>{block.end}</ThemedText>
-                      </View>
-                      <View style={[styles.blockBar, pause && styles.blockBarBreak, live && styles.blockBarLive]} />
-                      <View style={styles.blockText}>
-                        <ThemedText style={[styles.blockSubject, pause && styles.blockSubjectBreak]}>{block.subject}</ThemedText>
-                        {(!!block.room || block.kind === 'hall') && (
-                          <ThemedText style={styles.blockRoom}>
-                            {[block.kind === 'hall' ? (block.plan === 'dominio' ? t('common.dominio') : t('common.electivo')) : null, block.room || null].filter(Boolean).join(' · ')}
-                          </ThemedText>
-                        )}
-                      </View>
-                      {(edited || !!hallId) && <CustomIcon name="chevron-right" size={18} color={AppColors.textSecondary} />}
-                    </Pressable>
+                    <View key={item.day} style={styles.weekDay}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={item.name}
+                        accessibilityState={{ selected: !!edited && item.day === day }}
+                        disabled={!edited}
+                        onPress={() => setDay(item.day)}
+                        style={[styles.weekHead, !!edited && item.day === day && styles.daySelected]}
+                      >
+                        <ThemedText style={[styles.weekName, !!edited && item.day === day && styles.dayTextSelected]}>{item.name}</ThemedText>
+                        {today && <View style={[styles.todayDotInline, !!edited && item.day === day && styles.todayDotSelected]} />}
+                      </Pressable>
+                      {renderBlocks(item.day, true)}
+                    </View>
                   );
                 })}
               </View>
+            ) : (
+              <>
+                <View style={styles.days} accessibilityRole="tablist">
+                  {days.map(item => (
+                    <Pressable
+                      key={item.day}
+                      accessibilityRole="tab"
+                      accessibilityLabel={item.name}
+                      accessibilityState={{ selected: item.day === day }}
+                      onPress={() => { if (Platform.OS === 'ios') void Haptics.selectionAsync(); setDay(item.day); }}
+                      style={({ pressed }) => [styles.day, item.day === day && styles.daySelected, pressed && AppPressed]}
+                    >
+                      <ThemedText style={[styles.dayText, item.day === day && styles.dayTextSelected]}>{item.short}</ThemedText>
+                      {item.day === scheduleDay(now) && <View style={[styles.todayDot, item.day === day && styles.todayDotSelected]} />}
+                    </Pressable>
+                  ))}
+                </View>
+
+                <ThemedText style={styles.dayName}>{SCHEDULE_DAYS.find(item => item.day === day)?.name}{isToday ? t('components.schedule.scheduleView.hoy') : ''}</ThemedText>
+
+                {renderBlocks(day)}
+              </>
             )}
 
             {schedule.canEdit && (
@@ -368,6 +418,55 @@ const styles = StyleSheet.create({
   },
   blocks: {
     gap: AppSpacing.sm,
+  },
+  // Wide web window: the week in columns, each block with its time on top.
+  week: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: AppSpacing.md,
+    marginTop: AppSpacing.sm,
+  },
+  weekDay: {
+    flex: 1,
+    minWidth: 0,
+    gap: AppSpacing.sm,
+  },
+  weekHead: {
+    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: AppRadii.pill,
+    backgroundColor: AppColors.surface,
+  },
+  weekName: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 14,
+    lineHeight: 18,
+    color: AppColors.textPrimary,
+  },
+  todayDotInline: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: AppColors.accent,
+  },
+  blockCompact: {
+    minHeight: 0,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 2,
+    paddingHorizontal: AppSpacing.md,
+    paddingVertical: 10,
+  },
+  blockTextCompact: {
+    flexGrow: 0,
+    flexBasis: 'auto',
+    alignSelf: 'stretch',
+  },
+  blockTimeLive: {
+    color: AppColors.accent,
   },
   block: {
     minHeight: 64,

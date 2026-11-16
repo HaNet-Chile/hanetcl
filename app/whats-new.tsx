@@ -7,6 +7,7 @@ import React from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { useWide, widePageStyle } from '@/components/ui/wide-page';
 import { monthsShort, t } from '@/i18n';
 
 // Every PR adds its release on top (scripts/version.js keeps it in step with app.json).
@@ -21,12 +22,14 @@ function formatDate(iso: string) {
 
 export default function WhatsNewScreen() {
   const insets = useSafeAreaInsets();
+  // A wide web window keeps this list at reading width.
+  const wide = useWide();
   return (
     <FrostedScreen style={styles.screen}>
       <FlatList
         data={CHANGELOG.releases}
         keyExtractor={item => item.version}
-        contentContainerStyle={withTopInset(styles.page, insets.top)}
+        contentContainerStyle={withTopInset([styles.page, widePageStyle(wide, 'reading')], insets.top)}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <PageHeader eyebrow={t('common.configuraciones')} title={t('settings.novedades')} intro={t('whatsNew.tienesHanetAppversionlabelEstoEs', { appVersionLabel: APP_VERSION_LABEL })} style={styles.header} />

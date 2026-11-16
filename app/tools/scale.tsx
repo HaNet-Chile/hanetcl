@@ -5,6 +5,7 @@ import { HanetChip } from '@/components/ui/hanet-chip';
 import { HanetDialog, HanetDialogActions, dialogStyles } from '@/components/ui/hanet-dialog';
 import { KeyboardScroll } from '@/components/ui/keyboard';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WideColumns, useWideLayout, widePageStyle } from '@/components/ui/wide-page';
 import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { DEFAULT_SCALE, formatGrade, formatNumber, gradeFor, loadScale, parseNumber, pointsToPass, saveScale, scaleRows } from '@/services/grades';
 import type { ScaleSettings } from '@/services/grades';
@@ -66,12 +67,16 @@ export default function ScaleScreen() {
     if (value !== null && value > 0 && value <= MAX_POINTS) update({ maxPoints: value });
   };
 
+  // Beside the side navigation (wide web window) the settings stay on the
+  // left and the table takes the rest, in more columns.
+  const layout = useWideLayout();
+  const tableColumns = layout.columns ? 4 : 3;
   // Read down each column, like a printed scale.
   const columns = useMemo(() => {
     const rows = scaleRows(settings);
-    const size = Math.ceil(rows.length / 3);
-    return [rows.slice(0, size), rows.slice(size, size * 2), rows.slice(size * 2)];
-  }, [settings]);
+    const size = Math.ceil(rows.length / tableColumns);
+    return Array.from({ length: tableColumns }, (_, index) => rows.slice(size * index, size * (index + 1)));
+  }, [settings, tableColumns]);
   const toPass = pointsToPass(settings);
   const custom = !EXIGENCIES.some(value => Math.abs(value - settings.exigency) < 1e-9);
 
@@ -90,114 +95,127 @@ export default function ScaleScreen() {
 
   return (
     <FrostedScreen style={styles.screen}>
-      <KeyboardScroll contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
+      <KeyboardScroll contentContainerStyle={withTopInset([styles.page, widePageStyle(layout.wide)], insets.top)} showsVerticalScrollIndicator={false}>
         <PageHeader eyebrow={t('common.herramientas')} title={t('tools.scale.escalaDeNotas')} intro={t('tools.scale.convierteLosPuntosDeUna')} />
 
-        <View style={styles.card}>
-          <View style={styles.field}>
-            <ThemedText style={styles.label}>{t('tools.scale.puntajeMaximo')}</ThemedText>
-            <TextInput
-              accessibilityLabel={t('tools.scale.puntajeMaximo')}
-              value={maxText}
-              onChangeText={changeMax}
-              keyboardType="decimal-pad"
-              maxLength={6}
-              selectionColor={AppColors.accent}
-              style={[styles.input, !!maxError && styles.inputError]}
-            />
-            {!!maxError && <ThemedText style={styles.error}>{maxError}</ThemedText>}
-          </View>
+        <WideColumns
+          asideLeft
+          asideFirstOnPhone
+          asideWidth={380}
+          stickyAside
+          aside={(
+            <>
+              <View style={styles.card}>
+                <View style={styles.field}>
+                  <ThemedText style={styles.label}>{t('tools.scale.puntajeMaximo')}</ThemedText>
+                  <TextInput
+                    accessibilityLabel={t('tools.scale.puntajeMaximo')}
+                    value={maxText}
+                    onChangeText={changeMax}
+                    keyboardType="decimal-pad"
+                    maxLength={6}
+                    selectionColor={AppColors.accent}
+                    style={[styles.input, !!maxError && styles.inputError]}
+                  />
+                  {!!maxError && <ThemedText style={styles.error}>{maxError}</ThemedText>}
+                </View>
 
-          <View style={styles.field}>
-            <ThemedText style={styles.label}>{t('tools.scale.exigencia')}</ThemedText>
-            <View style={styles.chips}>
-              {EXIGENCIES.map(value => (
-                <Choice key={value} label={percent(value)} selected={!custom && Math.abs(value - settings.exigency) < 1e-9} onPress={() => update({ exigency: value })} />
-              ))}
-              <Choice
-                label={custom ? percent(settings.exigency) : t('tools.scale.otra')}
-                selected={custom}
-                onPress={() => { setCustomText(formatNumber(Math.round(settings.exigency * 1000) / 10)); setCustomOpen(true); }}
-              />
-            </View>
-            <ThemedText style={styles.hint}>{t('tools.scale.laParteDelPuntajeQue')}</ThemedText>
-          </View>
-
-          <View style={styles.field}>
-            <ThemedText style={styles.label}>{t('tools.scale.notaMinima')}</ThemedText>
-            <View style={styles.chips}>
-              {MIN_GRADES.map(value => (
-                <Choice key={value} label={formatGrade(value)} selected={settings.minGrade === value} onPress={() => update({ minGrade: value })} />
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <ThemedText style={styles.label}>{t('tools.scale.filasDeLaTabla')}</ThemedText>
-            <View style={styles.chips}>
-              <Choice label={t('tools.scale.cada1Punto')} selected={settings.step === 1} onPress={() => update({ step: 1 })} />
-              <Choice label={t('tools.scale.cadaMedioPunto')} selected={settings.step === 0.5} onPress={() => update({ step: 0.5 })} />
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.summary}>
-          <View style={styles.summaryItem}>
-            <ThemedText style={styles.summaryValue}>{formatNumber(toPass)}</ThemedText>
-            <ThemedText style={styles.summaryLabel}>{t('tools.scale.puntosParaEl4', { grade: formatGrade(settings.passGrade) })}</ThemedText>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryItem}>
-            <ThemedText style={styles.summaryValue}>{percent(settings.exigency)}</ThemedText>
-            <ThemedText style={styles.summaryLabel}>{t('tools.scale.deExigenciaSobrePoints', { points: formatNumber(settings.maxPoints) })}</ThemedText>
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <ThemedText accessibilityRole="header" style={styles.sectionTitle}>{t('tools.scale.calcularUnaNota')}</ThemedText>
-          <View style={styles.converter}>
-            <TextInput
-              accessibilityLabel={t('tools.scale.puntajeObtenido')}
-              value={scoreText}
-              onChangeText={setScoreText}
-              placeholder={t('tools.scale.puntaje')}
-              placeholderTextColor={AppColors.surfaceMuted}
-              keyboardType="decimal-pad"
-              maxLength={6}
-              selectionColor={AppColors.accent}
-              style={[styles.input, styles.converterInput, scoreError && styles.inputError]}
-            />
-            <View style={[styles.gradeBadge, scoreLow && styles.gradeBadgeLow]}>
-              <ThemedText accessibilityLiveRegion="polite" style={[styles.gradeBadgeText, scoreLow && styles.gradeBadgeTextLow]}>{scoreGrade === null ? '–' : formatGrade(scoreGrade)}</ThemedText>
-            </View>
-          </View>
-          {scoreError && <ThemedText style={styles.error}>{t('tools.scale.escribeUnPuntajeEntre0', { max: formatNumber(settings.maxPoints) })}</ThemedText>}
-        </View>
-
-        <View style={styles.tableHead}>
-          <ThemedText accessibilityRole="header" style={styles.sectionTitle}>{t('tools.scale.tabla')}</ThemedText>
-          <ThemedText style={styles.hint}>{t('tools.scale.puntosYNota')}</ThemedText>
-        </View>
-        <View style={styles.table}>
-          {columns.map((column, index) => (
-            <View key={index} style={[styles.column, index > 0 && styles.columnDivider]}>
-              {column.map(row => {
-                const low = row.grade < settings.passGrade;
-                return (
-                  <View
-                    key={row.points}
-                    accessible
-                    accessibilityLabel={t('tools.scale.pointsPuntosGrade', { points: formatNumber(row.points), grade: formatGrade(row.grade) })}
-                    style={styles.cell}
-                  >
-                    <ThemedText style={styles.cellPoints}>{formatNumber(row.points)}</ThemedText>
-                    <ThemedText style={[styles.cellGrade, low && styles.cellGradeLow]}>{formatGrade(row.grade)}</ThemedText>
+                <View style={styles.field}>
+                  <ThemedText style={styles.label}>{t('tools.scale.exigencia')}</ThemedText>
+                  <View style={styles.chips}>
+                    {EXIGENCIES.map(value => (
+                      <Choice key={value} label={percent(value)} selected={!custom && Math.abs(value - settings.exigency) < 1e-9} onPress={() => update({ exigency: value })} />
+                    ))}
+                    <Choice
+                      label={custom ? percent(settings.exigency) : t('tools.scale.otra')}
+                      selected={custom}
+                      onPress={() => { setCustomText(formatNumber(Math.round(settings.exigency * 1000) / 10)); setCustomOpen(true); }}
+                    />
                   </View>
-                );
-              })}
-            </View>
-          ))}
-        </View>
+                  <ThemedText style={styles.hint}>{t('tools.scale.laParteDelPuntajeQue')}</ThemedText>
+                </View>
+
+                <View style={styles.field}>
+                  <ThemedText style={styles.label}>{t('tools.scale.notaMinima')}</ThemedText>
+                  <View style={styles.chips}>
+                    {MIN_GRADES.map(value => (
+                      <Choice key={value} label={formatGrade(value)} selected={settings.minGrade === value} onPress={() => update({ minGrade: value })} />
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.field}>
+                  <ThemedText style={styles.label}>{t('tools.scale.filasDeLaTabla')}</ThemedText>
+                  <View style={styles.chips}>
+                    <Choice label={t('tools.scale.cada1Punto')} selected={settings.step === 1} onPress={() => update({ step: 1 })} />
+                    <Choice label={t('tools.scale.cadaMedioPunto')} selected={settings.step === 0.5} onPress={() => update({ step: 0.5 })} />
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.summary}>
+                <View style={styles.summaryItem}>
+                  <ThemedText style={styles.summaryValue}>{formatNumber(toPass)}</ThemedText>
+                  <ThemedText style={styles.summaryLabel}>{t('tools.scale.puntosParaEl4', { grade: formatGrade(settings.passGrade) })}</ThemedText>
+                </View>
+                <View style={styles.summaryDivider} />
+                <View style={styles.summaryItem}>
+                  <ThemedText style={styles.summaryValue}>{percent(settings.exigency)}</ThemedText>
+                  <ThemedText style={styles.summaryLabel}>{t('tools.scale.deExigenciaSobrePoints', { points: formatNumber(settings.maxPoints) })}</ThemedText>
+                </View>
+              </View>
+
+              <View style={styles.card}>
+                <ThemedText accessibilityRole="header" style={styles.sectionTitle}>{t('tools.scale.calcularUnaNota')}</ThemedText>
+                <View style={styles.converter}>
+                  <TextInput
+                    accessibilityLabel={t('tools.scale.puntajeObtenido')}
+                    value={scoreText}
+                    onChangeText={setScoreText}
+                    placeholder={t('tools.scale.puntaje')}
+                    placeholderTextColor={AppColors.surfaceMuted}
+                    keyboardType="decimal-pad"
+                    maxLength={6}
+                    selectionColor={AppColors.accent}
+                    style={[styles.input, styles.converterInput, scoreError && styles.inputError]}
+                  />
+                  <View style={[styles.gradeBadge, scoreLow && styles.gradeBadgeLow]}>
+                    <ThemedText accessibilityLiveRegion="polite" style={[styles.gradeBadgeText, scoreLow && styles.gradeBadgeTextLow]}>{scoreGrade === null ? '–' : formatGrade(scoreGrade)}</ThemedText>
+                  </View>
+                </View>
+                {scoreError && <ThemedText style={styles.error}>{t('tools.scale.escribeUnPuntajeEntre0', { max: formatNumber(settings.maxPoints) })}</ThemedText>}
+              </View>
+            </>
+          )}
+          main={(
+            <>
+              <View style={styles.tableHead}>
+                <ThemedText accessibilityRole="header" style={styles.sectionTitle}>{t('tools.scale.tabla')}</ThemedText>
+                <ThemedText style={styles.hint}>{t('tools.scale.puntosYNota')}</ThemedText>
+              </View>
+              <View style={styles.table}>
+                {columns.map((column, index) => (
+                  <View key={index} style={[styles.column, index > 0 && styles.columnDivider]}>
+                    {column.map(row => {
+                      const low = row.grade < settings.passGrade;
+                      return (
+                        <View
+                          key={row.points}
+                          accessible
+                          accessibilityLabel={t('tools.scale.pointsPuntosGrade', { points: formatNumber(row.points), grade: formatGrade(row.grade) })}
+                          style={styles.cell}
+                        >
+                          <ThemedText style={styles.cellPoints}>{formatNumber(row.points)}</ThemedText>
+                          <ThemedText style={[styles.cellGrade, low && styles.cellGradeLow]}>{formatGrade(row.grade)}</ThemedText>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
+        />
         <ThemedText style={styles.note}>{t('tools.scale.lasNotasSeRedondeanA')}</ThemedText>
       </KeyboardScroll>
 

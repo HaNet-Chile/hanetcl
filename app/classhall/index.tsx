@@ -220,7 +220,7 @@ export default function ClassHallScreen() {
             onPress={() => router.push('/classhall/join')}
             style={({ pressed }) => [styles.action, wide && styles.actionWide, pressed && styles.pressed]}
           >
-            <ThemedText style={styles.actionText}>{t('classhall.unirseAUnHall')}</ThemedText>
+            <ThemedText numberOfLines={1} style={styles.actionText}>{t('classhall.unirseAUnHall')}</ThemedText>
           </Pressable>
           {canCreate && (
             <Pressable
@@ -228,7 +228,7 @@ export default function ClassHallScreen() {
               onPress={() => router.push('/classhall/create')}
               style={({ pressed }) => [styles.action, wide && styles.actionWide, pressed && styles.pressed]}
             >
-              <ThemedText style={styles.actionText}>{t('classhall.create.crearUnHall')}</ThemedText>
+              <ThemedText numberOfLines={1} style={styles.actionText}>{t('classhall.create.crearUnHall')}</ThemedText>
             </Pressable>
           )}
         </View>
@@ -360,12 +360,15 @@ const styles = StyleSheet.create({
     letterSpacing: -1.6,
   },
   actionsWide: {
+    flexShrink: 0,
     padding: 0,
     backgroundColor: 'transparent',
   },
   // Pills as wide as their label, on one line.
   actionWide: {
-    flex: 0,
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
     minHeight: 44,
     paddingHorizontal: AppSpacing.xl,
   },

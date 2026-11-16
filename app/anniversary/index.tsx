@@ -24,6 +24,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen } from '@/components/ui/frosted-screen';
+import { WideColumns, useWideLayout, widePageStyle } from '@/components/ui/wide-page';
 import { t } from '@/i18n';
 
 // The countdown number grows in weight on a narrow cut, so it stays a number.
@@ -122,6 +123,7 @@ function WinnerCard({ anniversary, now, onShare }: { anniversary: Anniversary; n
 export default function AnniversaryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const layout = useWideLayout();
   const { user, initializing } = useSession();
   const state = useAnniversaryState();
   const [error, setError] = useState<string | null>(null);
@@ -237,6 +239,182 @@ export default function AnniversaryScreen() {
     const banner = bannerOf(anniversary, now, mine);
     const share = storyShareAvailable && scored ? () => setStory({ kind: 'anniversary', anniversary }) : undefined;
 
+    // The page in pieces: one column on the phone, and on a wide window the
+    // marcador and activities beside one's alianza, notices and plazos.
+    const allianceBlock = (
+      <>
+          {mine && <AllianceCard alliance={mine} standing={myStanding} mine lead={anniversary.isLead} />}
+          {mine && (
+            <AllianceExtras
+              alliance={mine}
+              onWallpaper={storyShareAvailable ? () => setStory({ kind: 'wallpaper', alliance: mine, title: anniversary.title }) : undefined}
+            />
+          )}
+      </>
+    );
+    const scoreBlock = (
+      <>
+          <SectionTitle title={t('common.marcador')} detail={hidden && organizer ? t('anniversary.ocultoParaLosDemas') : undefined} />
+          {phase !== 'after' && scored && <LeaderCard anniversary={anniversary} now={now} />}
+          <Scoreboard anniversary={anniversary} now={now} />
+          {share && phase !== 'after' && (
+            <HanetButton label={t('anniversary.compartirElMarcador')} variant="surface" onPress={share} />
+          )}
+      </>
+    );
+    const noticesBlock = (
+      <>
+          <NoticesPreview now={now} />
+      </>
+    );
+    const deadlinesBlock = (
+      <>
+          {upcomingDeadlines.length > 0 && (
+            <>
+              <SectionTitle title={t('anniversary.plazos')} />
+              <View style={styles.card}>
+                {upcomingDeadlines.map((deadline, index) => {
+                  const days = daysTo(deadline.dueAt, now);
+                  const soon = days <= 1;
+                  const when = days === 0 ? `Hoy, ${timeText(deadline.dueAt)}` : days === 1 ? `Mañana, ${timeText(deadline.dueAt)}` : shortWhen(deadline.dueAt);
+                  return (
+                    <Pressable
+                      key={deadline.id}
+                      accessibilityRole={organizer ? 'button' : undefined}
+                      accessibilityHint={organizer ? t('anniversary.editarElPlazo') : undefined}
+                      disabled={!organizer}
+                      onPress={() => router.push({ pathname: '/anniversary/deadline', params: { id: deadline.id } })}
+                      style={({ pressed }) => [styles.deadline, index > 0 && styles.lineBorder, pressed && AppPressed]}
+                    >
+                      <View style={[styles.deadlineIcon, soon && styles.deadlineIconSoon]}>
+                        <Ionicons name="alarm-outline" size={18} color={soon ? AppColors.textOnLight : AppColors.textPrimary} />
+                      </View>
+                      <View style={styles.deadlineText}>
+                        <ThemedText style={styles.lineTitle}>{deadline.title}</ThemedText>
+                        <ThemedText style={[styles.lineDetail, soon && styles.soon]}>
+                          {when}{organizer ? ` · ${deadline.audience === 'leads' ? t('anniversary.jefes') : t('anniversary.todaLaAlianza')}` : ''}
+                        </ThemedText>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </>
+          )}
+      </>
+    );
+    const activitiesBlock = (
+      <>
+          {anniversary.activities.length === 0 ? (
+            organizer && (
+              <>
+                <SectionTitle title={t('anniversary.activities.actividades')} />
+                <View style={styles.card}>
+                  <ThemedText style={styles.lineTitle}>{t('anniversary.todaviaNoHayActividades')}</ThemedText>
+                  <ThemedText style={styles.lineDetail}>{t('anniversary.cargaLasTipicasDeUn')}</ThemedText>
+                  <View style={styles.cardActions}>
+                    <HanetButton label={busy ? t('common.cargando') : t('anniversary.activities.cargarActividadesTipicas')} variant="accent" disabled={busy} onPress={loadPresets} />
+                    <HanetButton label={t('anniversary.crearUna')} variant="surface" onPress={() => router.push('/anniversary/activity')} />
+                  </View>
+                </View>
+              </>
+            )
+          ) : (
+            <>
+              <SectionTitle title={featured.title} />
+              <ActivityList
+                anniversary={anniversary}
+                activities={featured.list}
+                onOpen={openActivity}
+                footer={anniversary.activities.length > featured.list.length
+                  ? { label: t('anniversary.todasLasActividadesActivitiescount', { activitiesCount: anniversary.activities.length }), onPress: () => router.push('/anniversary/activities') }
+                  : undefined}
+              />
+            </>
+          )}
+      </>
+    );
+    const alliancesBlock = (
+      <>
+          {anniversary.alliances.length > 0 && (
+            <>
+              <SectionTitle title={t('anniversary.alianzas')} />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={!layout.wide && styles.bleed} contentContainerStyle={[styles.alliances, layout.wide && styles.alliancesWide]}>
+                {anniversary.alliances.map(alliance => (
+                  <AllianceCard
+                    key={alliance.id}
+                    alliance={alliance}
+                    standing={rows.find(row => row.id === alliance.id)}
+                    mine={alliance.id === mine?.id}
+                    style={styles.allianceCard}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          )}
+      </>
+    );
+    const movesBlock = (
+      <>
+          {anniversary.history.length > 0 && (
+            <>
+              <SectionTitle title={t('anniversary.movimientosDePuntos')} />
+              <View style={styles.card}>
+                {(allMoves ? anniversary.history : anniversary.history.slice(0, MOVES_SHOWN)).map((entry, index) => {
+                  const alliance = byId.get(entry.allianceId);
+                  const reason = entry.kind === 'result' ? (activityName.get(entry.activityId ?? '') ?? entry.reason) : entry.reason;
+                  return (
+                    <View key={entry.id} style={[styles.entry, index > 0 && styles.lineBorder]}>
+                      {alliance && <AllianceBadge alliance={alliance} size={30} />}
+                      <View style={styles.entryText}>
+                        <ThemedText style={styles.lineTitle}>{reason}</ThemedText>
+                        <ThemedText style={styles.lineDetail}>
+                          {alliance?.name ?? 'Alianza'}{entry.createdAt ? ` · ${shortWhen(entry.createdAt)}` : ''}
+                        </ThemedText>
+                      </View>
+                      <ThemedText style={[styles.entryPoints, entry.points < 0 && styles.negative]}>{signedPoints(entry.points)}</ThemedText>
+                      {organizer && entry.kind === 'adjust' && (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={t('anniversary.borrarElMovimientoReason', { reason })}
+                          onPress={() => setRemoving(entry)}
+                          hitSlop={6}
+                          style={({ pressed }) => [styles.remove, pressed && AppPressed]}
+                        >
+                          <Ionicons name="trash-outline" size={16} color={AppColors.textPrimary} />
+                        </Pressable>
+                      )}
+                    </View>
+                  );
+                })}
+                {anniversary.history.length > MOVES_SHOWN && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded: allMoves }}
+                    onPress={() => setAllMoves(value => !value)}
+                    style={({ pressed }) => [styles.moreRow, styles.lineBorder, pressed && AppPressed]}
+                  >
+                    <ThemedText style={styles.moreText}>{allMoves ? t('anniversary.verMenos') : t('anniversary.verLosHistorycountMovimientos', { historyCount: anniversary.history.length })}</ThemedText>
+                    <Ionicons name={allMoves ? 'chevron-up' : 'chevron-down'} size={16} color={AppColors.textSecondary} />
+                  </Pressable>
+                )}
+              </View>
+            </>
+          )}
+      </>
+    );
+    const closingBlock = (
+      <>
+          {!!anniversary.rulesUrl && (
+            <HanetButton label={t('anniversary.leerLasBases')} variant="surface" onPress={() => void Linking.openURL(anniversary.rulesUrl)} />
+          )}
+          <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.push('/anniversary/welcome')} style={({ pressed }) => [styles.replay, pressed && AppPressed]}>
+            <Ionicons name="sparkles-outline" size={16} color={AppColors.textSecondary} />
+            <ThemedText style={styles.replayText}>{t('anniversary.verLaBienvenidaOtraVez')}</ThemedText>
+          </Pressable>
+      </>
+    );
+
     return (
       <>
         <View style={styles.hero}>
@@ -256,154 +434,18 @@ export default function AnniversaryScreen() {
 
         {phase === 'after' && scored && <WinnerCard anniversary={anniversary} now={now} onShare={share} />}
 
-        {mine && <AllianceCard alliance={mine} standing={myStanding} mine lead={anniversary.isLead} />}
-        {mine && (
-          <AllianceExtras
-            alliance={mine}
-            onWallpaper={storyShareAvailable ? () => setStory({ kind: 'wallpaper', alliance: mine, title: anniversary.title }) : undefined}
+        {layout.columns ? (
+          <WideColumns
+            columnStyle={styles.column}
+            main={<>{scoreBlock}{activitiesBlock}{alliancesBlock}{movesBlock}</>}
+            aside={<>{allianceBlock}{noticesBlock}{deadlinesBlock}{closingBlock}</>}
+            stickyAside
           />
-        )}
-
-        <SectionTitle title={t('common.marcador')} detail={hidden && organizer ? t('anniversary.ocultoParaLosDemas') : undefined} />
-        {phase !== 'after' && scored && <LeaderCard anniversary={anniversary} now={now} />}
-        <Scoreboard anniversary={anniversary} now={now} />
-        {share && phase !== 'after' && (
-          <HanetButton label={t('anniversary.compartirElMarcador')} variant="surface" onPress={share} />
-        )}
-
-        <NoticesPreview now={now} />
-
-        {upcomingDeadlines.length > 0 && (
-          <>
-            <SectionTitle title={t('anniversary.plazos')} />
-            <View style={styles.card}>
-              {upcomingDeadlines.map((deadline, index) => {
-                const days = daysTo(deadline.dueAt, now);
-                const soon = days <= 1;
-                const when = days === 0 ? `Hoy, ${timeText(deadline.dueAt)}` : days === 1 ? `Mañana, ${timeText(deadline.dueAt)}` : shortWhen(deadline.dueAt);
-                return (
-                  <Pressable
-                    key={deadline.id}
-                    accessibilityRole={organizer ? 'button' : undefined}
-                    accessibilityHint={organizer ? t('anniversary.editarElPlazo') : undefined}
-                    disabled={!organizer}
-                    onPress={() => router.push({ pathname: '/anniversary/deadline', params: { id: deadline.id } })}
-                    style={({ pressed }) => [styles.deadline, index > 0 && styles.lineBorder, pressed && AppPressed]}
-                  >
-                    <View style={[styles.deadlineIcon, soon && styles.deadlineIconSoon]}>
-                      <Ionicons name="alarm-outline" size={18} color={soon ? AppColors.textOnLight : AppColors.textPrimary} />
-                    </View>
-                    <View style={styles.deadlineText}>
-                      <ThemedText style={styles.lineTitle}>{deadline.title}</ThemedText>
-                      <ThemedText style={[styles.lineDetail, soon && styles.soon]}>
-                        {when}{organizer ? ` · ${deadline.audience === 'leads' ? t('anniversary.jefes') : t('anniversary.todaLaAlianza')}` : ''}
-                      </ThemedText>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </>
-        )}
-
-        {anniversary.activities.length === 0 ? (
-          organizer && (
-            <>
-              <SectionTitle title={t('anniversary.activities.actividades')} />
-              <View style={styles.card}>
-                <ThemedText style={styles.lineTitle}>{t('anniversary.todaviaNoHayActividades')}</ThemedText>
-                <ThemedText style={styles.lineDetail}>{t('anniversary.cargaLasTipicasDeUn')}</ThemedText>
-                <View style={styles.cardActions}>
-                  <HanetButton label={busy ? t('common.cargando') : t('anniversary.activities.cargarActividadesTipicas')} variant="accent" disabled={busy} onPress={loadPresets} />
-                  <HanetButton label={t('anniversary.crearUna')} variant="surface" onPress={() => router.push('/anniversary/activity')} />
-                </View>
-              </View>
-            </>
-          )
         ) : (
           <>
-            <SectionTitle title={featured.title} />
-            <ActivityList
-              anniversary={anniversary}
-              activities={featured.list}
-              onOpen={openActivity}
-              footer={anniversary.activities.length > featured.list.length
-                ? { label: t('anniversary.todasLasActividadesActivitiescount', { activitiesCount: anniversary.activities.length }), onPress: () => router.push('/anniversary/activities') }
-                : undefined}
-            />
+            {allianceBlock}{scoreBlock}{noticesBlock}{deadlinesBlock}{activitiesBlock}{alliancesBlock}{movesBlock}{closingBlock}
           </>
         )}
-
-        {anniversary.alliances.length > 0 && (
-          <>
-            <SectionTitle title={t('anniversary.alianzas')} />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.alliances}>
-              {anniversary.alliances.map(alliance => (
-                <AllianceCard
-                  key={alliance.id}
-                  alliance={alliance}
-                  standing={rows.find(row => row.id === alliance.id)}
-                  mine={alliance.id === mine?.id}
-                  style={styles.allianceCard}
-                />
-              ))}
-            </ScrollView>
-          </>
-        )}
-
-        {anniversary.history.length > 0 && (
-          <>
-            <SectionTitle title={t('anniversary.movimientosDePuntos')} />
-            <View style={styles.card}>
-              {(allMoves ? anniversary.history : anniversary.history.slice(0, MOVES_SHOWN)).map((entry, index) => {
-                const alliance = byId.get(entry.allianceId);
-                const reason = entry.kind === 'result' ? (activityName.get(entry.activityId ?? '') ?? entry.reason) : entry.reason;
-                return (
-                  <View key={entry.id} style={[styles.entry, index > 0 && styles.lineBorder]}>
-                    {alliance && <AllianceBadge alliance={alliance} size={30} />}
-                    <View style={styles.entryText}>
-                      <ThemedText style={styles.lineTitle}>{reason}</ThemedText>
-                      <ThemedText style={styles.lineDetail}>
-                        {alliance?.name ?? 'Alianza'}{entry.createdAt ? ` · ${shortWhen(entry.createdAt)}` : ''}
-                      </ThemedText>
-                    </View>
-                    <ThemedText style={[styles.entryPoints, entry.points < 0 && styles.negative]}>{signedPoints(entry.points)}</ThemedText>
-                    {organizer && entry.kind === 'adjust' && (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={t('anniversary.borrarElMovimientoReason', { reason })}
-                        onPress={() => setRemoving(entry)}
-                        hitSlop={6}
-                        style={({ pressed }) => [styles.remove, pressed && AppPressed]}
-                      >
-                        <Ionicons name="trash-outline" size={16} color={AppColors.textPrimary} />
-                      </Pressable>
-                    )}
-                  </View>
-                );
-              })}
-              {anniversary.history.length > MOVES_SHOWN && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: allMoves }}
-                  onPress={() => setAllMoves(value => !value)}
-                  style={({ pressed }) => [styles.moreRow, styles.lineBorder, pressed && AppPressed]}
-                >
-                  <ThemedText style={styles.moreText}>{allMoves ? t('anniversary.verMenos') : t('anniversary.verLosHistorycountMovimientos', { historyCount: anniversary.history.length })}</ThemedText>
-                  <Ionicons name={allMoves ? 'chevron-up' : 'chevron-down'} size={16} color={AppColors.textSecondary} />
-                </Pressable>
-              )}
-            </View>
-          </>
-        )}
-
-        {!!anniversary.rulesUrl && (
-          <HanetButton label={t('anniversary.leerLasBases')} variant="surface" onPress={() => void Linking.openURL(anniversary.rulesUrl)} />
-        )}
-        <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.push('/anniversary/welcome')} style={({ pressed }) => [styles.replay, pressed && AppPressed]}>
-          <Ionicons name="sparkles-outline" size={16} color={AppColors.textSecondary} />
-          <ThemedText style={styles.replayText}>{t('anniversary.verLaBienvenidaOtraVez')}</ThemedText>
-        </Pressable>
 
         {!!error && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{error}</ThemedText>}
       </>
@@ -418,7 +460,7 @@ export default function AnniversaryScreen() {
 
   return (
     <FrostedScreen style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + AppSpacing.xl }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.content, widePageStyle(layout.wide), { paddingTop: insets.top + (layout.wide ? 28 : AppSpacing.xl) }]} showsVerticalScrollIndicator={false}>
         {!!anniversary && <EventGlow position="top" colors={glow} />}
         {content()}
       </ScrollView>
@@ -525,6 +567,13 @@ const styles = StyleSheet.create({
   },
   allianceCard: {
     width: 260,
+  },
+  alliancesWide: {
+    paddingHorizontal: 0,
+  },
+  // Wide window: each column keeps the page's own spacing.
+  column: {
+    gap: AppSpacing.md,
   },
   card: {
     gap: AppSpacing.md,

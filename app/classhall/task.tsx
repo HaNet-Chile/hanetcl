@@ -18,6 +18,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { t } from '@/i18n';
+import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 
 function openItem(item: SubmissionItem) {
   void openHallDocument({ url: item.url });
@@ -30,6 +31,7 @@ function submittedLabel(submission: HallSubmission) {
 
 export default function TaskScreen() {
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const router = useRouter();
   const { hallId, id } = useLocalSearchParams<{ hallId: string; id: string }>();
   const { user, initializing } = useSession();
@@ -99,7 +101,7 @@ export default function TaskScreen() {
 
   return (
     <FrostedScreen style={styles.container}>
-      <ScrollView contentContainerStyle={withTopInset(styles.content, insets.top)} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={withTopInset([styles.content, widePageStyle(wide, isTeacher ? 'reading' : 'wide')], insets.top)} showsVerticalScrollIndicator={false}>
         <View style={hallStyles.topBar}>
           <TopBarButton icon={HALL_ICONS.back} label={t('common.volver')} onPress={() => (router.canGoBack() ? router.back() : router.replace({ pathname: '/classhall/tasks', params: { hallId } }))} />
           <Image source={HALL_ICONS.logotype} style={hallStyles.logotype} contentFit="contain" contentPosition="left" accessibilityLabel={t('common.hanetClasshall')} />
@@ -116,127 +118,139 @@ export default function TaskScreen() {
 
         {!!detail && !!task && (
           <>
-            <View style={styles.hero}>
-              <ThemedText style={styles.kicker}>{t('classhall.task.tareaSubject', { subject: detail.subject })}</ThemedText>
-              <ThemedText accessibilityRole="header" style={styles.title}>{task.title}</ThemedText>
-              <View style={styles.dueRow}>
-                <View style={styles.dueText}>
-                  <ThemedText style={styles.dueLabel}>{dueLabel(task.dueAt, now)}</ThemedText>
-                  <ThemedText style={styles.dueDate}>{t('classhall.task.hastaElHalllongdate', { hallLongDate: hallLongDate(task.dueAt) })}</ThemedText>
-                </View>
-                {!isTeacher && status && <StatusPill label={status.label} tone={status.tone} />}
-              </View>
-              {task.acceptLate && <ThemedText style={styles.heroNote}>{t('classhall.task.aceptaEntregasAtrasadas')}</ThemedText>}
-            </View>
-
-            {(!!task.instructions || !!detail.attachment) && (
-              <View style={styles.card}>
-                <ThemedText style={styles.cardTitle}>{t('classhall.taskForm.instrucciones')}</ThemedText>
-                {!!task.instructions && <ThemedText selectable style={styles.body}>{task.instructions}</ThemedText>}
-                {!!detail.attachment && <DocumentTile document={detail.attachment} tone="accent" label={t('classhall.task.materialDeLaTarea')} />}
-                <ThemedText style={styles.byline}>{t('classhall.task.publicadaPorAuthornameValue', { authorName: task.authorName, value: task.createdAt ? ` el ${hallDay(task.createdAt)}` : '' })}</ThemedText>
-              </View>
-            )}
-
-            {!isTeacher && (
-              <View style={styles.card}>
-                <ThemedText style={styles.cardTitle}>{t('classhall.task.tuEntrega')}</ThemedText>
-                {mine ? (
-                  <>
-                    <ThemedText style={styles.meta}>
-                      {t('classhall.task.entregadaElSubmittedlabelValue', { submittedLabel: submittedLabel(mine), value: mine.late ? t('classhall.task.conAtraso') : '' })}
-                    </ThemedText>
-                    <View style={styles.items}>
-                      {mine.items.map(item => <SubmissionItemRow key={item.id} item={item} onOpen={() => openItem(item)} />)}
+            {/* On a wide window one's entrega waits beside the task. */}
+            <WideColumns
+              columnStyle={styles.column}
+              stickyAside
+              main={(
+                <>
+                <View style={styles.hero}>
+                  <ThemedText style={styles.kicker}>{t('classhall.task.tareaSubject', { subject: detail.subject })}</ThemedText>
+                  <ThemedText accessibilityRole="header" style={styles.title}>{task.title}</ThemedText>
+                  <View style={styles.dueRow}>
+                    <View style={styles.dueText}>
+                      <ThemedText style={styles.dueLabel}>{dueLabel(task.dueAt, now)}</ThemedText>
+                      <ThemedText style={styles.dueDate}>{t('classhall.task.hastaElHalllongdate', { hallLongDate: hallLongDate(task.dueAt) })}</ThemedText>
                     </View>
-                    {!!mine.note && (
-                      <View style={styles.note}>
-                        <ThemedText style={styles.noteLabel}>{t('classhall.submission.tuComentario')}</ThemedText>
-                        <ThemedText selectable style={styles.body}>{mine.note}</ThemedText>
-                      </View>
-                    )}
-                    {mine.reviewed && (
-                      <View style={styles.feedback}>
-                        <ThemedText style={styles.feedbackLabel}>{t('classhall.task.revisadaPorTuDocente')}</ThemedText>
-                        {!!mine.feedback && <ThemedText selectable style={styles.feedbackText}>{mine.feedback}</ThemedText>}
-                      </View>
-                    )}
-                    {canSubmit && <HanetButton label={t('classhall.submit.editarEntrega')} variant="surface" onPress={openSubmit} />}
-                    {!mine.reviewed && canSubmit && (
-                      <Pressable accessibilityRole="button" onPress={() => { setActionError(null); setConfirming('withdraw'); }} style={({ pressed }) => [styles.textButton, pressed && AppPressed]}>
-                        <ThemedText style={styles.textButtonLabel}>{t('classhall.task.retirarEntrega')}</ThemedText>
-                      </Pressable>
-                    )}
-                  </>
-                ) : canSubmit ? (
-                  <>
-                    <ThemedText style={styles.body}>
-                      {closed
-                        ? t('classhall.task.elPlazoTerminoPeroTu')
-                        : t('classhall.task.subeArchivosFotosOVinculos')}
-                    </ThemedText>
-                    <HanetButton label={t('classhall.submit.entregarTarea')} variant="accent" onPress={openSubmit} />
-                  </>
-                ) : (
-                  <ThemedText style={styles.body}>{t('classhall.task.elPlazoTerminoYEsta')}</ThemedText>
-                )}
-              </View>
-            )}
-
-            {isTeacher && (
-              <>
-                <View style={styles.stats}>
-                  <View style={styles.stat}>
-                    <ThemedText style={styles.statValue}>{submissions.length}{expected ? <ThemedText style={styles.statOf}>/{expected}</ThemedText> : null}</ThemedText>
-                    <ThemedText style={styles.statLabel}>{t('classhall.task.entregaron')}</ThemedText>
+                    {!isTeacher && status && <StatusPill label={status.label} tone={status.tone} />}
                   </View>
-                  <View style={styles.stat}>
-                    <ThemedText style={styles.statValue}>{reviewedCount}</ThemedText>
-                    <ThemedText style={styles.statLabel}>{t('classhall.task.revisadas')}</ThemedText>
-                  </View>
-                  <View style={styles.stat}>
-                    <ThemedText style={styles.statValue}>{lateCount}</ThemedText>
-                    <ThemedText style={styles.statLabel}>{t('classhall.task.atrasadas')}</ThemedText>
-                  </View>
+                  {task.acceptLate && <ThemedText style={styles.heroNote}>{t('classhall.task.aceptaEntregasAtrasadas')}</ThemedText>}
                 </View>
 
-                <ThemedText style={styles.sectionLabel}>{t('classhall.task.entregas')}</ThemedText>
-                {submissions.length === 0 ? (
+                {(!!task.instructions || !!detail.attachment) && (
                   <View style={styles.card}>
-                    <ThemedText style={styles.body}>{t('classhall.task.nadieHaEntregadoEstaTarea')}</ThemedText>
-                  </View>
-                ) : (
-                  <View style={styles.list}>
-                    {/* Not yet reviewed first, oldest first, as a queue. */}
-                    {[...submissions.filter(item => !item.reviewed).reverse(), ...submissions.filter(item => item.reviewed)].map(item => (
-                      <Pressable
-                        key={item.uid}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${item.studentName}, ${submittedLabel(item)}${item.late ? t('classhall.task.atrasada') : ''}${item.reviewed ? t('classhall.task.revisada') : t('classhall.task.porRevisar')}`}
-                        onPress={() => openSubmission(item)}
-                        style={({ pressed }) => [styles.submission, pressed && AppPressed]}
-                      >
-                        <HanetAvatar seed={item.avatarSeed} fallback={item.studentName.slice(0, 1).toLocaleUpperCase('es')} width={36} height={44} />
-                        <View style={styles.submissionText}>
-                          <ThemedText numberOfLines={1} style={styles.submissionName}>{item.studentName}</ThemedText>
-                          <ThemedText numberOfLines={1} style={styles.meta}>
-                            {[item.courseId, submittedLabel(item), t('classhall.task.countArchivos', { count: item.items.length })].filter(Boolean).join(' · ')}
-                          </ThemedText>
-                        </View>
-                        {item.reviewed
-                          ? <StatusPill label={t('classhall.task.revisada2')} tone="done" />
-                          : <StatusPill label={item.late ? t('common.atrasada') : t('classhall.task.porRevisar2')} tone={item.late ? 'late' : 'pending'} />}
-                      </Pressable>
-                    ))}
+                    <ThemedText style={styles.cardTitle}>{t('classhall.taskForm.instrucciones')}</ThemedText>
+                    {!!task.instructions && <ThemedText selectable style={styles.body}>{task.instructions}</ThemedText>}
+                    {!!detail.attachment && <DocumentTile document={detail.attachment} tone="accent" label={t('classhall.task.materialDeLaTarea')} />}
+                    <ThemedText style={styles.byline}>{t('classhall.task.publicadaPorAuthornameValue', { authorName: task.authorName, value: task.createdAt ? ` el ${hallDay(task.createdAt)}` : '' })}</ThemedText>
                   </View>
                 )}
 
-                <View style={styles.teacherRow}>
-                  <HallPill label={t('classhall.taskForm.editarTarea')} tone="light" onPress={() => router.push({ pathname: '/classhall/task-form', params: { hallId, id } })} />
-                  <HallPill label={t('common.eliminar')} onPress={() => { setActionError(null); setConfirming('delete'); }} />
-                </View>
-              </>
-            )}
+                {isTeacher && (
+                  <>
+                    <View style={styles.stats}>
+                      <View style={styles.stat}>
+                        <ThemedText style={styles.statValue}>{submissions.length}{expected ? <ThemedText style={styles.statOf}>/{expected}</ThemedText> : null}</ThemedText>
+                        <ThemedText style={styles.statLabel}>{t('classhall.task.entregaron')}</ThemedText>
+                      </View>
+                      <View style={styles.stat}>
+                        <ThemedText style={styles.statValue}>{reviewedCount}</ThemedText>
+                        <ThemedText style={styles.statLabel}>{t('classhall.task.revisadas')}</ThemedText>
+                      </View>
+                      <View style={styles.stat}>
+                        <ThemedText style={styles.statValue}>{lateCount}</ThemedText>
+                        <ThemedText style={styles.statLabel}>{t('classhall.task.atrasadas')}</ThemedText>
+                      </View>
+                    </View>
+
+                    <ThemedText style={styles.sectionLabel}>{t('classhall.task.entregas')}</ThemedText>
+                    {submissions.length === 0 ? (
+                      <View style={styles.card}>
+                        <ThemedText style={styles.body}>{t('classhall.task.nadieHaEntregadoEstaTarea')}</ThemedText>
+                      </View>
+                    ) : (
+                      <View style={styles.list}>
+                        {/* Not yet reviewed first, oldest first, as a queue. */}
+                        {[...submissions.filter(item => !item.reviewed).reverse(), ...submissions.filter(item => item.reviewed)].map(item => (
+                          <Pressable
+                            key={item.uid}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${item.studentName}, ${submittedLabel(item)}${item.late ? t('classhall.task.atrasada') : ''}${item.reviewed ? t('classhall.task.revisada') : t('classhall.task.porRevisar')}`}
+                            onPress={() => openSubmission(item)}
+                            style={({ pressed }) => [styles.submission, pressed && AppPressed]}
+                          >
+                            <HanetAvatar seed={item.avatarSeed} fallback={item.studentName.slice(0, 1).toLocaleUpperCase('es')} width={36} height={44} />
+                            <View style={styles.submissionText}>
+                              <ThemedText numberOfLines={1} style={styles.submissionName}>{item.studentName}</ThemedText>
+                              <ThemedText numberOfLines={1} style={styles.meta}>
+                                {[item.courseId, submittedLabel(item), t('classhall.task.countArchivos', { count: item.items.length })].filter(Boolean).join(' · ')}
+                              </ThemedText>
+                            </View>
+                            {item.reviewed
+                              ? <StatusPill label={t('classhall.task.revisada2')} tone="done" />
+                              : <StatusPill label={item.late ? t('common.atrasada') : t('classhall.task.porRevisar2')} tone={item.late ? 'late' : 'pending'} />}
+                          </Pressable>
+                        ))}
+                      </View>
+                    )}
+
+                    <View style={styles.teacherRow}>
+                      <HallPill label={t('classhall.taskForm.editarTarea')} tone="light" onPress={() => router.push({ pathname: '/classhall/task-form', params: { hallId, id } })} />
+                      <HallPill label={t('common.eliminar')} onPress={() => { setActionError(null); setConfirming('delete'); }} />
+                    </View>
+                  </>
+                )}
+                </>
+              )}
+              aside={!isTeacher && (
+                <>
+                {!isTeacher && (
+                  <View style={styles.card}>
+                    <ThemedText style={styles.cardTitle}>{t('classhall.task.tuEntrega')}</ThemedText>
+                    {mine ? (
+                      <>
+                        <ThemedText style={styles.meta}>
+                          {t('classhall.task.entregadaElSubmittedlabelValue', { submittedLabel: submittedLabel(mine), value: mine.late ? t('classhall.task.conAtraso') : '' })}
+                        </ThemedText>
+                        <View style={styles.items}>
+                          {mine.items.map(item => <SubmissionItemRow key={item.id} item={item} onOpen={() => openItem(item)} />)}
+                        </View>
+                        {!!mine.note && (
+                          <View style={styles.note}>
+                            <ThemedText style={styles.noteLabel}>{t('classhall.submission.tuComentario')}</ThemedText>
+                            <ThemedText selectable style={styles.body}>{mine.note}</ThemedText>
+                          </View>
+                        )}
+                        {mine.reviewed && (
+                          <View style={styles.feedback}>
+                            <ThemedText style={styles.feedbackLabel}>{t('classhall.task.revisadaPorTuDocente')}</ThemedText>
+                            {!!mine.feedback && <ThemedText selectable style={styles.feedbackText}>{mine.feedback}</ThemedText>}
+                          </View>
+                        )}
+                        {canSubmit && <HanetButton label={t('classhall.submit.editarEntrega')} variant="surface" onPress={openSubmit} />}
+                        {!mine.reviewed && canSubmit && (
+                          <Pressable accessibilityRole="button" onPress={() => { setActionError(null); setConfirming('withdraw'); }} style={({ pressed }) => [styles.textButton, pressed && AppPressed]}>
+                            <ThemedText style={styles.textButtonLabel}>{t('classhall.task.retirarEntrega')}</ThemedText>
+                          </Pressable>
+                        )}
+                      </>
+                    ) : canSubmit ? (
+                      <>
+                        <ThemedText style={styles.body}>
+                          {closed
+                            ? t('classhall.task.elPlazoTerminoPeroTu')
+                            : t('classhall.task.subeArchivosFotosOVinculos')}
+                        </ThemedText>
+                        <HanetButton label={t('classhall.submit.entregarTarea')} variant="accent" onPress={openSubmit} />
+                      </>
+                    ) : (
+                      <ThemedText style={styles.body}>{t('classhall.task.elPlazoTerminoYEsta')}</ThemedText>
+                    )}
+                  </View>
+                )}
+                </>
+              )}
+            />
           </>
         )}
       </ScrollView>
@@ -278,6 +292,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: AppSpacing.md,
     paddingBottom: TAB_BAR_CLEARANCE + AppSpacing.xl,
+    gap: AppSpacing.md,
+  },
+  column: {
     gap: AppSpacing.md,
   },
   hero: {

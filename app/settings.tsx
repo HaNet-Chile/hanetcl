@@ -23,6 +23,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { t } from '@/i18n';
 import { useDocumentScroll } from '@/hooks/use-document-scroll';
 import { InstallGuideDialog } from '@/components/web/install-guide';
@@ -151,6 +152,9 @@ export default function SettingsScreen() {
   const avatarSeed = profile?.avatarSeed ?? keptProfile?.avatarSeed ?? null;
 
   const onWeb = Platform.OS === 'web';
+  // Beside the side navigation (wide web window): the account, HaNet and the
+  // session on the left, the settings beside them.
+  const wide = useWide();
   const notificationsFooter = support === 'web'
     ? t('settings.esteNavegadorNoRecibeNotificaciones')
     : support === 'web-install'
@@ -159,180 +163,200 @@ export default function SettingsScreen() {
       ? t('settings.enAndroidLasNotificacionesNecesitan')
       : t('settings.elFeedIgualQuedaEn');
 
-  return (
-    <FrostedScreen style={styles.screen}>
-      <ScrollView ref={pageScroll} contentContainerStyle={withTopInset(styles.page, insets.top)} showsVerticalScrollIndicator={false}>
-        <ThemedText accessibilityRole="header" style={styles.title}>{t('common.configuraciones')}</ThemedText>
+  // At the end of the page on the phone, under the account on a wide window.
+  const aboutAndSession = (
+    <>
+      <SettingsGroup title={t('settings.acercaDeHanet')}>
+        <SettingsLinkRow icon="sparkles-outline" label={t('settings.novedades')} detail={APP_VERSION_LABEL} onPress={() => router.push('/whats-new')} />
+        <SettingsLinkRow icon="mail-outline" label={t('settings.contacto')} hint={CONTACT} onPress={() => void Linking.openURL(`mailto:${CONTACT}`)} />
+        <SettingsLinkRow icon="document-text-outline" label={t('licenses.licenciasDeCodigoAbierto')} onPress={() => router.push('/licenses')} />
+      </SettingsGroup>
 
+      <View style={styles.block}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={user?.email ? `${name}, ${user.email}` : name}
-          accessibilityHint={t('editProfile.editarPerfil')}
-          onPress={() => router.push('/edit-profile')}
-          style={({ pressed }) => [styles.account, pressed && AppPressed]}
+          accessibilityLabel={t('common.cerrarSesion')}
+          accessibilityHint={user?.email ? t('settings.sesionIniciadaComoEmail', { email: user.email }) : undefined}
+          onPress={() => void signOut()}
+          style={({ pressed }) => [styles.signOut, pressed && AppPressed]}
         >
-          <HanetAvatar seed={avatarSeed} photoUrl={photoUrl} fallback={initialsOf(name)} width={56} radius={16} />
-          <View style={styles.accountCopy}>
-            <ThemedText numberOfLines={1} style={styles.accountName}>{name}</ThemedText>
-            {!!user?.email && <ThemedText numberOfLines={1} style={styles.accountDetail}>{user.email}</ThemedText>}
-            <ThemedText style={styles.accountAction}>{t('editProfile.editarPerfil')}</ThemedText>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={AppColors.textSecondary} />
+          <ThemedText style={styles.signOutText}>{t('common.cerrarSesion')}</ThemedText>
         </Pressable>
+        {/* Looks like plain text; seven quick taps open the secret. */}
+        <Pressable accessibilityLabel={`${t('settings.version')} ${APP_VERSION_LABEL}`} onPress={tapVersion} style={styles.versionTap}>
+          <ThemedText style={styles.version}>HaNet {APP_VERSION_LABEL}</ThemedText>
+        </Pressable>
+      </View>
+    </>
+  );
 
-        <View style={styles.block}>
-          {support === 'supported' && anyPushOn && (permission === 'denied' || permission === 'undetermined') && (
-            <View style={styles.banner}>
-              <Ionicons name="notifications-off-outline" size={18} color={AppColors.errorText} />
-              <ThemedText style={styles.bannerText}>
-                {permission === 'denied'
-                  ? (onWeb ? t('settings.lasNotificacionesEstanBloqueadasEn') : t('settings.estanBloqueadasEnEsteTelefono'))
-                  : (onWeb ? t('settings.esteNavegadorTodaviaNoHa') : t('settings.esteTelefonoTodaviaNoLas'))}
-              </ThemedText>
-              {(permission !== 'denied' || canOpenNotificationSettings) && (
-                <Pressable
-                  accessibilityRole="button"
-                  hitSlop={8}
-                  onPress={permission === 'denied' ? openNotificationSettings : () => void enablePush().then(setPermission)}
-                  style={({ pressed }) => pressed && styles.pressedText}
-                >
-                  <ThemedText style={styles.bannerAction}>
-                    {permission === 'denied' ? t('common.abrirAjustes') : t('settings.permitir')}
-                  </ThemedText>
-                </Pressable>
-              )}
-            </View>
+  return (
+    <FrostedScreen style={styles.screen}>
+      <ScrollView ref={pageScroll} contentContainerStyle={withTopInset([styles.page, widePageStyle(wide)], insets.top)} showsVerticalScrollIndicator={false}>
+        <ThemedText accessibilityRole="header" style={[styles.title, wide && styles.titleWide]}>{t('common.configuraciones')}</ThemedText>
+
+        <WideColumns
+          asideLeft
+          asideFirstOnPhone
+          asideWidth={360}
+          stickyAside
+          aside={(
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={user?.email ? `${name}, ${user.email}` : name}
+                accessibilityHint={t('editProfile.editarPerfil')}
+                onPress={() => router.push('/edit-profile')}
+                style={({ pressed }) => [styles.account, pressed && AppPressed]}
+              >
+                <HanetAvatar seed={avatarSeed} photoUrl={photoUrl} fallback={initialsOf(name)} width={56} radius={16} />
+                <View style={styles.accountCopy}>
+                  <ThemedText numberOfLines={1} style={styles.accountName}>{name}</ThemedText>
+                  {!!user?.email && <ThemedText numberOfLines={1} style={styles.accountDetail}>{user.email}</ThemedText>}
+                  <ThemedText style={styles.accountAction}>{t('editProfile.editarPerfil')}</ThemedText>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={AppColors.textSecondary} />
+              </Pressable>
+              {wide && aboutAndSession}
+            </>
           )}
-          <SettingsGroup
-            title={t('settings.notificaciones')}
-            footer={(
-              <>
-                {!!notificationsError && <SettingsNote error>{notificationsError}</SettingsNote>}
-                <SettingsNote>{notificationsFooter}</SettingsNote>
-              </>
-            )}
-          >
-            <SettingsToggleRow
-              icon="school-outline"
-              label="ClassHall"
-              detail={t('settings.anunciosTareasYRevisiones')}
-              value={classhallOn}
-              onChange={on => void saveSwitch(on, classhallOn, setClasshallOn, saveClasshallNotifications)}
-              disabled={loadingNotifications}
-            />
-            <SettingsToggleRow
-              icon="sunny-outline"
-              label={t('settings.resumenDeLas700')}
-              detail={t('settings.tuPrimeraClaseYLo')}
-              value={morningOn}
-              onChange={on => void saveSwitch(on, morningOn, setMorningOn, saveMorningNotifications)}
-              disabled={loadingNotifications}
-            />
-            <SettingsToggleRow
-              icon="hourglass-outline"
-              label={t('settings.avisosDePruebas')}
-              detail={onWeb ? t('settings.soloEnLaAppDelTelefono') : t('settings.n24Y4HorasAntesSolo')}
-              value={examsOn}
-              onChange={on => void chooseExams(on)}
-              disabled={onWeb}
-            />
-            <SettingsToggleRow
-              icon="flag-outline"
-              label={t('common.aniversario')}
-              detail={t('settings.pruebasFlashYPlazosDe')}
-              value={anniversaryOn}
-              onChange={on => void saveSwitch(on, anniversaryOn, setAnniversaryOn, saveAnniversaryNotifications)}
-              disabled={loadingNotifications}
-            />
-            <SettingsToggleRow
-              icon="newspaper-outline"
-              label={t('layout.feed')}
-              detail={t('settings.publicacionesEnviadasComoNotificacion')}
-              value={feedOn}
-              onChange={on => void saveSwitch(on, feedOn, setFeedOn, saveFeedNotifications)}
-              disabled={loadingNotifications}
-            />
-          </SettingsGroup>
-        </View>
-
-        <HomeCalendarSetting />
-
-        <SettingsGroup
-          title={t('settings.privacidad')}
-          footer={lockAvailable === false
-            ? Platform.OS === 'web'
-              ? t('settings.laProteccionDeNotasSe')
-              : t('settings.paraProtegerTusNotasEste')
-            : t('settings.valeSoloEnEsteTelefono')}
-        >
-          <SettingsToggleRow
-            icon="lock-closed-outline"
-            label={t('settings.protegerNotas')}
-            detail={t('settings.pideFaceIdHuellaO')}
-            value={gradesLock.enabled}
-            onChange={on => void chooseGradesLock(on)}
-            disabled={savingLock || !gradesLock.ready || !lockAvailable}
-          />
-        </SettingsGroup>
-
-        <View style={styles.block}>
-          <ThemedText accessibilityRole="header" style={styles.groupTitle}>{t('settings.iconoDeLaApp')}</ThemedText>
-          <View accessibilityRole="radiogroup" style={[styles.iconCard, !iconsAvailable && styles.iconCardOff]}>
-            {APP_ICONS.map(option => {
-              const selected = iconsAvailable && option.id === icon;
-              return (
-                <Pressable
-                  key={option.label}
-                  accessibilityRole="radio"
-                  accessibilityLabel={t('settings.iconoLabelValue', { label: option.label, value: option.id === null ? t('settings.predeterminado') : '' })}
-                  accessibilityState={{ checked: selected, disabled: !iconsAvailable }}
-                  disabled={!iconsAvailable}
-                  onPress={() => void chooseIcon(option.id)}
-                  style={({ pressed }) => [styles.iconOption, pressed && AppPressed]}
-                >
-                  <View style={[styles.iconRing, selected && styles.iconRingSelected]}>
-                    <Image source={option.preview} style={styles.iconImage} contentFit="cover" />
+          main={(
+            <>
+              <View style={styles.block}>
+                {support === 'supported' && anyPushOn && (permission === 'denied' || permission === 'undetermined') && (
+                  <View style={styles.banner}>
+                    <Ionicons name="notifications-off-outline" size={18} color={AppColors.errorText} />
+                    <ThemedText style={styles.bannerText}>
+                      {permission === 'denied'
+                        ? (onWeb ? t('settings.lasNotificacionesEstanBloqueadasEn') : t('settings.estanBloqueadasEnEsteTelefono'))
+                        : (onWeb ? t('settings.esteNavegadorTodaviaNoHa') : t('settings.esteTelefonoTodaviaNoLas'))}
+                    </ThemedText>
+                    {(permission !== 'denied' || canOpenNotificationSettings) && (
+                      <Pressable
+                        accessibilityRole="button"
+                        hitSlop={8}
+                        onPress={permission === 'denied' ? openNotificationSettings : () => void enablePush().then(setPermission)}
+                        style={({ pressed }) => pressed && styles.pressedText}
+                      >
+                        <ThemedText style={styles.bannerAction}>
+                          {permission === 'denied' ? t('common.abrirAjustes') : t('settings.permitir')}
+                        </ThemedText>
+                      </Pressable>
+                    )}
                   </View>
-                  <ThemedText numberOfLines={1} style={[styles.iconLabel, selected && styles.iconLabelSelected]}>{option.label}</ThemedText>
-                </Pressable>
-              );
-            })}
-          </View>
-          {!!iconError && <SettingsNote error>{iconError}</SettingsNote>}
-          {!iconsAvailable && (
-            <SettingsNote>
-              {Platform.OS === 'web' ? t('settings.elIconoSeCambiaDesde') : t('settings.paraCambiarElIconoNecesitas')}
-            </SettingsNote>
+                )}
+                <SettingsGroup
+                  title={t('settings.notificaciones')}
+                  footer={(
+                    <>
+                      {!!notificationsError && <SettingsNote error>{notificationsError}</SettingsNote>}
+                      <SettingsNote>{notificationsFooter}</SettingsNote>
+                    </>
+                  )}
+                >
+                  <SettingsToggleRow
+                    icon="school-outline"
+                    label="ClassHall"
+                    detail={t('settings.anunciosTareasYRevisiones')}
+                    value={classhallOn}
+                    onChange={on => void saveSwitch(on, classhallOn, setClasshallOn, saveClasshallNotifications)}
+                    disabled={loadingNotifications}
+                  />
+                  <SettingsToggleRow
+                    icon="sunny-outline"
+                    label={t('settings.resumenDeLas700')}
+                    detail={t('settings.tuPrimeraClaseYLo')}
+                    value={morningOn}
+                    onChange={on => void saveSwitch(on, morningOn, setMorningOn, saveMorningNotifications)}
+                    disabled={loadingNotifications}
+                  />
+                  <SettingsToggleRow
+                    icon="hourglass-outline"
+                    label={t('settings.avisosDePruebas')}
+                    detail={onWeb ? t('settings.soloEnLaAppDelTelefono') : t('settings.n24Y4HorasAntesSolo')}
+                    value={examsOn}
+                    onChange={on => void chooseExams(on)}
+                    disabled={onWeb}
+                  />
+                  <SettingsToggleRow
+                    icon="flag-outline"
+                    label={t('common.aniversario')}
+                    detail={t('settings.pruebasFlashYPlazosDe')}
+                    value={anniversaryOn}
+                    onChange={on => void saveSwitch(on, anniversaryOn, setAnniversaryOn, saveAnniversaryNotifications)}
+                    disabled={loadingNotifications}
+                  />
+                  <SettingsToggleRow
+                    icon="newspaper-outline"
+                    label={t('layout.feed')}
+                    detail={t('settings.publicacionesEnviadasComoNotificacion')}
+                    value={feedOn}
+                    onChange={on => void saveSwitch(on, feedOn, setFeedOn, saveFeedNotifications)}
+                    disabled={loadingNotifications}
+                  />
+                </SettingsGroup>
+              </View>
+
+              <HomeCalendarSetting />
+
+              <SettingsGroup
+                title={t('settings.privacidad')}
+                footer={lockAvailable === false
+                  ? Platform.OS === 'web'
+                    ? t('settings.laProteccionDeNotasSe')
+                    : t('settings.paraProtegerTusNotasEste')
+                  : t('settings.valeSoloEnEsteTelefono')}
+              >
+                <SettingsToggleRow
+                  icon="lock-closed-outline"
+                  label={t('settings.protegerNotas')}
+                  detail={t('settings.pideFaceIdHuellaO')}
+                  value={gradesLock.enabled}
+                  onChange={on => void chooseGradesLock(on)}
+                  disabled={savingLock || !gradesLock.ready || !lockAvailable}
+                />
+              </SettingsGroup>
+
+              <View style={styles.block}>
+                <ThemedText accessibilityRole="header" style={styles.groupTitle}>{t('settings.iconoDeLaApp')}</ThemedText>
+                <View accessibilityRole="radiogroup" style={[styles.iconCard, !iconsAvailable && styles.iconCardOff]}>
+                  {APP_ICONS.map(option => {
+                    const selected = iconsAvailable && option.id === icon;
+                    return (
+                      <Pressable
+                        key={option.label}
+                        accessibilityRole="radio"
+                        accessibilityLabel={t('settings.iconoLabelValue', { label: option.label, value: option.id === null ? t('settings.predeterminado') : '' })}
+                        accessibilityState={{ checked: selected, disabled: !iconsAvailable }}
+                        disabled={!iconsAvailable}
+                        onPress={() => void chooseIcon(option.id)}
+                        style={({ pressed }) => [styles.iconOption, pressed && AppPressed]}
+                      >
+                        <View style={[styles.iconRing, selected && styles.iconRingSelected]}>
+                          <Image source={option.preview} style={styles.iconImage} contentFit="cover" />
+                        </View>
+                        <ThemedText numberOfLines={1} style={[styles.iconLabel, selected && styles.iconLabelSelected]}>{option.label}</ThemedText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                {!!iconError && <SettingsNote error>{iconError}</SettingsNote>}
+                {!iconsAvailable && (
+                  <SettingsNote>
+                    {Platform.OS === 'web' ? t('settings.elIconoSeCambiaDesde') : t('settings.paraCambiarElIconoNecesitas')}
+                  </SettingsNote>
+                )}
+              </View>
+
+              {installGuideAvailable && (
+                <SettingsGroup title={t('settings.hanetWeb')}>
+                  <SettingsLinkRow icon="add-circle-outline" label={t('settings.agregarHanetATuInicio')} onPress={() => setInstallGuideOpen(true)} />
+                </SettingsGroup>
+              )}
+            </>
           )}
-        </View>
-
-        {installGuideAvailable && (
-          <SettingsGroup title={t('settings.hanetWeb')}>
-            <SettingsLinkRow icon="add-circle-outline" label={t('settings.agregarHanetATuInicio')} onPress={() => setInstallGuideOpen(true)} />
-          </SettingsGroup>
-        )}
-
-        <SettingsGroup title={t('settings.acercaDeHanet')}>
-          <SettingsLinkRow icon="sparkles-outline" label={t('settings.novedades')} detail={APP_VERSION_LABEL} onPress={() => router.push('/whats-new')} />
-          <SettingsLinkRow icon="mail-outline" label={t('settings.contacto')} hint={CONTACT} onPress={() => void Linking.openURL(`mailto:${CONTACT}`)} />
-          <SettingsLinkRow icon="document-text-outline" label={t('licenses.licenciasDeCodigoAbierto')} onPress={() => router.push('/licenses')} />
-        </SettingsGroup>
-
-        <View style={styles.block}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('common.cerrarSesion')}
-            accessibilityHint={user?.email ? t('settings.sesionIniciadaComoEmail', { email: user.email }) : undefined}
-            onPress={() => void signOut()}
-            style={({ pressed }) => [styles.signOut, pressed && AppPressed]}
-          >
-            <ThemedText style={styles.signOutText}>{t('common.cerrarSesion')}</ThemedText>
-          </Pressable>
-          {/* Looks like plain text; seven quick taps open the secret. */}
-          <Pressable accessibilityLabel={`${t('settings.version')} ${APP_VERSION_LABEL}`} onPress={tapVersion} style={styles.versionTap}>
-            <ThemedText style={styles.version}>HaNet {APP_VERSION_LABEL}</ThemedText>
-          </Pressable>
-        </View>
+        />
+        {!wide && aboutAndSession}
       </ScrollView>
       <VersionEasterEgg visible={eggOpen} version={APP_VERSION} stage={APP_RELEASE_STAGE} onClose={() => setEggOpen(false)} />
       <InstallGuideDialog visible={installGuideOpen} onClose={() => setInstallGuideOpen(false)} />
@@ -352,6 +376,8 @@ const styles = StyleSheet.create({
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.xl },
 
   title: { ...AppType.largeTitle, color: AppColors.textPrimary, paddingTop: AppSpacing.lg, paddingHorizontal: AppSpacing.xs },
+  // Wide web window: the desktop title, like ClassHall's.
+  titleWide: { fontFamily: 'DMSans_700Bold', fontSize: 40, lineHeight: 46, letterSpacing: -1.6, paddingTop: 0, paddingHorizontal: 0 },
   block: { gap: AppSpacing.sm },
   groupTitle: { ...AppType.footnote, fontFamily: 'DMSans_700Bold', color: AppColors.textSecondary, paddingHorizontal: AppSpacing.sm },
 

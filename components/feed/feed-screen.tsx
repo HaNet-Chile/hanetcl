@@ -1,4 +1,6 @@
 import { TAB_BAR_CLEARANCE } from '@/components/AppTabBar';
+import { WIDE_PAGE, useWide } from '@/components/ui/wide-page';
+import { useContentWidth } from '@/hooks/use-desktop-layout';
 import { eventBar, useEventBar } from '@/components/events/event-bar-store';
 import { markdownToPlain } from '@/components/feed/feed-markdown';
 import { FeedPostView, SpaceTile } from '@/components/feed/feed-ui';
@@ -22,6 +24,9 @@ import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { t } from '@/i18n';
 
 const MAX_WIDTH = 480;
+// Beside the side navigation (wide web window) the posts read in a wider
+// column, centered like any feed on a computer.
+const WIDE_WIDTH = 680;
 
 type Dialog =
   | { kind: 'more'; post: FeedPost }
@@ -39,6 +44,8 @@ export function FeedScreen({ tag, title }: { tag?: string; title?: string }) {
   const router = useRouter();
   const { user } = useSession();
   const { width } = useWindowDimensions();
+  const wide = useWide();
+  const contentArea = useContentWidth();
   const list = useRef<FlatList<FeedPost>>(null);
   const { query } = useEventBar();
 
@@ -101,7 +108,7 @@ export function FeedScreen({ tag, title }: { tag?: string; title?: string }) {
     return () => clearTimeout(timer);
   }, [foundPost, router, scrollOffset, tag, visible]);
 
-  const contentWidth = Math.min(width, MAX_WIDTH);
+  const contentWidth = wide ? Math.min(contentArea - WIDE_PAGE.gutter * 2, WIDE_WIDTH) : Math.min(width, MAX_WIDTH);
   const canPublish = (feed?.publishAs.length ?? 0) > 0;
 
   // Publishing goes in the bar's menu, while this screen is in front.
@@ -192,7 +199,7 @@ export function FeedScreen({ tag, title }: { tag?: string; title?: string }) {
     <View style={styles.header}>
       <View style={styles.topBar}>
         <View style={styles.titleWrap}>
-          <ThemedText accessibilityRole="header" style={styles.title}>{title ?? 'Feed y comunidad'}</ThemedText>
+          <ThemedText accessibilityRole="header" style={[styles.title, wide && styles.titleWide]}>{title ?? 'Feed y comunidad'}</ThemedText>
           {(!!tag || !!feed?.institutionName) && (
             <ThemedText numberOfLines={1} style={styles.subtitle}>{[tag && `#${tag}`, feed?.institutionName].filter(Boolean).join(' · ')}</ThemedText>
           )}
@@ -278,7 +285,7 @@ export function FeedScreen({ tag, title }: { tag?: string; title?: string }) {
           setTimeout(() => list.current?.scrollToIndex({ index: info.index, animated: false, viewOffset: scrollOffset }), 80);
         }}
         ListEmptyComponent={empty ?? undefined}
-        contentContainerStyle={withTopInset(styles.content, insets.top)}
+        contentContainerStyle={withTopInset([styles.content, wide && styles.contentWide], insets.top)}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={AppColors.accent} progressViewOffset={insets.top} />}
@@ -380,6 +387,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingBottom: TAB_BAR_CLEARANCE + AppSpacing.xxl,
   },
+  contentWide: {
+    maxWidth: WIDE_WIDTH,
+    paddingTop: WIDE_PAGE.top,
+  },
   header: {
     gap: AppSpacing.md,
   },
@@ -392,6 +403,12 @@ const styles = StyleSheet.create({
   },
   titleWrap: {
     flex: 1,
+  },
+  titleWide: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 40,
+    lineHeight: 46,
+    letterSpacing: -1.6,
   },
   title: {
     fontFamily: 'DMSans_500Medium',

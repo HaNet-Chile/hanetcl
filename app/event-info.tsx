@@ -32,6 +32,7 @@ import type { Hall } from '@/services/classhall-service';
 import { sameSubject, subjectName } from '@/constants/subjects';
 import { doc, getDoc } from 'firebase/firestore';
 import { t } from '@/i18n';
+import { useWide, widePageStyle } from '@/components/ui/wide-page';
 
 const ICONS = {
   date: require('@/assets/icons/event/calendar.svg'),
@@ -53,6 +54,7 @@ type EventParams = {
 export default function EventInfoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const wide = useWide();
   const { user, initializing } = useSession();
   const params = useLocalSearchParams<EventParams>();
 
@@ -321,13 +323,13 @@ export default function EventInfoScreen() {
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={withTopInset([styles.scrollContent, { paddingBottom: insets.bottom + 132 }], insets.top)}
+        contentContainerStyle={withTopInset([styles.scrollContent, widePageStyle(wide, 'reading'), { paddingBottom: insets.bottom + 132 }], insets.top)}
       >
         <View style={styles.topBar}>
           <ThemedText style={styles.topBarDate} numberOfLines={1}>{formatLongDate(event.startDate)}</ThemedText>
         </View>
 
-        <ThemedText accessibilityRole="header" style={[styles.title, event.cancelled && styles.titleCancelled]}>
+        <ThemedText accessibilityRole="header" style={[styles.title, wide && styles.titleWide, event.cancelled && styles.titleCancelled]}>
           {event.title}
         </ThemedText>
         {event.cancelled && <ThemedText style={styles.cancelledNote}>{t('eventInfo.esteEventoFueCancelado')}</ThemedText>}
@@ -604,6 +606,12 @@ const styles = StyleSheet.create({
   icon: {
     width: 24,
     height: 24,
+  },
+  // Wide window: the desktop title, as in PageHeader.
+  titleWide: {
+    fontSize: 40,
+    lineHeight: 46,
+    letterSpacing: -1.6,
   },
   title: {
     paddingHorizontal: 10,
