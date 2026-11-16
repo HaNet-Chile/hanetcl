@@ -84,12 +84,13 @@ export function StructureGroup() {
 
       <Section
         title="Resultado de búsqueda"
-        description="Una fila de la búsqueda, dentro de un grupo de ajustes: ícono, título con lo que coincide en negrita y una línea de contexto. El ícono rosado marca la mejor respuesta, la que abre la tecla “Buscar” del teclado, o lo que viene entre las sugerencias."
+        description="Una fila de la búsqueda, dentro de un grupo de ajustes: ícono, título con lo que coincide en negrita y una línea de contexto. El ícono rosado marca la mejor respuesta, la que abre la tecla “Buscar” del teclado, o lo que viene entre las sugerencias. Lo del Calendar que ya pasó va tachado, después de lo que viene."
         source="components/search/search-row.tsx · SearchRow · services/search.ts"
       >
         <SettingsGroup title="Tus clases (ejemplo, buscando “mate”)">
           <SearchRow top query="mate" item={{ key: 'a', kind: 'hall', title: 'Matemática', subtitle: 'Docente de ejemplo', icon: 'school-outline', href: '/classhall' }} onPress={() => {}} />
           <SearchRow query="mate" item={{ key: 'b', kind: 'calendar', title: 'Prueba de Matemática: funciones', subtitle: 'Mié 18 nov. · Evaluación sumativa', icon: 'calendar-outline', href: '/calendar' }} onPress={() => {}} />
+          <SearchRow query="mate" item={{ key: 'd', kind: 'calendar', title: 'Control de Matemática', subtitle: 'Ayer · Evaluación formativa', icon: 'calendar-outline', href: '/calendar', past: true }} onPress={() => {}} />
           <SearchRow query="mate" item={{ key: 'c', kind: 'section', title: 'ClassHall', subtitle: 'Tus clases, tareas y materiales', icon: 'school-outline', href: '/classhall' }} onPress={() => {}} />
         </SettingsGroup>
       </Section>

@@ -34,6 +34,8 @@ export type SearchItem = {
   href: Href;
   /** When it happens, for what has a date: what comes first goes first. */
   at?: number;
+  /** It already happened (the Calendar's): shown struck through, after what is still to come. */
+  past?: boolean;
 };
 
 export type SearchGroup = { kind: SearchKind; label: string; items: SearchItem[] };
@@ -84,6 +86,7 @@ function dayLabel(date: Date, now: number) {
   const days = Math.round((new Date(date).setHours(0, 0, 0, 0) - today) / DAY);
   if (days === 0) return t('common.hoy2');
   if (days === 1) return t('common.manana');
+  if (days === -1) return t('services.feedService.ayer');
   return `${capitalize(weekdaysShort()[date.getDay()])} ${date.getDate()} ${monthsShort()[date.getMonth()]}.`;
 }
 
@@ -121,9 +124,9 @@ export function buildSearchIndex({ role, halls, calendar, institutionEvents, reg
     });
   }
 
-  // What already happened stays findable for a month ("¿cuándo fue la prueba?").
+  // What already happened stays findable ("¿cuándo fue la prueba?"), marked as past.
   for (const event of calendar ?? []) {
-    if (event.cancelled || event.endDate.getTime() < now - 30 * DAY) continue;
+    if (event.cancelled) continue;
     items.push({
       key: `calendar:${event.id}`,
       kind: 'calendar',
@@ -133,6 +136,7 @@ export function buildSearchIndex({ role, halls, calendar, institutionEvents, reg
       icon: event.taskId ? 'document-text-outline' : 'calendar-outline',
       href: { pathname: '/event-info', params: { id: event.id, canEdit: '0' } },
       at: event.startDate.getTime(),
+      past: event.endDate.getTime() < now,
     });
   }
 
@@ -203,8 +207,17 @@ export function searchIndex(index: SearchItem[], query: string, now = Date.now()
 
   // The group with the best answer goes first, so what Enter opens is on top.
   const best = (kind: SearchKind) => ranked.find(entry => entry.item.kind === kind)?.value ?? 0;
+  // The Calendar's answers go by date whatever their match: the soonest first,
+  // and what already happened after all that is to come, the latest first.
+  const byDate = (a: SearchItem, b: SearchItem) => (
+    Number(!!a.past) - Number(!!b.past) || (a.past ? (b.at ?? 0) - (a.at ?? 0) : (a.at ?? 0) - (b.at ?? 0))
+  );
+  const inGroup = (kind: SearchKind) => {
+    const items = ranked.filter(entry => entry.item.kind === kind).map(entry => entry.item);
+    return (kind === 'calendar' ? items.sort(byDate) : items).slice(0, PER_GROUP);
+  };
   const groups = GROUPS
-    .map(group => ({ ...group, items: ranked.filter(entry => entry.item.kind === group.kind).slice(0, PER_GROUP).map(entry => entry.item) }))
+    .map(group => ({ ...group, items: inGroup(group.kind) }))
     .filter(group => group.items.length > 0)
     .sort((a, b) => best(b.kind) - best(a.kind));
   return { groups, top: groups[0]?.items[0] ?? null };
@@ -240,7 +253,7 @@ export function matchParts(title: string, query: string): { text: string; match:
  * All of it is real and opens from the search.
  */
 export function suggestionsFrom(index: SearchItem[], now = Date.now(), limit = 6): SearchItem[] {
-  const upcoming = (kind: SearchKind) => index.filter(item => item.kind === kind && (item.at ?? 0) >= now).sort((a, b) => (a.at ?? 0) - (b.at ?? 0));
+  const upcoming = (kind: SearchKind) => index.filter(item => item.kind === kind && !item.past && (item.at ?? 0) >= now).sort((a, b) => (a.at ?? 0) - (b.at ?? 0));
   const section = (key: string) => index.find(item => item.key === `section:${key}`);
   const halls = index.filter(item => item.kind === 'hall');
   const picks = [
