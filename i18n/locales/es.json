@@ -1267,7 +1267,6 @@
     },
     "gridMenu": {
       "abrirTitle": "Abrir {{title}}",
-      "actividad": "actividad",
       "calendario": "Calendario",
       "classhallYCalificaciones": "ClassHall y calificaciones",
       "countDias_one": "Mañana",
@@ -1281,15 +1280,19 @@
       "faltanCountDias_one": "Empieza mañana",
       "faltanCountDias_other": "Faltan {{count}} días",
       "feedYComunidad": "Feed y comunidad",
+      "formativa": "Formativa",
       "ganoName": "¡Ganó {{name}}!",
       "hoyHoursMinutesName": "Hoy {{hours}}:{{minutes}} · {{name}}",
       "nameLideraPoints": "{{name}} lidera · {{points}}",
       "prox": "Próx.",
       "proxEval": "Próx. eval.",
-      "proximaValueTitleWhenAbrir": "Próxima {{value}}: {{title}}, {{when}}. Abrir",
+      "proximoEnTuCalendarType": "Próximo en tu Calendar: {{type}}, {{title}}, {{when}}. Abrir",
       "proximoEvento": "Próximo evento",
+      "proxTaller": "Próx. taller",
+      "proxTarea": "Próx. tarea",
       "quedanCountDias_one": "Queda 1 día",
       "quedanCountDias_other": "Quedan {{count}} días",
+      "remedial": "Remedial",
       "ultimoDia": "¡Último día!",
       "valueTitleWhenVenuenameAbrir": "{{value}}: {{title}}, {{when}}, {{venueName}}. Abrir"
     },
@@ -1448,6 +1451,16 @@
       }
     },
     "settings": {
+      "homeCalendarSetting": {
+        "apagado": "Apagado",
+        "avisoDelCalendar": "Aviso del Calendar",
+        "countTipos_one": "{{count}} tipo",
+        "countTipos_other": "{{count}} tipos",
+        "elAvisoMuestraLoMas": "El aviso muestra lo más próximo de tu curso entre los tipos que elijas. Vale solo en este teléfono.",
+        "eligeQueEventosDeTu": "Elige qué eventos de tu curso pueden aparecer en el aviso del Calendar del Inicio. Siempre se muestra el más próximo.",
+        "eligeQueEventosMuestra": "Elige qué eventos muestra",
+        "todos": "Todos"
+      },
       "versionEasterEgg": {
         "hanetVersionVersionValueToca": "HaNet versión {{version}}{{value}}. Toca para cerrar.",
         "tocaParaCerrar": "Toca para cerrar"
@@ -1481,9 +1494,9 @@
       }
     },
     "topHeader": {
-      "buscarEnHanetProximamente": "Buscar en HaNet, próximamente",
-      "buscarProximamente": "Buscar · Próximamente",
-      "hanetBeta": "HaNet Beta"
+      "abreLasNovedades": "Abre las novedades",
+      "hanetBeta": "HaNet Beta",
+      "versionAppversionlabel": "Versión {{appVersionLabel}}"
     },
     "ui": {
       "hanetDateTimePicker": {
@@ -2222,6 +2235,13 @@
     "uneteALaRedEscolar": "Únete a la red escolar de HaNet, solo faltas tú.",
     "vaDirectoAIniciarSesion": "Va directo a iniciar sesión"
   },
+  "search": {
+    "borrarLasBusquedasRecientes": "Borrar las búsquedas recientes",
+    "buscaEnTusClasesEl": "Busca en tus clases, el Calendar, los eventos y el Feed. No busca personas.",
+    "busquedasRecientes": "Búsquedas recientes",
+    "noEncontramosNadaParaTyped": "No encontramos nada para “{{typed}}”. Prueba con el nombre de una clase, una evaluación, un evento o una herramienta.",
+    "sugerencias": "Sugerencias"
+  },
   "services": {
     "anniversaryService": {
       "deportes": "Deportes",
@@ -2343,6 +2363,43 @@
     "pushService": {
       "anunciosTareasMaterialNuevoY": "Anuncios, tareas, material nuevo y recordatorios de entrega.",
       "elResumenDeLas7": "El resumen de las 7:00 y los avisos 24 y 4 horas antes de cada prueba."
+    },
+    "search": {
+      "administracionEquipo": "administracion equipo",
+      "ajustesOpcionesCerrarSesionPrivacidad": "ajustes opciones cerrar sesion privacidad proteger",
+      "alianzasActividadesYPuntos": "Alianzas, actividades y puntos",
+      "alianzasMarcadorPuntajeSemana": "alianzas marcador puntaje semana",
+      "avisosPush": "avisos push",
+      "bloquesRecreoAlmuerzoClasesHora": "bloques recreo almuerzo clases hora",
+      "buscarEnHanet": "Buscar en HaNet",
+      "calendarioAgendaPruebasEvaluacionesTareas": "calendario agenda pruebas evaluaciones tareas fechas semana mes",
+      "calificacionesPromedioSemestreDestaparRaspar": "calificaciones promedio semestre destapar raspar",
+      "clasesAsignaturasRamosMateriasHall": "clases asignaturas ramos materias hall docente tareas entregas anuncios",
+      "comunicadosDeTuInstitucion": "Comunicados de tu institución",
+      "comunidadAvisosPublicacionesVotacionesNoticias": "comunidad avisos publicaciones votaciones noticias espacios",
+      "cuentaQrCodigoFotoBlobatar": "cuenta qr codigo foto blobatar",
+      "dePuntosANota": "De puntos a nota",
+      "electivosTestVocacionalInteresesAreas": "electivos test vocacional intereses areas carreras",
+      "enHanet": "En HaNet",
+      "enTuInstitucionYCerca": "En tu institución y cerca de ti",
+      "institucionesPersonasYRoles": "Instituciones, personas y roles",
+      "laAgendaDeTuCurso": "La agenda de tu curso",
+      "loUltimoQueTeLlego": "Lo último que te llegó",
+      "notificacionesPrivacidadEIconoDe": "Notificaciones, privacidad e ícono de la app",
+      "panoramasCiudadEntradasConciertosActividades": "panoramas ciudad entradas conciertos actividades",
+      "promedioCalcularPonderacionExamen": "promedio calcular ponderacion examen",
+      "puntajeExigenciaTablaConversion": "puntaje exigencia tabla conversion",
+      "queCambioEnCadaVersion": "Qué cambió en cada versión",
+      "recursosParaTuAnoEscolar": "Recursos para tu año escolar",
+      "testDeInteresesParaElegir": "Test de intereses para elegir electivos",
+      "tuHanetIdYTu": "Tu HaNet ID y tu HN-QR",
+      "tuPromedioYCuantoNecesitas": "Tu promedio y cuánto necesitas",
+      "tusCalificacionesYPromedios": "Tus calificaciones y promedios",
+      "tusClases": "Tus clases",
+      "tusClasesDeLaSemana": "Tus clases de la semana",
+      "tusClasesTareasYMateriales": "Tus clases, tareas y materiales",
+      "utilidadesRecursos": "utilidades recursos",
+      "versionCambiosActualizacion": "version cambios actualizacion"
     },
     "widgetService": {
       "disfrutaElDia": "Disfruta el día",

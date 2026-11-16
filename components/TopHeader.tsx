@@ -1,26 +1,70 @@
 import { AppColors, AppType } from '@/constants/design-tokens';
+import { APP_VERSION_LABEL, APP_VERSION_NUMBER } from '@/constants/app-version';
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { SearchPill } from '@/components/ui/search-pill';
+import { SEARCH_PLACEHOLDER, pillSuggestions, useSearchIndex } from '@/services/search';
+import { useSession } from '@/services/auth-service';
 import { t } from '@/i18n';
 
-/** `transparent` lets what is behind show (the anniversary's glow). */
+/** The header's measures, shared with the search screen, whose field starts where this one is. */
+export const TOP_HEADER = { paddingTop: 12, paddingHorizontal: 20, paddingBottom: 20, gap: 16 } as const;
+
+/**
+ * "HaNet Beta" with the version's numbers raised beside it. With `onPress`
+ * the numbers open Novedades.
+ */
+export function HomeTitle({ onPressVersion }: { onPressVersion?: () => void }) {
+  const version = (
+    <ThemedText style={styles.version}>{APP_VERSION_NUMBER}</ThemedText>
+  );
+  return (
+    <View style={styles.titleContainer}>
+      <ThemedText accessibilityRole="header" numberOfLines={1} style={styles.titleText}>{t('components.topHeader.hanetBeta')}</ThemedText>
+      {onPressVersion ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('components.topHeader.versionAppversionlabel', { appVersionLabel: APP_VERSION_LABEL })}
+          accessibilityHint={t('components.topHeader.abreLasNovedades')}
+          hitSlop={{ top: 14, bottom: 18, left: 6, right: 10 }}
+          onPress={onPressVersion}
+          style={({ pressed }) => pressed && styles.versionPressed}
+        >
+          {version}
+        </Pressable>
+      ) : version}
+    </View>
+  );
+}
+
+/**
+ * The Home's header: the app's name and the search, a pill that goes through
+ * what this account can find while nobody touches it and opens the search.
+ * `transparent` lets what is behind show (the anniversary's glow).
+ */
 export default function TopHeader({ transparent }: { transparent?: boolean } = {}) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { user } = useSession();
+  const index = useSearchIndex();
+  const suggestions = React.useMemo(() => pillSuggestions(index), [index]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 12 }, transparent && styles.transparent]}>
-      <View style={styles.titleContainer}>
-        <ThemedText style={styles.titleText}>{t('components.topHeader.hanetBeta')}</ThemedText>
-        <ThemedText style={styles.superscript}>1</ThemedText>
-      </View>
-      {/* Search does not exist yet; the field says so instead of taking input. */}
-      <View style={styles.searchContainer} accessible accessibilityLabel={t('components.topHeader.buscarEnHanetProximamente')} accessibilityState={{ disabled: true }}>
-        <IconSymbol name="magnifyingglass" size={20} color="rgba(226,225,218,0.5)" />
-        <ThemedText style={styles.searchInput} numberOfLines={1}>{t('components.topHeader.buscarProximamente')}</ThemedText>
-      </View>
+    <View style={[styles.container, { paddingTop: insets.top + TOP_HEADER.paddingTop }, transparent && styles.transparent]}>
+      <HomeTitle onPressVersion={user ? () => router.push('/whats-new') : undefined} />
+      {/* Without an account there is nothing of one's own to look through. */}
+      {!!user && (
+        <SearchPill
+          label={SEARCH_PLACEHOLDER}
+          shortLabel={t('components.schedule.blockEditor.buscar')}
+          suggestions={suggestions}
+          onPress={() => router.push('/search')}
+          style={styles.search}
+        />
+      )}
     </View>
   );
 }
@@ -29,10 +73,11 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: AppColors.textOnLight,
+    gap: TOP_HEADER.gap,
+    minHeight: 44 + TOP_HEADER.paddingBottom,
+    paddingHorizontal: TOP_HEADER.paddingHorizontal,
+    paddingBottom: TOP_HEADER.paddingBottom,
+    backgroundColor: AppColors.canvas,
   },
   transparent: {
     backgroundColor: 'transparent',
@@ -40,35 +85,27 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    gap: 3,
   },
   titleText: {
     ...AppType.title3,
     color: AppColors.textSecondary,
   },
-  superscript: {
-    fontSize: 12.9,
-    fontWeight: 'bold',
+  // Raised like an exponent: small, and near 0 tracking as small text wants.
+  version: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.1,
     color: AppColors.textSecondary,
-    lineHeight: 18,
-    marginLeft: 2,
+    opacity: 0.72,
+    fontVariant: ['tabular-nums'],
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: AppColors.surface,
-    borderRadius: 16,
-    borderCurve: 'continuous',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    flex: 1,
-    marginLeft: 20,
+  versionPressed: {
+    opacity: 0.6,
   },
-  searchInput: {
-    marginLeft: 8,
-    color: 'rgba(226,225,218,0.5)',
-    fontSize: 16,
-    lineHeight: 24,
-    letterSpacing: -0.4,
+  search: {
     flex: 1,
+    minWidth: 0,
   },
 });

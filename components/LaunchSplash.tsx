@@ -25,6 +25,11 @@ const ASSETS = {
 // Figma [SPLASH] (10584:10895): HA is 147 × 256, NET 305 × 125 turned upright, 24 apart.
 const WORD_WIDTH = 147 + 24 + 125;
 const CARD_PADDING = 32;
+const LOGO_WIDTH = 74;
+const TITLE_GAP = 12;
+const WIDE_HEADER = 360;
+const VERSION_SIZE = 40;
+const VERSION_LINE = 48;
 
 /**
  * HaNet's launch screen, drawn over the app while the session loads. Once
@@ -64,6 +69,11 @@ export function LaunchSplash({ ready, quick = false }: { ready: boolean; quick?:
   const fit = card.width ? (card.width - CARD_PADDING * 2) / WORD_WIDTH : 1;
   const scale = wide && card.height ? Math.min(2.4, fit, (card.height - CARD_PADDING * 2 - 32) / 305) : Math.min(1, fit);
 
+  // The version's room beside the logo, and the size at which it fits there
+  // (DM Sans Bold runs about 0.52 em per character in a version label).
+  const titleWidth = (wide ? WIDE_HEADER : windowWidth - AppSpacing.md * 2) - CARD_PADDING * 2 - (wide ? 0 : LOGO_WIDTH + TITLE_GAP);
+  const versionSize = Math.max(20, Math.min(VERSION_SIZE, Math.floor(titleWidth / (APP_VERSION_LABEL.length * 0.52))));
+
   return (
     <Animated.View
       accessible
@@ -71,7 +81,11 @@ export function LaunchSplash({ ready, quick = false }: { ready: boolean; quick?:
       style={[styles.root, wide && styles.rootWide, { paddingTop: insets.top + (wide ? AppSpacing.md : AppSpacing.xl), paddingBottom: insets.bottom + AppSpacing.md }, style]}
     >
       <View style={[styles.header, wide && styles.headerWide]}>
-        <ThemedText style={styles.version}>{`HaNet\n${APP_VERSION_LABEL}`}</ThemedText>
+        <View style={styles.title}>
+          <ThemedText numberOfLines={1} style={styles.version}>HaNet</ThemedText>
+          {/* One line always: a long version gets smaller instead of making the card taller. */}
+          <ThemedText numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} style={[styles.version, { fontSize: versionSize }]}>{APP_VERSION_LABEL}</ThemedText>
+        </View>
         <Image source={ASSETS.logotype} style={styles.logotype} contentFit="contain" />
       </View>
       <View style={styles.wordCard} onLayout={event => setCard({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })}>
@@ -96,26 +110,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   headerWide: {
-    width: 360,
+    width: WIDE_HEADER,
+    height: 'auto',
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
   header: {
-    minHeight: 157,
+    // Fixed: two lines of text and the padding, whatever the version says.
+    height: VERSION_LINE * 2 + CARD_PADDING * 2,
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+    gap: TITLE_GAP,
     padding: CARD_PADDING,
     borderRadius: AppRadii.xl,
     borderCurve: 'continuous',
     backgroundColor: AppColors.surface,
   },
-  version: {
+  title: {
     flex: 1,
+    minWidth: 0,
+  },
+  version: {
     fontFamily: 'DMSans_700Bold',
-    fontSize: 40,
-    lineHeight: 48,
+    fontSize: VERSION_SIZE,
+    lineHeight: VERSION_LINE,
     letterSpacing: -0.4,
     color: AppColors.textSecondary,
   },
@@ -124,7 +144,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logotype: {
-    width: 74,
+    width: LOGO_WIDTH,
     height: 96,
   },
   wordCard: {

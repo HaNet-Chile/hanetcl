@@ -13,9 +13,9 @@ import { describeAuthError, useSession } from '@/services/auth-service';
 import { REPORT_REASONS, canShareAsStory, deleteFeedPost, listFeed, reportFeedPost, setFeedPostPinned, spaceGroup, toggleFeedReaction, voteFeedPoll } from '@/services/feed-service';
 import type { Feed, FeedPost } from '@/services/feed-service';
 import * as Haptics from 'expo-haptics';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCached } from '@/services/cache';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, RefreshControl, ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
@@ -85,6 +85,21 @@ export function FeedScreen({ tag, title }: { tag?: string; title?: string }) {
     if (!term) return true;
     return [post.body, post.space.name, ...post.tags].some(value => value.toLocaleLowerCase('es').includes(term));
   }), [feed, filter, term]);
+
+  // Arriving from the Home's search: the feed opens on the post that was found.
+  const { post: foundPost } = useLocalSearchParams<{ post?: string }>();
+  const scrollOffset = insets.top + 8;
+  useEffect(() => {
+    if (!foundPost || tag) return;
+    const position = visible.findIndex(post => post.id === foundPost);
+    if (position < 0) return;
+    // Once the list has drawn its rows.
+    const timer = setTimeout(() => {
+      list.current?.scrollToIndex({ index: position, animated: false, viewOffset: scrollOffset });
+      router.setParams({ post: undefined });
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [foundPost, router, scrollOffset, tag, visible]);
 
   const contentWidth = Math.min(width, MAX_WIDTH);
   const canPublish = (feed?.publishAs.length ?? 0) > 0;
@@ -257,6 +272,11 @@ export function FeedScreen({ tag, title }: { tag?: string; title?: string }) {
           />
         )}
         ListHeaderComponent={header}
+        // Posts have no fixed height: get near first, then land on the row.
+        onScrollToIndexFailed={info => {
+          list.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: false });
+          setTimeout(() => list.current?.scrollToIndex({ index: info.index, animated: false, viewOffset: scrollOffset }), 80);
+        }}
         ListEmptyComponent={empty ?? undefined}
         contentContainerStyle={withTopInset(styles.content, insets.top)}
         showsVerticalScrollIndicator={false}
