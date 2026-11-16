@@ -299,6 +299,10 @@ export default function SettingsScreen() {
 
               <HomeCalendarSetting />
 
+              <SettingsGroup title={t('settings.cuenta')}>
+                <SettingsLinkRow icon="shield-checkmark-outline" label={t('security.seguridad')} detail={t('settings.dispositivosYAlertas')} onPress={() => router.push('/security')} />
+              </SettingsGroup>
+
               <SettingsGroup
                 title={t('settings.privacidad')}
                 footer={lockAvailable === false

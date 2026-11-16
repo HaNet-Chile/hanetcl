@@ -1,6 +1,7 @@
 import { httpsCallable } from 'firebase/functions';
 import app, { functions } from './firebase';
 import { registerServiceWorker, serviceWorkerSupported } from './service-worker';
+import { getDeviceId } from './security-service';
 import { isAppleMobile, isInstalled } from './web-install';
 
 // Web push for the web app: the browser's Firebase Cloud Messaging token is
@@ -49,7 +50,7 @@ export async function registerBrowser() {
       ...(VAPID_KEY ? { vapidKey: VAPID_KEY } : {}),
     });
     if (!token) return false;
-    await httpsCallable(functions, 'registerPushToken')({ token, platform: 'web' });
+    await httpsCallable(functions, 'registerPushToken')({ token, platform: 'web', deviceId: await getDeviceId() });
     registeredToken = token;
     return true;
   } catch (error) {

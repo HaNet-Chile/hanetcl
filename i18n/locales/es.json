@@ -1464,6 +1464,10 @@
       "versionEasterEgg": {
         "hanetVersionVersionValueToca": "HaNet versión {{version}}{{value}}. Toca para cerrar.",
         "tocaParaCerrar": "Toca para cerrar"
+      },
+      "deviceRow": {
+        "esteDispositivo": "Este dispositivo",
+        "ultimaActividadAge": "Última actividad: {{age}}"
       }
     },
     "share": {
@@ -2242,6 +2246,30 @@
     "noEncontramosNadaParaTyped": "No encontramos nada para “{{typed}}”. Prueba con el nombre de una clase, una evaluación, un evento o una herramienta.",
     "sugerencias": "Sugerencias"
   },
+  "security": {
+    "actividadReciente": "Actividad reciente",
+    "aquiVanAQuedarLos": "Aquí van a quedar los inicios de sesión nuevos y los cambios en tu cuenta.",
+    "cambiarContrasena": "Cambiar contraseña",
+    "cerrando": "Cerrando…",
+    "cerrarSesionEnTodasPartes": "Cerrar sesión en todas partes",
+    "cerrarSesionEnTodasPartes2": "¿Cerrar sesión en todas partes?",
+    "cerrarTodo": "Cerrar todo",
+    "dondeEstaAbiertaTuCuenta": "Dónde está abierta tu cuenta",
+    "enviandoCorreo": "Enviando correo…",
+    "esteDispositivo": "Este dispositivo",
+    "incluyeEsteDispositivo": "Incluye este dispositivo",
+    "noPudimosCargarTuSeguridad": "No pudimos cargar tu seguridad. Revisa tu conexión.",
+    "noPudimosCerrarLasSesiones": "No pudimos cerrar las sesiones. Inténtalo de nuevo.",
+    "noPudimosMandarElCorreo": "No pudimos mandar el correo. Inténtalo de nuevo en un rato.",
+    "noReconocesAlgo": "¿No reconoces algo?",
+    "seguridad": "Seguridad",
+    "siNoReconocesAlgunoCierra": "Si no reconoces alguno, cierra sesión en todas partes y cambia tu contraseña.",
+    "teAvisamosCuandoAlguienEntra": "Te avisamos cuando alguien entra a tu cuenta desde un dispositivo nuevo o cuando algo cambia en ella. Estas alertas llegan siempre, aunque apagues las demás notificaciones.",
+    "teMandamosUnCorreoA": "Te mandamos un correo a {{email}} para cambiarla.",
+    "teMandamosUnLinkA": "Te mandamos un link a tu correo para elegir una nueva.",
+    "todaviaNoHayDispositivosEn": "Todavía no hay dispositivos en la lista. Aparecen cuando entras a HaNet.",
+    "tuCuentaSeCierraEn": "Tu cuenta se cierra en todos tus dispositivos, este también, y dejan de llegarles notificaciones. Los que estén abiertos se cierran en menos de una hora. Después entras de nuevo con tu contraseña."
+  },
   "services": {
     "anniversaryService": {
       "deportes": "Deportes",
@@ -2362,7 +2390,9 @@
     },
     "pushService": {
       "anunciosTareasMaterialNuevoY": "Anuncios, tareas, material nuevo y recordatorios de entrega.",
-      "elResumenDeLas7": "El resumen de las 7:00 y los avisos 24 y 4 horas antes de cada prueba."
+      "elResumenDeLas7": "El resumen de las 7:00 y los avisos 24 y 4 horas antes de cada prueba.",
+      "tuCuenta": "Tu cuenta",
+      "iniciosDeSesionYCambios": "Inicios de sesión nuevos y cambios en tu cuenta."
     },
     "search": {
       "administracionEquipo": "administracion equipo",
@@ -2401,6 +2431,12 @@
       "utilidadesRecursos": "utilidades recursos",
       "versionCambiosActualizacion": "version cambios actualizacion"
     },
+    "securityService": {
+      "navegador": "Navegador",
+      "browserEnOs": "{{browser}} en {{os}}",
+      "hanetWebInstalada": "HaNet web, instalada",
+      "hanetWeb": "HaNet web"
+    },
     "widgetService": {
       "disfrutaElDia": "Disfruta el día",
       "entrasALasStart": "Entras a las {{start}}",
@@ -2421,6 +2457,7 @@
     "confirmaParaQuitarLaProteccion": "Confirma para quitar la protección",
     "contacto": "Contacto",
     "cuenta": "Cuenta",
+    "dispositivosYAlertas": "Dispositivos y alertas",
     "elFeedIgualQuedaEn": "Lo que publica el Feed igual queda en Notificaciones, al final del Inicio.",
     "elIconoSeCambiaDesde": "El ícono se cambia desde la app del teléfono.",
     "enAndroidLasNotificacionesNecesitan": "En Android, las notificaciones necesitan la app de HaNet instalada; Expo Go no las recibe.",

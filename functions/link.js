@@ -4,6 +4,7 @@ const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https")
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const { RESEND_API_KEY, sendEmail, magicLinkEmail, alreadyLinkedEmail, escapeHtml } = require("./email");
+const { alertAccount } = require("./security");
 
 // Identity link by institutional email:
 //   1. startInstitutionalLink   the student names their institutional email
@@ -307,6 +308,13 @@ function build(getAdminApp) {
     const adminAuth = getAuth(adminApp);
     const current = (await adminAuth.getUser(auth.uid)).customClaims || {};
     await adminAuth.setCustomUserClaims(auth.uid, { ...current, role: profile.role, courseId: profile.courseId });
+
+    // Said in the notifications section only: whoever linked is right here.
+    await alertAccount(getAdminApp, auth.uid, {
+      kind: "role",
+      title: "Tu cuenta quedó vinculada",
+      body: `Tu HaNet ID ahora es parte de ${institution.data().name}, en ${profile.courseId}.`,
+    }, { push: false });
 
     return { linked: true, institutionName: institution.data().name, courseId: profile.courseId };
   });

@@ -75,6 +75,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `TopNotice` | `system/top-notice.tsx` | Píldora flotante arriba de todo, que no tapa la pantalla: "Sin conexión" y "Hay una versión nueva". |
 | `UpdatePrompt` | `system/update-prompt.tsx` | Web: registra el service worker y ofrece la versión nueva con un `TopNotice`. |
 | `SettingsGroup` · `SettingsLinkRow` · `SettingsToggleRow` · `SettingsNote` | `settings/settings-list.tsx` | Listas agrupadas tipo ajustes del teléfono. Toda la fila cambia el interruptor. |
+| `DeviceRow` | `settings/device-row.tsx` | Un dispositivo donde está abierta la cuenta (Configuraciones → Seguridad), dentro de un `SettingsGroup`: ícono según teléfono, tablet o computador, sistema y app, y la última actividad. El que tienes en la mano dice "Este dispositivo" en rosado. |
 | `useQuickActions` | `quick-actions.tsx` | Los atajos al mantener el ícono de la app (Calendar, ClassHall, Eventos, Notificaciones). |
 | `AppErrorLayer` · `ErrorScreen` y pantallas | `errors/` | Cuenta bloqueada, servidores, sin conexión y error fatal. |
 | `LaunchSplash` · `WelcomeCelebration` · `InstitutionSync` · `OnboardingProgress` | raíz de `components/` | La entrada: splash, bienvenida al unirse, vínculo con la institución y el avance del registro. |
@@ -92,7 +93,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 
 | Componente | Archivo | Qué es |
 | --- | --- | --- |
-| `NotificationRow` | `notifications/notification-row.tsx` | Una notificación: ícono según el tipo, punto rosado si es nueva; una nota nueva lleva rayas y nunca la nota. |
+| `NotificationRow` | `notifications/notification-row.tsx` | Una notificación: ícono según el tipo, punto rosado si es nueva; una nota nueva lleva rayas y nunca la nota. Las alertas de la cuenta (`signIn`, `account`, `role`) usan la misma fila, también en la Actividad reciente de Seguridad. |
 | `HomeNotificationsPreview` · `NotificationsPeek` | `notifications/home-notifications.tsx` | El final del Inicio: "Tienes N notificaciones nuevas" y las 2 más recientes. |
 | `NotificationsPanel` | `notifications/notifications-panel.tsx` | La sección que sube pegada al Inicio. |
 | `usePullDown` | `notifications/pull-down.ts` | Tirar pasado un borde para abrir o cerrar: umbral con vibración, resistencia y resorte. iOS lee el rebote del scroll; Android y la web miden el dedo. |

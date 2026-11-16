@@ -23,6 +23,7 @@ import { useSession } from '@/services/auth-service';
 import { useLaunchContentReady } from '@/services/launch-ready';
 import { hasSeenOnboarding, markOnboardingSeen } from '@/services/onboarding';
 import { listenToNotificationTaps, registerDevice } from '@/services/push-service';
+import { touchDevice } from '@/services/security-service';
 import { refreshDayWidgets } from '@/services/day-sync';
 
 // The only screens reachable without an account. Everyone starts at the
@@ -153,10 +154,12 @@ export default function RootLayout() {
   }, [initializing, navigationReady, routed, router, user]);
 
   // Push notifications: the device registers with the account (when the person
-  // already allowed them), and a tapped notification opens its screen.
+  // already allowed them), and a tapped notification opens its screen. The
+  // device also stays on the account's list for the security alerts.
   useEffect(() => {
     if (!user || !routed || !navigationReady) return;
     void registerDevice();
+    void touchDevice(user);
     return listenToNotificationTaps(url => router.push(url as Href));
   }, [navigationReady, routed, router, user]);
 
@@ -217,6 +220,7 @@ export default function RootLayout() {
             <Stack.Screen name="settings" options={{ headerShown: false }} />
             <Stack.Screen name="licenses" options={{ headerShown: false }} />
             <Stack.Screen name="whats-new" options={{ headerShown: false }} />
+            <Stack.Screen name="security" options={{ headerShown: false }} />
             {/* A fade: its header starts drawn like the Home's, so the field seems to stay in place. */}
             <Stack.Screen name="search" options={{ headerShown: false, animation: 'fade', animationDuration: 220 }} />
             <Stack.Screen name="event-info" options={{ headerShown: false }} />

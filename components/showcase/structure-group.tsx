@@ -1,4 +1,5 @@
 import { GroupTitle, Note, Section, Stage, useOverlay } from '@/components/showcase/showcase-ui';
+import { DeviceRow } from '@/components/settings/device-row';
 import { SettingsGroup, SettingsLinkRow, SettingsNote, SettingsToggleRow } from '@/components/settings/settings-list';
 import { TopNotice } from '@/components/system/top-notice';
 import { HanetButton } from '@/components/ui/hanet-button';
@@ -16,6 +17,7 @@ export function StructureGroup() {
   const [morning, setMorning] = useState(true);
   const [lock, setLock] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [now] = useState(() => Date.now());
 
   return (
     <>
@@ -52,6 +54,18 @@ export function StructureGroup() {
           <SettingsLinkRow icon="sparkles-outline" label="Novedades" detail="v0.10.1-beta" onPress={() => {}} />
         </SettingsGroup>
         <SettingsNote error>Así se ve una nota de error bajo un grupo.</SettingsNote>
+      </Section>
+
+      <Section
+        title="Dispositivo"
+        description="Dónde está abierta la cuenta, en Configuraciones → Seguridad. El que tienes en la mano dice “Este dispositivo” en rosado; los demás, su última actividad."
+        source="components/settings/device-row.tsx · DeviceRow"
+      >
+        <SettingsGroup title="Dónde está abierta tu cuenta (ejemplo)">
+          <DeviceRow device={{ kind: 'phone', name: 'iPhone', system: 'iOS 26.1', app: 'HaNet v0.12.0-beta', lastAt: now }} current now={now} />
+          <DeviceRow device={{ kind: 'computer', name: 'Chrome en Windows', system: null, app: 'HaNet web', lastAt: now - 3 * 60 * 60 * 1000 }} now={now} />
+          <DeviceRow device={{ kind: 'phone', name: 'moto e15', system: 'Android 14', app: 'HaNet v0.11.0-beta', lastAt: now - 26 * 60 * 60 * 1000 }} now={now} />
+        </SettingsGroup>
       </Section>
 
       <Section

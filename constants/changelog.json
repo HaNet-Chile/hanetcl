@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "0.12.0-beta",
+      "date": "2026-11-16",
+      "title": "Seguridad de tu cuenta",
+      "items": [
+        "Si alguien entra a tu cuenta desde un teléfono o computador nuevo, te llega un aviso a tus otros dispositivos y queda en Notificaciones.",
+        "También te avisamos cuando cambia tu contraseña, tu correo, tu rol o el vínculo con tu liceo.",
+        "Nueva página Seguridad, en Configuraciones: ves dónde está abierta tu cuenta y lo que pasó en ella últimamente.",
+        "Si no reconoces algo, desde ahí puedes cambiar tu contraseña o cerrar sesión en todas partes.",
+        "Las alertas de seguridad llegan siempre, aunque apagues las demás notificaciones."
+      ]
+    },
+    {
       "version": "0.11.0-beta",
       "date": "2026-11-16",
       "title": "HaNet en el computador",
