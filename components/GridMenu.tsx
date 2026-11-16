@@ -7,6 +7,7 @@ import { MarqueeLine } from '@/components/events/event-ui';
 import { eventDay } from '@/services/events-service';
 import type { HnEvent } from '@/services/events-service';
 import type { NextCalendarItem } from '@/hooks/use-home-highlights';
+import type { HomeCalendarType } from '@/services/home-calendar';
 
 // Premium Native Animated Icons
 import { SparklesIcon } from '@/assets/animated-icons/sparks';
@@ -167,15 +168,29 @@ function AnniversaryStrip({ text, alliance }: NonNullable<ReturnType<typeof anni
   );
 }
 
-// Figma "Alerta (próximo evento evaluación)": how many days to the course's
-// next evaluation, or to whatever comes next when there is none.
+// What the notice says under the days, by the kind of event. (The kinds are
+// the types as they are saved: data, not labels.)
+function badgeKind(type: HomeCalendarType) {
+  switch (type) {
+    case 'Evaluación sumativa': return t('components.gridMenu.proxEval');
+    case 'Evaluación formativa': return t('components.gridMenu.formativa');
+    case 'Taller': return t('components.gridMenu.proxTaller');
+    case 'Tarea': return t('components.gridMenu.proxTarea');
+    case 'Remedial': return t('components.gridMenu.remedial');
+    case 'Actividad': return t('anniversary.detail.actividad');
+    default: return t('components.gridMenu.prox');
+  }
+}
+
+// Figma "Alerta (próximo evento evaluación)": how many days to the soonest
+// event of the course among the kinds chosen in Configuraciones.
 function calendarBadge(item: NextCalendarItem, open: () => void): SideBadge {
   const main = item.days === 0 ? t('common.hoy2') : t('components.gridMenu.countDias', { count: item.days });
   const when = item.days > 1 ? `en ${main}` : main.toLocaleLowerCase('es');
   return {
     main,
-    sub: item.isEvaluation ? t('components.gridMenu.proxEval') : t('components.gridMenu.prox'),
-    label: t('components.gridMenu.proximaValueTitleWhenAbrir', { value: item.isEvaluation ? t('common.evaluacion') : t('components.gridMenu.actividad'), title: item.event.title, when }),
+    sub: badgeKind(item.type),
+    label: t('components.gridMenu.proximoEnTuCalendarType', { type: item.type, title: item.event.title, when }),
     onPress: open,
   };
 }

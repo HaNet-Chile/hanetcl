@@ -1267,7 +1267,6 @@
     },
     "gridMenu": {
       "abrirTitle": "Abrir {{title}}",
-      "actividad": "actividad",
       "calendario": "Calendario",
       "classhallYCalificaciones": "ClassHall y calificaciones",
       "countDias_one": "Mañana",
@@ -1281,15 +1280,19 @@
       "faltanCountDias_one": "Empieza mañana",
       "faltanCountDias_other": "Faltan {{count}} días",
       "feedYComunidad": "Feed y comunidad",
+      "formativa": "Formativa",
       "ganoName": "¡Ganó {{name}}!",
       "hoyHoursMinutesName": "Hoy {{hours}}:{{minutes}} · {{name}}",
       "nameLideraPoints": "{{name}} lidera · {{points}}",
       "prox": "Próx.",
       "proxEval": "Próx. eval.",
-      "proximaValueTitleWhenAbrir": "Próxima {{value}}: {{title}}, {{when}}. Abrir",
+      "proximoEnTuCalendarType": "Próximo en tu Calendar: {{type}}, {{title}}, {{when}}. Abrir",
       "proximoEvento": "Próximo evento",
+      "proxTaller": "Próx. taller",
+      "proxTarea": "Próx. tarea",
       "quedanCountDias_one": "Queda 1 día",
       "quedanCountDias_other": "Quedan {{count}} días",
+      "remedial": "Remedial",
       "ultimoDia": "¡Último día!",
       "valueTitleWhenVenuenameAbrir": "{{value}}: {{title}}, {{when}}, {{venueName}}. Abrir"
     },
@@ -1448,6 +1451,16 @@
       }
     },
     "settings": {
+      "homeCalendarSetting": {
+        "apagado": "Apagado",
+        "avisoDelCalendar": "Aviso del Calendar",
+        "countTipos_one": "{{count}} tipo",
+        "countTipos_other": "{{count}} tipos",
+        "elAvisoMuestraLoMas": "El aviso muestra lo más próximo de tu curso entre los tipos que elijas. Vale solo en este teléfono.",
+        "eligeQueEventosDeTu": "Elige qué eventos de tu curso pueden aparecer en el aviso del Calendar del Inicio. Siempre se muestra el más próximo.",
+        "eligeQueEventosMuestra": "Elige qué eventos muestra",
+        "todos": "Todos"
+      },
       "versionEasterEgg": {
         "hanetVersionVersionValueToca": "HaNet versión {{version}}{{value}}. Toca para cerrar.",
         "tocaParaCerrar": "Toca para cerrar"

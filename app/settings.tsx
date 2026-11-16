@@ -1,4 +1,5 @@
 import { useSecretTaps, VersionEasterEgg } from '@/components/settings/version-easter-egg';
+import { HomeCalendarSetting } from '@/components/settings/home-calendar-setting';
 import { SettingsGroup, SettingsLinkRow, SettingsNote, SettingsToggleRow } from '@/components/settings/settings-list';
 import { ThemedText } from '@/components/themed-text';
 import { HanetAvatar } from '@/components/ui/hanet-avatar';
@@ -253,6 +254,8 @@ export default function SettingsScreen() {
             />
           </SettingsGroup>
         </View>
+
+        <HomeCalendarSetting />
 
         <SettingsGroup
           title={t('settings.privacidad')}

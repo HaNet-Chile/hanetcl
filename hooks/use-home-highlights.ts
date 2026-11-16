@@ -1,11 +1,13 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { claimedCourse, useSession } from '@/services/auth-service';
 import { restoreCached } from '@/services/cache';
 import { listEvents } from '@/services/events-service';
 import type { EventList, HnEvent } from '@/services/events-service';
 import { fetchCalendarEvents, restoreCalendarEvents } from '@/services/ical-service';
 import type { CalendarEvent } from '@/services/ical-service';
+import { DEFAULT_HOME_CALENDAR_TYPES, homeCalendarType, useHomeCalendarTypes } from '@/services/home-calendar';
+import type { HomeCalendarType } from '@/services/home-calendar';
 import { t } from '@/i18n';
 
 // What the Home tiles point at (Figma "[home] beta", 10587:1792): the
@@ -13,7 +15,7 @@ import { t } from '@/i18n';
 // on the Eventos one. Both come from real data; with nothing to show, the
 // tile stays plain.
 
-export type NextCalendarItem = { event: CalendarEvent; days: number; isEvaluation: boolean };
+export type NextCalendarItem = { event: CalendarEvent; days: number; isEvaluation: boolean; type: HomeCalendarType };
 
 const DAY = 86_400_000;
 
@@ -25,12 +27,15 @@ function daysUntil(date: Date, now: Date) {
 
 const isEvaluation = (event: CalendarEvent) => event.eventType?.toLocaleLowerCase('es').startsWith(t('common.evaluacion')) ?? false;
 
-/** The next evaluation; without one, the next thing on the course's agenda. */
-export function pickNextCalendarItem(events: CalendarEvent[], now = new Date()): NextCalendarItem | null {
-  const upcoming = events.filter(event => !event.cancelled && event.endDate.getTime() >= now.getTime());
-  const event = upcoming.find(isEvaluation) ?? upcoming[0];
+/**
+ * The soonest thing on the course's agenda among the kinds this phone chose
+ * to see on the Home (Configuraciones → Aviso del Calendar): evaluations,
+ * talleres, tareas… Nothing chosen, or nothing of those coming, is no notice.
+ */
+export function pickNextCalendarItem(events: CalendarEvent[], types: readonly HomeCalendarType[] = DEFAULT_HOME_CALENDAR_TYPES, now = new Date()): NextCalendarItem | null {
+  const event = events.find(item => !item.cancelled && item.endDate.getTime() >= now.getTime() && types.includes(homeCalendarType(item)));
   if (!event) return null;
-  return { event, days: Math.max(0, daysUntil(event.startDate, now)), isEvaluation: isEvaluation(event) };
+  return { event, days: Math.max(0, daysUntil(event.startDate, now)), isEvaluation: isEvaluation(event), type: homeCalendarType(event) };
 }
 
 /** What sponsors pay for first; else what comes soonest. */
@@ -41,7 +46,9 @@ export function pickPromotedEvent(events: HnEvent[], now = Date.now()) {
 
 export function useHomeHighlights() {
   const { user } = useSession();
-  const [calendar, setCalendar] = useState<{ uid: string; item: NextCalendarItem | null } | null>(null);
+  // The course's events; the notice is picked from them by the kinds chosen on this phone.
+  const [calendar, setCalendar] = useState<{ uid: string; events: CalendarEvent[] } | null>(null);
+  const types = useHomeCalendarTypes();
   const [promo, setPromo] = useState<{ uid: string; event: HnEvent | null } | null>(null);
   // Which account each tile has finished loading for, failed or not: the
   // launch splash waits on both.
@@ -63,12 +70,12 @@ export function useHomeHighlights() {
           if (!courseId) return [];
           void restoreCalendarEvents(courseId).then(kept => {
             if (!active || !kept) return;
-            setCalendar(current => current?.uid === user.uid ? current : { uid: user.uid, item: pickNextCalendarItem(kept) });
+            setCalendar(current => current?.uid === user.uid ? current : { uid: user.uid, events: kept });
             settle('calendar');
           });
           return fetchCalendarEvents(courseId);
         })
-        .then(events => { if (active) setCalendar({ uid: user.uid, item: pickNextCalendarItem(events) }); })
+        .then(events => { if (active) setCalendar({ uid: user.uid, events }); })
         .catch(() => undefined)
         .finally(() => settle('calendar'));
 
@@ -86,8 +93,11 @@ export function useHomeHighlights() {
     }, [user])
   );
 
+  const events = user && calendar?.uid === user.uid ? calendar.events : null;
+  const nextCalendarItem = useMemo(() => (events ? pickNextCalendarItem(events, types) : null), [events, types]);
+
   return {
-    nextCalendarItem: user && calendar?.uid === user.uid ? calendar.item : null,
+    nextCalendarItem,
     promotedEvent: user && promo?.uid === user.uid ? promo.event : null,
     loaded: !!user && settled.calendar === user.uid && settled.promo === user.uid,
   };
