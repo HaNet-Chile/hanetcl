@@ -538,7 +538,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
 const TAB_ROOTS = ['/', '/explore'];
 const BAR_ROUTES = [
   ...TAB_ROOTS, '/calendar', '/events', '/feed', '/event-info', '/event-detail', '/classhall', '/classhall/hall', '/classhall/evaluation',
-  '/anniversary', '/anniversary/activities', '/anniversary/notices', '/hnt-admin', '/settings', '/licenses',
+  '/anniversary', '/anniversary/activities', '/anniversary/notices', '/hnt-admin', '/settings', '/licenses', '/security', '/whats-new', '/grades', '/grades/subject',
   '/tools', '/tools/electividad', '/tools/electividad/result', '/tools/scale', '/tools/grades', '/tools/verbs', '/tools/verbs/pick',
 ];
 
