@@ -11,6 +11,7 @@ import { describeAuthError, getMyProfile, useSession } from '@/services/auth-ser
 import type { MyProfile } from '@/services/auth-service';
 import { useCached } from '@/services/cache';
 import { examRemindersEnabled, setExamRemindersEnabled } from '@/services/exam-reminders';
+import { setWhatsNewPromptEnabled, whatsNewPromptEnabled } from '@/services/whats-new-prompt';
 import { gradesLockAvailable, setGradesLock, useGradesLock } from '@/services/grades-lock';
 import { getProfilePhotoUrl } from '@/services/profile-service';
 import { canOpenNotificationSettings, enablePush, openNotificationSettings, pushPermission, pushSupport, saveAnniversaryNotifications, saveClasshallNotifications, saveFeedNotifications, saveMorningNotifications } from '@/services/push-service';
@@ -58,6 +59,8 @@ export default function SettingsScreen() {
   const [savingLock, setSavingLock] = useState(false);
   const [anniversaryOn, setAnniversaryOn] = useState(true);
   const [feedOn, setFeedOn] = useState(true);
+  // The summary of a new version on the first Home after updating (this phone only).
+  const [whatsNewOn, setWhatsNewOn] = useState(true);
   // The account card: what the phone kept shows until this visit's load answers.
   const keptProfile = useCached<MyProfile>(user ? 'profile' : null);
   const [profile, setProfile] = useState<MyProfile | null>(null);
@@ -65,6 +68,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     void examRemindersEnabled().then(setExamsOn);
+    void whatsNewPromptEnabled().then(setWhatsNewOn);
     void gradesLockAvailable().then(setLockAvailable);
   }, []);
 
@@ -132,6 +136,13 @@ export default function SettingsScreen() {
     setSavingLock(false);
   };
 
+  const chooseWhatsNew = async (on: boolean) => {
+    if (on === whatsNewOn) return;
+    setWhatsNewOn(on);
+    await setWhatsNewPromptEnabled(on);
+    if (Platform.OS !== 'web') void Haptics.selectionAsync();
+  };
+
   const chooseExams = async (on: boolean) => {
     if (on === examsOn) return;
     setExamsOn(on);
@@ -168,6 +179,13 @@ export default function SettingsScreen() {
     <>
       <SettingsGroup title={t('settings.acercaDeHanet')}>
         <SettingsLinkRow icon="sparkles-outline" label={t('settings.novedades')} detail={APP_VERSION_LABEL} onPress={() => router.push('/whats-new')} />
+        <SettingsToggleRow
+          icon="megaphone-outline"
+          label={t('settings.resumenAlActualizar')}
+          detail={t('settings.loMasImportanteDeCada')}
+          value={whatsNewOn}
+          onChange={on => void chooseWhatsNew(on)}
+        />
         <SettingsLinkRow icon="mail-outline" label={t('settings.contacto')} hint={CONTACT} onPress={() => void Linking.openURL(`mailto:${CONTACT}`)} />
         <SettingsLinkRow icon="document-text-outline" label={t('licenses.licenciasDeCodigoAbierto')} onPress={() => router.push('/licenses')} />
       </SettingsGroup>
@@ -298,6 +316,10 @@ export default function SettingsScreen() {
               </View>
 
               <HomeCalendarSetting />
+
+              <SettingsGroup title={t('settings.cuenta')}>
+                <SettingsLinkRow icon="shield-checkmark-outline" label={t('security.seguridad')} detail={t('settings.dispositivosYAlertas')} onPress={() => router.push('/security')} />
+              </SettingsGroup>
 
               <SettingsGroup
                 title={t('settings.privacidad')}

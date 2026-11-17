@@ -17,6 +17,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db, functions } from './firebase';
 import { cached, clearCache } from './cache';
 import { unregisterDevice } from './push-service';
+import { forgetThisDevice, withSignInReport } from './security-service';
 import { useEffect, useState } from 'react';
 import { t } from '@/i18n';
 
@@ -28,12 +29,13 @@ if (Platform.OS !== 'web') {
 // ─── Web: uses Firebase's signInWithPopup ────────────────────────────────────
 export async function signInWithGoogleWeb(): Promise<void> {
   const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
+  await withSignInReport(() => signInWithPopup(auth, provider));
 }
 
 // ─── Email/Password Auth ─────────────────────────────────────────────────────
 export async function signInWithEmail(email: string, pass: string) {
-  return signInWithEmailAndPassword(auth, email.trim(), pass);
+  // The account's other devices hear about it (services/security-service.ts).
+  return withSignInReport(() => signInWithEmailAndPassword(auth, email.trim(), pass));
 }
 
 export async function resetPassword(email: string) {
@@ -57,7 +59,7 @@ export type SignUpProfile = {
  */
 export async function signUpWithEmail(email: string, pass: string, profile: SignUpProfile) {
   if (!auth.currentUser) {
-    await createUserWithEmailAndPassword(auth, email.trim(), pass);
+    await withSignInReport(() => createUserWithEmailAndPassword(auth, email.trim(), pass));
   }
   await httpsCallable(functions, 'completeSignUp')(profile);
   await auth.currentUser?.reload();
@@ -300,9 +302,10 @@ export function useSession() {
   return {
     user,
     initializing,
-    // The device stops getting this account's notifications first.
+    // The device stops getting this account's notifications first, and
+    // leaves the account's list of devices.
     signOut: async () => {
-      await unregisterDevice();
+      await Promise.all([unregisterDevice(), forgetThisDevice()]);
       await firebaseSignOut(auth);
       await clearCache();
     },

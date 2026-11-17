@@ -24,6 +24,7 @@ function samples(now: number): HnNotification[] {
   return [
     { id: 'n1', kind: 'grade', title: 'Tienes una nota nueva', body: 'Matemática · Prueba 2. Destápala en ClassHall.', url: null, at: now - 4 * MINUTE },
     { id: 'n2', kind: 'announcement', title: 'Historia: anuncio nuevo', body: 'Mañana la clase es en la biblioteca. Traigan su cuaderno.', url: null, at: now - 52 * MINUTE },
+    { id: 'n4', kind: 'signIn', title: 'Nuevo inicio de sesión', body: 'Entraron a tu cuenta desde Chrome en Windows a las 14:32. ¿No fuiste tú? Revisa tus dispositivos.', url: null, at: now - 2 * 60 * MINUTE },
     { id: 'n3', kind: 'dayChange', title: 'Salida anticipada el viernes', body: 'Las clases terminan a las 12:30 por consejo de profesores.', url: null, at: now - 26 * 60 * MINUTE },
   ];
 }

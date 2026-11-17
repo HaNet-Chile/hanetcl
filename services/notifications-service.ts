@@ -19,7 +19,11 @@ export type NotificationKind =
   | 'anniversary'
   | 'feed'
   | 'test'
-  | 'dayChange';
+  | 'dayChange'
+  // The account's security (functions/security.js).
+  | 'signIn'
+  | 'account'
+  | 'role';
 
 export type HnNotification = {
   id: string;

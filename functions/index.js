@@ -54,6 +54,9 @@ Object.assign(exports, require("./classhall-notify").build(getAdminApp));
 // The Home's notifications section: what each account was told.
 Object.assign(exports, require("./inbox").build(getAdminApp));
 
+// The account's security alerts: new sign-ins, password, email and role changes.
+Object.assign(exports, require("./security").build(getAdminApp));
+
 // The changing code of the HN-QR, for check-in at events.
 Object.assign(exports, require("./hanet-id").build(getAdminApp));
 

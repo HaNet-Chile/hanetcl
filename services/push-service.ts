@@ -3,6 +3,7 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { httpsCallable } from 'firebase/functions';
 import { Linking, Platform } from 'react-native';
 import { functions } from './firebase';
+import { getDeviceId } from './security-service';
 import { enableWebPush, listenToWebNotificationTaps, registerBrowser, unregisterBrowser, webPermission, webPushSupport } from './web-push';
 import { t } from '@/i18n';
 
@@ -24,6 +25,8 @@ export type PushPermission = 'granted' | 'denied' | 'undetermined';
 const ANDROID_CHANNEL = 'classhall';
 // The day's summary at 7:00 and the reminders of evaluations (services/exam-reminders.ts).
 export const AGENDA_CHANNEL = 'agenda';
+// Security alerts: new sign-ins and changes to the account (functions/security.js).
+const ACCOUNT_CHANNEL = 'account';
 const PROMPT_DISMISSED_KEY = 'hanet.pushPromptDismissed';
 
 export function pushSupport(): PushSupport {
@@ -61,6 +64,12 @@ export async function ensureChannel(module: NotificationsModule) {
     importance: module.AndroidImportance.HIGH,
     lightColor: '#EF2274',
   });
+  await module.setNotificationChannelAsync(ACCOUNT_CHANNEL, {
+    name: t('services.pushService.tuCuenta'),
+    description: t('services.pushService.iniciosDeSesionYCambios'),
+    importance: module.AndroidImportance.HIGH,
+    lightColor: '#EF2274',
+  });
   await module.setNotificationChannelAsync(AGENDA_CHANNEL, {
     name: t('settings.tuDiaYTusPruebas'),
     description: t('services.pushService.elResumenDeLas7'),
@@ -89,7 +98,7 @@ export async function registerDevice() {
     if ((await module.getPermissionsAsync()).status !== 'granted') return false;
     const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
     const { data: token } = await module.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-    await httpsCallable(functions, 'registerPushToken')({ token, platform: Platform.OS });
+    await httpsCallable(functions, 'registerPushToken')({ token, platform: Platform.OS, deviceId: await getDeviceId() });
     registeredToken = token;
     return true;
   } catch (error) {
@@ -138,10 +147,10 @@ export function listenToNotificationTaps(open: (url: string) => void) {
   return () => subscription.remove();
 }
 
-// Only HaNet's own screens: ClassHall, the timetable, the Calendar and its events, the Feed,
-// the anniversary and its notices.
+// Only HaNet's own screens: ClassHall, the timetable, the account's security, the Calendar
+// and its events, the Feed, the anniversary and its notices.
 function isNotificationRoute(url: unknown): url is string {
-  return typeof url === 'string' && /^\/(classhall\/(hall|task)\?[A-Za-z0-9_=&-]+|schedule|calendar|feed|anniversary(\/notices)?|event-info\?[A-Za-z0-9_=&%-]+)$/.test(url);
+  return typeof url === 'string' && /^\/(classhall\/(hall|task)\?[A-Za-z0-9_=&-]+|schedule|security|calendar|feed|anniversary(\/notices)?|event-info\?[A-Za-z0-9_=&%-]+)$/.test(url);
 }
 
 /** Whether the system's settings can be opened to unblock notifications: the browser's can't. */

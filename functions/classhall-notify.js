@@ -227,9 +227,13 @@ function build(getAdminApp) {
     const platform = ["ios", "android", "web"].includes(request.data?.platform) ? request.data.platform : "unknown";
     if (!validToken(token, platform)) throw new HttpsError("invalid-argument", "Ese token de notificaciones no es válido.");
 
+    // The app's own random id for the device (functions/security.js), so a
+    // security alert can skip the device that caused it.
+    const deviceId = typeof request.data?.deviceId === "string" && /^[A-Za-z0-9_-]{16,64}$/.test(request.data.deviceId) ? request.data.deviceId : null;
+
     const db = identityDb(getAdminApp);
     const uid = request.auth.uid;
-    await db.collection("pushTokens").doc(tokenId(token)).set({ uid, token, platform, updatedAt: FieldValue.serverTimestamp() });
+    await db.collection("pushTokens").doc(tokenId(token)).set({ uid, token, platform, deviceId, updatedAt: FieldValue.serverTimestamp() });
 
     // An account keeps its most recent devices.
     const mine = await db.collection("pushTokens").where("uid", "==", uid).get();

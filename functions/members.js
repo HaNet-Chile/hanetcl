@@ -1,6 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { alertAccount, noteSessionsCut } = require("./security");
 
 // People of an institution, for the HNT panel: who is on the roster, who
 // already linked their HaNet ID, with which role, and the actions on them.
@@ -89,12 +90,20 @@ function build(getAdminApp) {
 
     const db = identityDb(getAdminApp);
     const userRef = db.collection("users").doc(uid);
-    if (!(await userRef.get()).exists) {
+    const user = await userRef.get();
+    if (!user.exists) {
       throw new HttpsError("not-found", "Esa persona todavía no ha vinculado su HaNet ID.");
     }
 
     await userRef.update({ role, roleUpdatedAt: FieldValue.serverTimestamp(), roleUpdatedBy: caller.uid });
     await writeClaims(getAdminApp(), uid, { role });
+    if ((user.data().role || "Estudiante") !== role) {
+      await alertAccount(getAdminApp, uid, {
+        kind: "role",
+        title: "Cambió tu rol en HaNet",
+        body: `Ahora tu rol es ${role}. Si no lo esperabas, escríbenos a muxp@muxp.art.`,
+      });
+    }
     return { role };
   });
 
@@ -119,7 +128,11 @@ function build(getAdminApp) {
 
     const auth = getAuth(getAdminApp());
     await auth.updateUser(uid, { disabled: blocked });
-    if (blocked) await auth.revokeRefreshTokens(uid);
+    if (blocked) {
+      await auth.revokeRefreshTokens(uid);
+      // HaNet cut the sessions, not a new password.
+      await noteSessionsCut(getAdminApp, uid);
+    }
     await userRef.update({
       blocked,
       blockedUpdatedAt: FieldValue.serverTimestamp(),
@@ -144,6 +157,7 @@ function build(getAdminApp) {
     const db = identityDb(getAdminApp);
     const userRef = db.collection("users").doc(uid);
     const linkRef = db.collection("identityLinks").doc(uid);
+    let institutionName = null;
 
     await db.runTransaction(async (tx) => {
       const [user, link] = await Promise.all([tx.get(userRef), tx.get(linkRef)]);
@@ -153,6 +167,10 @@ function build(getAdminApp) {
 
       const institutionId = user.data().institutionId || link.data()?.institutionId;
       const rut = user.data().rut || link.data()?.rut;
+      if (institutionId) {
+        const institution = await tx.get(db.collection("institutions").doc(institutionId));
+        institutionName = institution.data()?.name || null;
+      }
       if (institutionId && rut) {
         const personRef = db.collection("institutions").doc(institutionId).collection("roster").doc(rut);
         const person = await tx.get(personRef);
@@ -165,6 +183,11 @@ function build(getAdminApp) {
     });
 
     await writeClaims(getAdminApp(), uid, { role: null, courseId: null });
+    await alertAccount(getAdminApp, uid, {
+      kind: "role",
+      title: "Tu cuenta se desvinculó",
+      body: `${institutionName ? `Tu HaNet ID ya no está vinculado a ${institutionName}` : "Tu HaNet ID ya no está vinculado a tu institución"}. Si es un error, habla con tu liceo.`,
+    });
     console.log("adminUnlinkMember", { by: caller.uid, uid });
     return { unlinked: true };
   });

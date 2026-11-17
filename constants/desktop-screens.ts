@@ -101,6 +101,7 @@ export const DESKTOP_SCREENS: Record<string, DesktopScreen> = {
   'settings': { layout: 'wide' },
   'edit-profile': { layout: 'sheet' },
   'whats-new': { layout: 'reading' },
+  'security': { layout: 'reading' },
   'licenses': { layout: 'reading' },
   'hnt-admin': { layout: 'reading' },
   'ui-showcase': { layout: 'reading' },
