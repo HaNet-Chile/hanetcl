@@ -33,6 +33,7 @@ import { DesktopHome } from '@/components/home/desktop-home';
 import { useSideNav } from '@/hooks/use-desktop-layout';
 import { useDocumentScroll } from '@/hooks/use-document-scroll';
 import { PushPermissionDialog } from '@/components/notifications/push-permission-dialog';
+import { WhatsNewDialog } from '@/components/system/whats-new-dialog';
 import { HomeInstallGuide } from '@/components/web/install-guide';
 import { shouldOfferInstallGuide } from '@/services/web-install';
 
@@ -337,6 +338,8 @@ export default function HomeScreen() {
           home screen; then the first visit asks for notifications. */}
       <HomeInstallGuide ready={linked && contentLoaded && !welcome} onDone={() => setInstallGuidePending(false)} />
       <PushPermissionDialog ready={linked && contentLoaded && !welcome && !installGuidePending} />
+      {/* The first Home after updating: what the new version brings, once. */}
+      <WhatsNewDialog ready={linked && contentLoaded && !welcome && !installGuidePending} />
 
       <WelcomeCelebration
         visible={!!welcome}

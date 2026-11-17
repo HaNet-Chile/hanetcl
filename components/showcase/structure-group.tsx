@@ -2,6 +2,9 @@ import { GroupTitle, Note, Section, Stage, useOverlay } from '@/components/showc
 import { DeviceRow } from '@/components/settings/device-row';
 import { SettingsGroup, SettingsLinkRow, SettingsNote, SettingsToggleRow } from '@/components/settings/settings-list';
 import { TopNotice } from '@/components/system/top-notice';
+import { WhatsNewPrompt } from '@/components/system/whats-new-dialog';
+import { currentRelease } from '@/services/whats-new-prompt';
+import type { ReleaseSummary } from '@/services/whats-new-prompt';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { MessageCard } from '@/components/ui/message-card';
 import { PageHeader } from '@/components/ui/page-header';
@@ -18,6 +21,7 @@ export function StructureGroup() {
   const [lock, setLock] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [now] = useState(() => Date.now());
+  const [whatsNew, setWhatsNew] = useState<ReleaseSummary | null>(null);
 
   return (
     <>
@@ -84,6 +88,15 @@ export function StructureGroup() {
           onPress={() => overlay(<TopNotice icon="sparkles-outline" text={t('components.system.updatePrompt.hayUnaVersionNuevaDe')} action={{ label: t('components.system.updatePrompt.actualizar'), onPress: () => overlay(null) }} />, 6000)}
         />
       </Section>
+
+      <Section
+        title="Resumen al actualizar"
+        description="El primer Inicio después de actualizar HaNet muestra lo más importante de la versión, una vez. Sale de los highlights del changelog (o de sus primeras 3 novedades) y se apaga en Configuraciones."
+        source="components/system/whats-new-dialog.tsx · WhatsNewDialog (decide cuándo) y WhatsNewPrompt (el diálogo)"
+      >
+        <HanetButton label="Ver el resumen" variant="surface" onPress={() => setWhatsNew(currentRelease())} />
+      </Section>
+      <WhatsNewPrompt release={whatsNew} onClose={() => setWhatsNew(null)} onSeeAll={() => setWhatsNew(null)} />
 
       <Section
         title="Buscador"

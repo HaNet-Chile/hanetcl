@@ -1451,6 +1451,10 @@
       }
     },
     "settings": {
+      "deviceRow": {
+        "esteDispositivo": "Este dispositivo",
+        "ultimaActividadAge": "Última actividad: {{age}}"
+      },
       "homeCalendarSetting": {
         "apagado": "Apagado",
         "avisoDelCalendar": "Aviso del Calendar",
@@ -1464,10 +1468,6 @@
       "versionEasterEgg": {
         "hanetVersionVersionValueToca": "HaNet versión {{version}}{{value}}. Toca para cerrar.",
         "tocaParaCerrar": "Toca para cerrar"
-      },
-      "deviceRow": {
-        "esteDispositivo": "Este dispositivo",
-        "ultimaActividadAge": "Última actividad: {{age}}"
       }
     },
     "share": {
@@ -1495,6 +1495,12 @@
         "actualizando": "Actualizando…",
         "actualizar": "Actualizar",
         "hayUnaVersionNuevaDe": "Hay una versión nueva de HaNet."
+      },
+      "whatsNewDialog": {
+        "hanetSeActualizo": "HaNet se actualizó",
+        "listo": "Listo",
+        "puedesApagarEsteResumen": "Puedes apagar este resumen en Configuraciones.",
+        "verTodo": "Ver todo"
       }
     },
     "topHeader": {
@@ -2391,8 +2397,8 @@
     "pushService": {
       "anunciosTareasMaterialNuevoY": "Anuncios, tareas, material nuevo y recordatorios de entrega.",
       "elResumenDeLas7": "El resumen de las 7:00 y los avisos 24 y 4 horas antes de cada prueba.",
-      "tuCuenta": "Tu cuenta",
-      "iniciosDeSesionYCambios": "Inicios de sesión nuevos y cambios en tu cuenta."
+      "iniciosDeSesionYCambios": "Inicios de sesión nuevos y cambios en tu cuenta.",
+      "tuCuenta": "Tu cuenta"
     },
     "search": {
       "administracionEquipo": "administracion equipo",
@@ -2432,10 +2438,10 @@
       "versionCambiosActualizacion": "version cambios actualizacion"
     },
     "securityService": {
-      "navegador": "Navegador",
       "browserEnOs": "{{browser}} en {{os}}",
+      "hanetWeb": "HaNet web",
       "hanetWebInstalada": "HaNet web, instalada",
-      "hanetWeb": "HaNet web"
+      "navegador": "Navegador"
     },
     "widgetService": {
       "disfrutaElDia": "Disfruta el día",
@@ -2470,6 +2476,7 @@
     "iconoLabelValue": "Ícono {{label}}{{value}}",
     "laProteccionDeNotasSe": "La protección de Notas se activa desde la app en el teléfono.",
     "lasNotificacionesEstanBloqueadasEn": "Las notificaciones están bloqueadas en este navegador. Desbloquéalas en los ajustes del sitio.",
+    "loMasImportanteDeCada": "Lo más importante de cada versión nueva, la primera vez que la abres. Solo en este dispositivo.",
     "n24Y4HorasAntesSolo": "24 y 4 horas antes, solo en este teléfono",
     "noPudimosCambiarElIcono": "No pudimos cambiar el ícono. Inténtalo nuevamente.",
     "noPudimosCargarTusAjustes": "No pudimos cargar tus ajustes. Revisa tu conexión.",
@@ -2486,6 +2493,7 @@
     "protegerNotas": "Proteger Notas",
     "pruebasFlashYPlazosDe": "Pruebas flash y plazos de tu alianza",
     "publicacionesEnviadasComoNotificacion": "Publicaciones enviadas como notificación",
+    "resumenAlActualizar": "Resumen al actualizar",
     "resumenDeLas700": "Resumen de las 7:00",
     "sesionIniciadaComoEmail": "Sesión iniciada como {{email}}",
     "soloEnLaAppDelTelefono": "Solo en la app del teléfono",

@@ -72,6 +72,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `SearchRow` | `search/search-row.tsx` | Un resultado o una sugerencia de la búsqueda, dentro de un `SettingsGroup`: título con lo que coincide en negrita y una línea de contexto. `top` (ícono rosado) para la mejor respuesta o lo que viene. Lo del Calendar que ya pasó va tachado (`item.past`). El índice y el orden están en `services/search.ts`. |
 | `GridMenu` | `GridMenu.tsx` | La grilla de tiles del Inicio en el teléfono. |
 | `DesktopHome` (y sus tarjetas) | `home/desktop-home.tsx` | El Inicio de escritorio: foto de la institución, la fila de lo urgente y el tablero. Gris, rosado solo para lo de ahora. |
+| `WhatsNewDialog` · `WhatsNewPrompt` | `system/whats-new-dialog.tsx` | El primer Inicio después de actualizar (build, update o "Actualizar" en la web): lo más importante de la versión, una vez. Sale de `highlights` de `constants/changelog.json` (o las primeras 3 novedades). Se apaga en Configuraciones → Acerca de HaNet (`services/whats-new-prompt.ts`, por dispositivo). `WhatsNewPrompt` es solo el diálogo. |
 | `TopNotice` | `system/top-notice.tsx` | Píldora flotante arriba de todo, que no tapa la pantalla: "Sin conexión" y "Hay una versión nueva". |
 | `UpdatePrompt` | `system/update-prompt.tsx` | Web: registra el service worker y ofrece la versión nueva con un `TopNotice`. |
 | `SettingsGroup` · `SettingsLinkRow` · `SettingsToggleRow` · `SettingsNote` | `settings/settings-list.tsx` | Listas agrupadas tipo ajustes del teléfono. Toda la fila cambia el interruptor. |

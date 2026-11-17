@@ -22,6 +22,7 @@ import { sheetDetents } from '@/constants/sheets';
 import { useSession } from '@/services/auth-service';
 import { useLaunchContentReady } from '@/services/launch-ready';
 import { hasSeenOnboarding, markOnboardingSeen } from '@/services/onboarding';
+import { markWhatsNewSeen } from '@/services/whats-new-prompt';
 import { listenToNotificationTaps, registerDevice } from '@/services/push-service';
 import { touchDevice } from '@/services/security-service';
 import { refreshDayWidgets } from '@/services/day-sync';
@@ -146,6 +147,8 @@ export default function RootLayout() {
       if (!user) router.replace('/onboarding');
       // Signed in already means past the welcome pages.
       if (user && !seen) void markOnboardingSeen();
+      // A fresh install starts at this version: its first Home has nothing "new" to tell.
+      if (!seen) void markWhatsNewSeen();
       setReturning(seen);
       setSignedInAtLaunch(!!user);
       setRouted(true);
