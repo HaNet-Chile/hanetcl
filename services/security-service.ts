@@ -125,10 +125,7 @@ export async function withSignInReport<T>(signIn: () => Promise<T>): Promise<T> 
     const result = await signIn();
     const uid = (result as { user?: User } | undefined)?.user?.uid;
     if (uid) await markSeen(uid);
-    // One more try a little later: a sign-in nobody reports within a few
-    // minutes is told to the account as unknown (functions/security.js).
-    void report(true).catch(() => new Promise(resolve => setTimeout(resolve, 20_000)).then(() => report(true)))
-      .catch(error => console.warn('reportDevice', error instanceof Error ? error.message : error));
+    void report(true).catch(error => console.warn('reportDevice', error instanceof Error ? error.message : error));
     return result;
   } finally {
     signingIn = false;

@@ -2,7 +2,6 @@ const { randomUUID } = require("node:crypto");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { recordInbox } = require("./inbox");
 const { sendPush } = require("./classhall-notify");
 
@@ -17,12 +16,6 @@ const { sendPush } = require("./classhall-notify");
 // sign-in methods, when the sessions were last cut) with what was seen last
 // time: a password reset or an email change cut every session, so the next
 // call from any device finds out.
-//
-// With Identity Platform there is also watchSignIn (sign-in-watch.js), which
-// notes every sign-in before it happens, the app's or not. reportDevice with
-// `signIn` claims (deletes) the account's notes, and alertUnclaimedSignIns
-// warns about the ones nobody claimed: a sign-in from outside the app, or
-// from an older version of it that does not report.
 //
 // An alert lands in the notifications section (inbox) and as a push to the
 // account's OTHER devices, whatever the notification switches say: these are
@@ -49,10 +42,6 @@ const MAX_DEVICES = 20;
 // Android shows these in their own channel (services/push-service.ts).
 const ANDROID_CHANNEL = "account";
 const ROUTE = "/security";
-// How long the app has to claim a sign-in before it counts as unreported.
-const CLAIM_WINDOW_MS = 4 * 60 * 1000;
-// A note this recent is the sign-in the app is reporting.
-const CLAIM_RECENT_MS = 2 * 60 * 1000;
 
 function identityDb(getAdminApp) {
   return getFirestore(getAdminApp(), "hn-enrollmentdata");
@@ -169,29 +158,6 @@ async function noteSessionsCut(getAdminApp, uid) {
   }
 }
 
-/** What a user agent says about the device that signed in, in plain words. */
-function deviceFromAgent(agent) {
-  const ua = String(agent || "");
-  const os = /iPad/.test(ua) ? "iPad"
-    : /iPhone|iPod/.test(ua) ? "iPhone"
-      : /Android/.test(ua) ? "Android"
-        : /Windows/.test(ua) ? "Windows"
-          : /CrOS/.test(ua) ? "ChromeOS"
-            : /Mac OS X|Macintosh/.test(ua) ? "Mac"
-              : /Linux/.test(ua) ? "Linux" : null;
-  const browser = /Edg(e|A|iOS)?\//.test(ua) ? "Edge"
-    : /SamsungBrowser/.test(ua) ? "Samsung Internet"
-      : /Firefox|FxiOS/.test(ua) ? "Firefox"
-        : /OPR\//.test(ua) ? "Opera"
-          : /Chrome|CriOS/.test(ua) ? "Chrome"
-            : /Safari/.test(ua) ? "Safari" : null;
-  if (browser) return os ? `${browser} en ${os}` : browser;
-  // The phone app signs in without a browser.
-  if (/CFNetwork|Darwin/.test(ua)) return "un iPhone";
-  if (/okhttp|Dalvik/.test(ua)) return "un teléfono Android";
-  return os || "un dispositivo";
-}
-
 function cleanDevice(value) {
   const device = value && typeof value === "object" ? value : {};
   return {
@@ -246,51 +212,8 @@ function build(getAdminApp) {
       }, { merge: true }),
     ]);
 
-    // This sign-in came from the app: its note from watchSignIn, the newest
-    // one of the last two minutes, is claimed. Older notes stay, so an
-    // unreported sign-in just before this one is still told.
-    if (signIn) {
-      const notes = await identityDb(getAdminApp).collection("signInChecks").where("uid", "==", uid).get();
-      const own = notes.docs
-        .filter(doc => now - (doc.data().at || 0) < CLAIM_RECENT_MS)
-        .sort((a, b) => (b.data().at || 0) - (a.data().at || 0))[0];
-      if (own) await own.ref.delete();
-    }
-
     for (const alert of alerts) await alertAccount(getAdminApp, uid, alert, { exceptDeviceId: deviceId });
     return { alerts: alerts.length };
-  });
-
-  // Every 5 minutes: the sign-ins watchSignIn noted that no app claimed. One
-  // alert per account, for its latest one; a brand-new account is skipped.
-  const alertUnclaimedSignIns = onSchedule({ schedule: "every 5 minutes", timeoutSeconds: 120 }, async () => {
-    const db = identityDb(getAdminApp);
-    const now = Date.now();
-    const notes = await db.collection("signInChecks").where("at", "<=", now - CLAIM_WINDOW_MS).orderBy("at", "asc").limit(200).get();
-    if (notes.empty) return;
-
-    const latest = new Map();
-    for (const doc of notes.docs) {
-      const data = doc.data();
-      if (!data.uid || data.newUser) continue;
-      latest.set(data.uid, data);
-    }
-    for (const [uid, data] of latest) {
-      try {
-        const user = await getAuth(getAdminApp()).getUser(uid);
-        const created = Date.parse(user.metadata?.creationTime || "") || 0;
-        if (data.at - created < NEW_ACCOUNT_MS) continue;
-      } catch {
-        continue;
-      }
-      await alertAccount(getAdminApp, uid, {
-        kind: "signIn",
-        title: "Nuevo inicio de sesión",
-        body: `Entraron a tu cuenta desde ${deviceFromAgent(data.userAgent)} a las ${clock(data.at)}. ¿No fuiste tú? Revisa tus dispositivos.`,
-      });
-    }
-    await Promise.all(notes.docs.map(doc => doc.ref.delete()));
-    console.log("alertUnclaimedSignIns", { notes: notes.size, alerted: latest.size });
   });
 
   // { deviceId } — signing out on this device takes it off the list.
@@ -364,7 +287,7 @@ function build(getAdminApp) {
     return { ok: true };
   });
 
-  return { reportDevice, forgetMyDevice, getMySecurity, signOutEverywhere, alertUnclaimedSignIns };
+  return { reportDevice, forgetMyDevice, getMySecurity, signOutEverywhere };
 }
 
-module.exports = { build, alertAccount, noteSessionsCut, changesBetween, deviceFromAgent };
+module.exports = { build, alertAccount, noteSessionsCut, changesBetween };
