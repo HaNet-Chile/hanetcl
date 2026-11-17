@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import { VERBS, VERB_LISTS } from '@/constants/verbs';
 import type { Verb, VerbType } from '@/constants/verbs';
+import { setVerbAudio } from '@/services/verbs-sound';
 
 // Verbos en inglés (Herramientas): practice the three forms of English verbs.
 // It all happens on the phone, like the grade tools: the setup and the best
@@ -175,15 +176,18 @@ export function formatDuration(seconds: number) {
 const STORAGE_KEY = 'hn-verbs-quiz';
 
 export type SoloBest = { percent: number; seconds: number; at: number };
-export type InfiniteBest = { seconds: number; correct: number; loops: number; at: number };
+export type InfiniteBest = { seconds: number; correct: number; loops: number; streak?: number; at: number };
+
+export type VerbAudio = { sound: boolean; music: boolean };
 
 type Saved = {
   setup: QuizSetup;
+  audio: VerbAudio;
   solo: Record<string, SoloBest>;
   infinite: InfiniteBest | null;
 };
 
-let state: Saved = { setup: DEFAULT_SETUP, solo: {}, infinite: null };
+let state: Saved = { setup: DEFAULT_SETUP, audio: { sound: true, music: true }, solo: {}, infinite: null };
 let loaded = false;
 let loading: Promise<void> | null = null;
 const listeners = new Set<() => void>();
@@ -224,6 +228,7 @@ export function loadVerbsQuiz(): Promise<void> {
         if (saved) {
           state = {
             setup: validSetup(saved.setup),
+            audio: { sound: saved.audio?.sound !== false, music: saved.audio?.music !== false },
             solo: saved.solo && typeof saved.solo === 'object' ? saved.solo : {},
             infinite: saved.infinite ?? null,
           };
@@ -231,6 +236,7 @@ export function loadVerbsQuiz(): Promise<void> {
       })
       .catch(() => undefined)
       .finally(() => {
+        setVerbAudio(state.audio);
         loaded = true;
         emit();
       });
@@ -251,6 +257,11 @@ export function useVerbsQuiz() {
   return useSyncExternalStore(subscribe, snapshot, snapshot);
 }
 
+/** The longest Infinito game saved on this phone. */
+export function getInfiniteBest() {
+  return state.infinite;
+}
+
 /** The setup as saved (after loadVerbsQuiz). */
 export function getSetup() {
   return state.setup;
@@ -258,6 +269,14 @@ export function getSetup() {
 
 export function updateSetup(patch: Partial<QuizSetup>) {
   state = { ...state, setup: { ...state.setup, ...patch } };
+  persist();
+  emit();
+}
+
+/** The switches for effects and music. */
+export function updateAudio(patch: Partial<VerbAudio>) {
+  state = { ...state, audio: { ...state.audio, ...patch } };
+  setVerbAudio(state.audio);
   persist();
   emit();
 }

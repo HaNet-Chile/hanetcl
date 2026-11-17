@@ -131,6 +131,23 @@ export function FatalScreen({ onDismiss, preview }: { onDismiss: () => void; pre
   );
 }
 
+/**
+ * A link that leads nowhere in HaNet (an old notification, a mistyped
+ * address). The path stays in small print, so a screenshot says what broke.
+ */
+export function NotFoundScreen({ path, onHome, onBack }: { path?: string; onHome: () => void; onBack?: () => void }) {
+  return (
+    <ErrorScreen
+      icon=":/"
+      title={t('components.errors.appErrorScreens.estaPantallaNoExiste')}
+      body={<>{t('components.errors.appErrorScreens.elLinkQueAbristeNo')}</>}
+      note={path ? <>{t('components.errors.appErrorScreens.siTeSiguePasandoCuentanos')}{' '}<Strong>{SUPPORT_EMAIL}</Strong>{' '}{t('components.errors.appErrorScreens.yMencionaEstaRuta')}{' '}<Strong>{path}</Strong></> : undefined}
+      primary={{ label: t('components.errors.appErrorScreens.irAlInicio'), onPress: onHome }}
+      secondary={onBack ? { label: t('common.volver'), onPress: onBack } : undefined}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   dialogActions: {
     gap: AppSpacing.sm,

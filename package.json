@@ -37,6 +37,7 @@
     "cal-parser": "^1.0.2",
     "expo": "^58.0.0",
     "expo-alternate-app-icons": "^8.0.0",
+    "expo-audio": "~58.0.12",
     "expo-auth-session": "~58.0.14",
     "expo-blur": "~58.0.5",
     "expo-camera": "~58.0.12",

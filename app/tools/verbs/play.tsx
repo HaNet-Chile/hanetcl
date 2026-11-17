@@ -4,7 +4,8 @@ import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetDialog, HanetDialogActions, dialogStyles } from '@/components/ui/hanet-dialog';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import type { Verb } from '@/constants/verbs';
-import { currentSession, getSetup, loadVerbsQuiz, startSession } from '@/services/verbs-quiz';
+import { currentSession, getSetup, loadVerbsQuiz, startSession, updateAudio, useVerbsQuiz } from '@/services/verbs-quiz';
+import { playEffect, stopAllVerbAudio } from '@/services/verbs-sound';
 import type { PlaySession } from '@/services/verbs-quiz';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,6 +26,11 @@ export default function PlayVerbsScreen() {
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState<Phase>('countdown');
   const [confirmExit, setConfirmExit] = useState(false);
+  const { audio } = useVerbsQuiz();
+  const muted = !audio.sound && !audio.music;
+
+  // Nothing keeps playing once the game screen is gone.
+  useEffect(() => () => stopAllVerbAudio(), []);
 
   // Opened directly (a reload of the web page): a new game with the saved setup.
   useEffect(() => {
@@ -42,8 +48,10 @@ export default function PlayVerbsScreen() {
   }, [router]);
 
   const close = useCallback(() => {
-    if (phase === 'playing') setConfirmExit(true);
-    else leave();
+    if (phase === 'playing') {
+      playEffect('surrender');
+      setConfirmExit(true);
+    } else leave();
   }, [leave, phase]);
 
   useEffect(() => {
@@ -56,6 +64,7 @@ export default function PlayVerbsScreen() {
 
   const replay = (only?: Verb[]) => {
     if (!session) return;
+    stopAllVerbAudio();
     setSession(startSession(session.setup, only));
     setRound(value => value + 1);
     setPhase('countdown');
@@ -78,7 +87,16 @@ export default function PlayVerbsScreen() {
           <Ionicons name="close" size={22} color={AppColors.textPrimary} />
         </Pressable>
         <ThemedText style={styles.topTitle}>{title}</ThemedText>
-        <View style={styles.spacer} />
+        <Pressable
+          accessibilityRole="switch"
+          accessibilityLabel={t('tools.verbs.play.sonido')}
+          accessibilityState={{ checked: !muted }}
+          hitSlop={8}
+          onPress={() => updateAudio(muted ? { sound: true, music: true } : { sound: false, music: false })}
+          style={({ pressed }) => [styles.round, pressed && AppPressed]}
+        >
+          <Ionicons name={muted ? 'volume-mute' : 'volume-high'} size={20} color={muted ? AppColors.textSecondary : AppColors.textPrimary} />
+        </Pressable>
       </View>
 
       <View style={styles.body}>
@@ -128,7 +146,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas, paddingHorizontal: AppSpacing.lg },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: AppSpacing.md, width: '100%', maxWidth: 560, alignSelf: 'center' },
   round: { width: 40, height: 40, borderRadius: AppRadii.pill, backgroundColor: AppColors.surface, alignItems: 'center', justifyContent: 'center' },
-  spacer: { width: 40, height: 40 },
   topTitle: { ...AppType.headline, color: AppColors.textPrimary, flex: 1, textAlign: 'center' },
   body: { flex: 1 },
   loading: { marginTop: AppSpacing.xxl },

@@ -134,7 +134,8 @@ export async function unregisterDevice() {
 /** Calls `open` with the screen a tapped notification points to, now and for the cold start. */
 export function listenToNotificationTaps(open: (url: string) => void) {
   const openScreen = (url: unknown) => {
-    if (isNotificationRoute(url)) open(url);
+    const route = notificationRoute(url);
+    if (route) open(route);
   };
   if (Platform.OS === 'web') return listenToWebNotificationTaps(openScreen);
   const module = notifications();
@@ -145,6 +146,24 @@ export function listenToNotificationTaps(open: (url: string) => void) {
   });
   const subscription = module.addNotificationResponseReceivedListener(response => handle(response.notification.request.content.data));
   return () => subscription.remove();
+}
+
+/**
+ * The screen a notification points to, as a path. A push normally carries
+ * "/security", but a full link (hanetcl://security, an Expo Go link with
+ * "/--/security" or the web address) leads to the same screen instead of a
+ * route that doesn't exist.
+ */
+export function notificationRoute(url: unknown): string | null {
+  if (typeof url !== 'string') return null;
+  let path = url.trim();
+  const expoGo = path.match(/\/--(\/.*)$/);
+  if (expoGo) path = expoGo[1];
+  else if (/^https?:\/\//i.test(path)) path = path.replace(/^https?:\/\/[^/?#]*/i, '');
+  else if (/^[a-z][a-z0-9+.-]*:\/\//i.test(path)) path = path.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '/');
+  if (!path.startsWith('/')) path = `/${path}`;
+  path = path.replace(/\/+(?=\?|$)/, '') || '/';
+  return isNotificationRoute(path) ? path : null;
 }
 
 // Only HaNet's own screens: ClassHall, the timetable, the account's security, the Calendar

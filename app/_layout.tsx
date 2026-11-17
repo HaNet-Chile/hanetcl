@@ -224,6 +224,7 @@ export default function RootLayout() {
             <Stack.Screen name="licenses" options={{ headerShown: false }} />
             <Stack.Screen name="whats-new" options={{ headerShown: false }} />
             <Stack.Screen name="security" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" options={{ headerShown: false }} />
             {/* A fade: its header starts drawn like the Home's, so the field seems to stay in place. */}
             <Stack.Screen name="search" options={{ headerShown: false, animation: 'fade', animationDuration: 220 }} />
             <Stack.Screen name="event-info" options={{ headerShown: false }} />

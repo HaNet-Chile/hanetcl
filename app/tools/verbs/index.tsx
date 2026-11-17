@@ -2,11 +2,10 @@ import { ThemedText } from '@/components/themed-text';
 import { formLabel } from '@/components/tools/verb-ui';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetChip } from '@/components/ui/hanet-chip';
-import { HanetSegmented } from '@/components/ui/hanet-auth-fields';
 import { PageHeader } from '@/components/ui/page-header';
 import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { WideColumns, useWideLayout, widePageStyle } from '@/components/ui/wide-page';
-import { AppColors, AppRadii, AppRowPressed, AppSpacing, AppType } from '@/constants/design-tokens';
+import { AppColors, AppDisplay, AppPressed, AppRadii, AppRowPressed, AppSpacing, AppType } from '@/constants/design-tokens';
 import { VERBS, VERB_LISTS } from '@/constants/verbs';
 import {
   INFINITE_RULES,
@@ -16,9 +15,12 @@ import {
   formatDuration,
   sourceKey,
   startSession,
+  updateAudio,
   updateSetup,
   useVerbsQuiz,
 } from '@/services/verbs-quiz';
+import { playEffect } from '@/services/verbs-sound';
+import type { VerbEffect } from '@/services/verbs-sound';
 import type { QuizMode, SoloStyle, VerbForm, VerbSource } from '@/services/verbs-quiz';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -43,8 +45,28 @@ function sameSource(a: VerbSource, b: VerbSource) {
   return true;
 }
 
-function tap() {
+function tap(sound: VerbEffect = 'select') {
   if (Platform.OS !== 'web') void Haptics.selectionAsync();
+  playEffect(sound);
+}
+
+/** One of the two games, as a tile: the chosen one turns pink. */
+function ModeTile({ icon, title, text, selected, onPress }: { icon: IconName; title: string; text: string; selected: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={`${title}. ${text}`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.modeTile, selected && styles.modeTileOn, pressed && AppPressed]}
+    >
+      <View style={[styles.modeIcon, selected && styles.modeIconOn]}>
+        <Ionicons name={icon} size={22} color={selected ? AppColors.textPrimary : AppColors.accent} />
+      </View>
+      <ThemedText style={styles.modeTitle}>{title}</ThemedText>
+      <ThemedText style={styles.modeText}>{text}</ThemedText>
+    </Pressable>
+  );
 }
 
 /** One way of choosing the verbs: a row with a radio mark. */
@@ -90,7 +112,7 @@ export default function VerbsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const layout = useWideLayout();
-  const { setup, solo, infinite } = useVerbsQuiz();
+  const { setup, solo, infinite, audio } = useVerbsQuiz();
   const { mode, style, forms, source } = setup;
 
   const count = countFor(source);
@@ -116,6 +138,7 @@ export default function VerbsScreen() {
 
   const start = () => {
     if (!ready) return;
+    tap('start');
     startSession(setup);
     router.push('/tools/verbs/play');
   };
@@ -194,15 +217,14 @@ export default function VerbsScreen() {
 
   const settings = (
     <View style={styles.settings}>
-      <HanetSegmented<QuizMode>
-        accessibilityLabel={t('tools.verbs.juego')}
-        value={mode}
-        onChange={value => { tap(); updateSetup({ mode: value }); }}
-        options={[
-          { value: 'solo', label: t('tools.verbs.solitario'), accessibilityLabel: t('tools.verbs.solitario') },
-          { value: 'infinite', label: t('tools.verbs.infinito'), accessibilityLabel: t('tools.verbs.infinito') },
-        ]}
-      />
+      <View accessibilityRole="radiogroup" accessibilityLabel={t('tools.verbs.juego')} style={styles.modes}>
+        {([
+          ['solo', 'trophy-outline', t('tools.verbs.solitario'), t('tools.verbs.tuListaCompletaConNota')],
+          ['infinite', 'infinite-outline', t('tools.verbs.infinito'), t('tools.verbs.contraElRelojSinFinal')],
+        ] as [QuizMode, IconName, string, string][]).map(([value, icon, title, text]) => (
+          <ModeTile key={value} icon={icon} title={title} text={text} selected={mode === value} onPress={() => { tap('confirm'); updateSetup({ mode: value }); }} />
+        ))}
+      </View>
 
       {mode === 'solo' ? (
         <View style={styles.card}>
@@ -217,7 +239,7 @@ export default function VerbsScreen() {
                     label={label}
                     accessibilityRole="radio"
                     selected={style === value}
-                    onPress={() => { tap(); updateSetup({ style: value }); }}
+                    onPress={() => { tap(value === 'challenge' ? 'challenge' : 'review'); updateSetup({ style: value }); }}
                     style={style !== value && styles.chipIdle}
                   />
                 ))}
@@ -271,6 +293,27 @@ export default function VerbsScreen() {
         onPress={start}
         icon={<Ionicons name="play" size={16} color={AppColors.textPrimary} />}
       />
+
+      <View style={styles.audioRow}>
+        <HanetChip
+          label={t('tools.verbs.efectos')}
+          accessibilityRole="switch"
+          compact
+          selected={audio.sound}
+          icon={<Ionicons name={audio.sound ? 'volume-high' : 'volume-mute'} size={15} color={audio.sound ? AppColors.textPrimary : AppColors.textSecondary} />}
+          onPress={() => { updateAudio({ sound: !audio.sound }); if (!audio.sound) tap(); }}
+          style={!audio.sound && styles.chipIdle}
+        />
+        <HanetChip
+          label={t('services.eventsService.musica')}
+          accessibilityRole="switch"
+          compact
+          selected={audio.music}
+          icon={<Ionicons name={audio.music ? 'musical-notes' : 'musical-notes-outline'} size={15} color={audio.music ? AppColors.textPrimary : AppColors.textSecondary} />}
+          onPress={() => { tap(); updateAudio({ music: !audio.music }); }}
+          style={!audio.music && styles.chipIdle}
+        />
+      </View>
     </View>
   );
 
@@ -293,6 +336,14 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: AppColors.canvas },
   page: { width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: AppSpacing.lg, paddingBottom: 150, gap: AppSpacing.lg },
   settings: { gap: AppSpacing.lg },
+  modes: { flexDirection: 'row', gap: AppSpacing.md },
+  modeTile: { flex: 1, padding: AppSpacing.lg, borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface, borderWidth: 1.5, borderColor: AppColors.hairline, gap: 6 },
+  modeTileOn: { borderColor: AppColors.accent },
+  modeIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: AppColors.accentTint, alignItems: 'center', justifyContent: 'center', marginBottom: AppSpacing.xs },
+  modeIconOn: { backgroundColor: AppColors.accent },
+  modeTitle: { ...AppDisplay.section, color: AppColors.textPrimary },
+  modeText: { ...AppType.footnote, color: AppColors.textSecondary },
+  audioRow: { flexDirection: 'row', justifyContent: 'center', gap: AppSpacing.sm },
   group: { gap: AppSpacing.sm },
   groupTitle: { ...AppType.headline, color: AppColors.textPrimary, paddingHorizontal: AppSpacing.xs },
   card: { borderRadius: AppRadii.lg, borderCurve: 'continuous', backgroundColor: AppColors.surface, overflow: 'hidden' },

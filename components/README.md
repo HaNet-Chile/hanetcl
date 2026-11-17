@@ -78,7 +78,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `SettingsGroup` · `SettingsLinkRow` · `SettingsToggleRow` · `SettingsNote` | `settings/settings-list.tsx` | Listas agrupadas tipo ajustes del teléfono. Toda la fila cambia el interruptor. |
 | `DeviceRow` | `settings/device-row.tsx` | Un dispositivo donde está abierta la cuenta (Configuraciones → Seguridad), dentro de un `SettingsGroup`: ícono según teléfono, tablet o computador, sistema y app, y la última actividad. El que tienes en la mano dice "Este dispositivo" en rosado. |
 | `useQuickActions` | `quick-actions.tsx` | Los atajos al mantener el ícono de la app (Calendar, ClassHall, Eventos, Notificaciones). |
-| `AppErrorLayer` · `ErrorScreen` y pantallas | `errors/` | Cuenta bloqueada, servidores, sin conexión y error fatal. |
+| `AppErrorLayer` · `ErrorScreen` y pantallas | `errors/` | Cuenta bloqueada, servidores, sin conexión, error fatal y pantalla no encontrada (`NotFoundScreen`, la de `app/+not-found.tsx` para links que no llevan a ninguna parte). |
 | `LaunchSplash` · `WelcomeCelebration` · `InstitutionSync` · `OnboardingProgress` | raíz de `components/` | La entrada: splash, bienvenida al unirse, vínculo con la institución y el avance del registro. |
 
 ## Notas (módulo `grades`)

@@ -1,3 +1,5 @@
+import { Confetti } from '@/components/anniversary/confetti';
+import { FlexText } from '@/components/anniversary/flex-text';
 import { ThemedText } from '@/components/themed-text';
 import { VerbAnswerField, VerbTag, VerbTimeBar, formLabel, formShortLabel, typeLabel } from '@/components/tools/verb-ui';
 import type { AnswerState } from '@/components/tools/verb-ui';
@@ -15,15 +17,17 @@ import {
   recordInfinite,
   recordSolo,
   scoreSolo,
+  getInfiniteBest,
   shuffle,
 } from '@/services/verbs-quiz';
+import { playEffect, playMusic, stopEffect, stopMusic } from '@/services/verbs-sound';
 import type { InfiniteBest, SoloAnswers, SoloBest, SoloResult, SoloStyle, VerbForm, VerbSource } from '@/services/verbs-quiz';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { TextInputInstance } from 'react-native';
-import Animated, { FadeIn, FadeOut, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, FadeInLeft, FadeInRight, FadeOut, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { t } from '@/i18n';
 
 // The two games of Verbos en inglés, drawn inside app/tools/verbs/play.tsx,
@@ -47,20 +51,41 @@ export function VerbCountdown({ onDone }: { onDone: () => void }) {
   const done = useRef(onDone);
   useEffect(() => { done.current = onDone; }, [onDone]);
 
+  const ring = useSharedValue(0);
+
+  // One sound for the whole count (its beeps are a second apart), as in the original.
   useEffect(() => {
-    haptic.tick();
+    playEffect('countdown');
+    return () => stopEffect('countdown');
+  }, []);
+
+  useEffect(() => {
+    if (step === 0) haptic.win();
+    else haptic.tick();
+    if (!reduceMotion) {
+      ring.set(0);
+      ring.set(withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) }));
+    }
     const timer = setTimeout(() => {
       if (step > 0) setStep(step - 1);
       else done.current();
-    }, step > 0 ? 700 : 450);
+    }, step > 0 ? 1000 : 450);
     return () => clearTimeout(timer);
-  }, [step]);
+  }, [reduceMotion, ring, step]);
+
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: 1 - ring.get(),
+    transform: [{ scale: 0.55 + ring.get() * 0.9 }],
+  }));
 
   return (
     <View style={styles.countdown} accessibilityLiveRegion="assertive">
-      <Animated.View key={step} entering={reduceMotion ? undefined : FadeIn.duration(120)}>
-        <ThemedText style={[styles.countdownText, step === 0 && styles.countdownGo]}>{step > 0 ? String(step) : t('components.tools.verbGames.ya')}</ThemedText>
-      </Animated.View>
+      <View style={styles.countdownBox}>
+        <Animated.View pointerEvents="none" style={[styles.countdownRing, step === 0 && styles.countdownRingGo, ringStyle]} />
+        <Animated.View key={step} entering={reduceMotion ? undefined : ZoomIn.duration(220)}>
+          <FlexText style={[styles.countdownText, step === 0 && styles.countdownGo]}>{step > 0 ? String(step) : t('components.tools.verbGames.ya')}</FlexText>
+        </Animated.View>
+      </View>
     </View>
   );
 }
@@ -73,6 +98,25 @@ function StatBlock({ value, label }: { value: string; label: string }) {
     </View>
   );
 }
+
+/** A number that counts up to its value when it appears. */
+function useCountUp(target: number, ms = 800) {
+  const reduceMotion = useReducedMotion();
+  const [value, setValue] = useState(reduceMotion ? target : 0);
+  useEffect(() => {
+    if (reduceMotion) return;
+    const started = now();
+    const timer = setInterval(() => {
+      const progress = Math.min(1, (now() - started) / ms);
+      setValue(Math.round(target * (1 - Math.pow(1 - progress, 3))));
+      if (progress >= 1) clearInterval(timer);
+    }, 30);
+    return () => clearInterval(timer);
+  }, [ms, reduceMotion, target]);
+  return value;
+}
+
+const CONFETTI = [AppColors.accent, AppColors.accentMint, AppColors.accentYellow, AppColors.surfaceSoft];
 
 // ---------------------------------------------------------------- Solitario
 
@@ -92,7 +136,27 @@ export function SoloGame({ verbs, forms, style, source, onFinished, onReplay, on
   const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState<{ score: SoloResult; best: SoloBest | null; isNew: boolean } | null>(null);
   const [blanksAsk, setBlanksAsk] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const reduceMotion = useReducedMotion();
   const started = useRef(0);
+  const progress = useSharedValue(1 / Math.max(verbs.length, 1));
+
+  useEffect(() => {
+    playMusic('solo');
+    return () => stopMusic();
+  }, []);
+
+  useEffect(() => {
+    progress.set(withTiming((index + 1) / Math.max(verbs.length, 1), { duration: 260, easing: Easing.out(Easing.cubic) }));
+  }, [index, progress, verbs.length]);
+  const progressStyle = useAnimatedStyle(() => ({ width: `${progress.get() * 100}%` }));
+
+  const goTo = (next: number) => {
+    setDirection(next > index ? 1 : -1);
+    playEffect('select');
+    haptic.tick();
+    setIndex(next);
+  };
   useEffect(() => { started.current = now(); }, []);
   const refs = useRef<Record<string, TextInputInstance | null>>({});
 
@@ -113,6 +177,7 @@ export function SoloGame({ verbs, forms, style, source, onFinished, onReplay, on
 
   const finish = (force = false) => {
     if (!force && blanks > 0) {
+      playEffect('confirm');
       setBlanksAsk(blanks);
       return;
     }
@@ -120,7 +185,9 @@ export function SoloGame({ verbs, forms, style, source, onFinished, onReplay, on
     const seconds = Math.floor((now() - started.current) / 1000);
     const score = scoreSolo(verbs, forms, answers, seconds);
     const saved = recordSolo(source, forms, score);
-    if (score.percent === 100) haptic.win();
+    stopMusic();
+    playEffect(score.percent === 100 ? 'scorePerfect' : score.percent >= 51 ? 'scoreGood' : 'scoreBad');
+    if (score.percent >= 90) haptic.win();
     setResult({ score, ...saved });
     onFinished();
   };
@@ -133,7 +200,7 @@ export function SoloGame({ verbs, forms, style, source, onFinished, onReplay, on
       return;
     }
     if (style === 'challenge') {
-      if (verbIndex < verbs.length - 1) setIndex(verbIndex + 1);
+      if (verbIndex < verbs.length - 1) goTo(verbIndex + 1);
       else finish();
       return;
     }
@@ -189,15 +256,19 @@ export function SoloGame({ verbs, forms, style, source, onFinished, onReplay, on
           <ThemedText style={styles.clock}>{formatDuration(elapsed)}</ThemedText>
         </View>
         <View style={styles.track} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: verbs.length, now: index + 1 }}>
-          <View style={[styles.trackFill, { width: `${((index + 1) / verbs.length) * 100}%` }]} />
+          <Animated.View style={[styles.trackFill, progressStyle]} />
         </View>
 
-        <View key={verb.infinitive} style={styles.verbCard}>
+        <Animated.View
+          key={verb.infinitive}
+          entering={reduceMotion ? undefined : (direction === 1 ? FadeInRight : FadeInLeft).duration(200)}
+          style={styles.verbCard}
+        >
           <VerbTag label={typeLabel(verb)} />
           <ThemedText style={styles.meaning}>{verb.translation}</ThemedText>
           {showsInfinitive && <ThemedText style={styles.given}>{verb.infinitive}</ThemedText>}
           <View style={styles.fields}>{fields(verb, index, false)}</View>
-        </View>
+        </Animated.View>
 
         <View style={styles.navRow}>
           <Pressable
@@ -205,7 +276,7 @@ export function SoloGame({ verbs, forms, style, source, onFinished, onReplay, on
             accessibilityLabel={t('components.tools.verbGames.verboAnterior')}
             accessibilityState={{ disabled: index === 0 }}
             disabled={index === 0}
-            onPress={() => setIndex(index - 1)}
+            onPress={() => goTo(index - 1)}
             style={({ pressed }) => [styles.backPill, index === 0 && styles.disabled, pressed && AppPressed]}
           >
             <Ionicons name="chevron-back" size={16} color={AppColors.textPrimary} />
@@ -214,7 +285,7 @@ export function SoloGame({ verbs, forms, style, source, onFinished, onReplay, on
           <HanetButton
             label={last ? t('eventCheckin.terminar') : t('anniversary.welcome.siguiente')}
             variant={last ? 'accent' : 'primary'}
-            onPress={() => (last ? finish() : setIndex(index + 1))}
+            onPress={() => (last ? finish() : goTo(index + 1))}
             style={styles.navMain}
           />
         </View>
@@ -263,15 +334,19 @@ function SoloResults({ result, best, isNew, forms, onReplay, onExit }: {
     return [...seen.values()];
   }, [result.misses]);
 
+  const shown = useCountUp(result.percent);
   const fullGame = forms.length === VERB_FORMS.length;
   const bestLine = isNew
     ? t('components.tools.verbGames.tuMejorMarcaConEsta')
     : best ? t('components.tools.verbGames.tuMejorMarcaConEsta2', { percent: best.percent, duration: formatDuration(best.seconds) }) : null;
 
   return (
+    <View style={styles.fill}>
     <ScrollView contentContainerStyle={styles.gamePage} showsVerticalScrollIndicator={false}>
       <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(160)} style={styles.hero}>
-        <ThemedText style={styles.heroNumber} accessibilityLabel={t('components.tools.verbGames.percentPorCiento', { percent: result.percent })}>{`${result.percent} %`}</ThemedText>
+        <FlexText style={styles.heroNumber} accessibilityLabel={t('components.tools.verbGames.percentPorCiento', { percent: result.percent })}>
+          {String(shown)}<ThemedText style={styles.heroUnit}> %</ThemedText>
+        </FlexText>
         <ThemedText style={styles.heroLine}>{t('components.tools.verbGames.correctDeTotalRespuestasCorrectas', { correct: result.correct, total: result.total, duration: formatDuration(result.seconds) })}</ThemedText>
         {fullGame && !!bestLine && <ThemedText style={[styles.bestLine, isNew && styles.bestLineNew]}>{bestLine}</ThemedText>}
       </Animated.View>
@@ -313,6 +388,8 @@ function SoloResults({ result, best, isNew, forms, onReplay, onExit }: {
         <HanetButton label={t('components.tools.verbGames.volverAVerbos')} variant="surface" onPress={onExit} />
       </View>
     </ScrollView>
+    {result.percent >= 90 && <Confetti colors={CONFETTI} count={48} />}
+    </View>
   );
 }
 
@@ -327,7 +404,11 @@ type InfiniteProps = {
   onExit: () => void;
 };
 
-type Over = { cause: 'time' | 'errors'; seconds: number; correct: number; errors: number; loops: number; best: InfiniteBest; isNew: boolean };
+type Over = { cause: 'time' | 'errors'; seconds: number; correct: number; errors: number; loops: number; streak: number; best: InfiniteBest; isNew: boolean };
+type Totals = { correct: number; errors: number; loops: number; streak: number };
+
+/** From this many in a row, the streak shows. */
+const STREAK_FROM = 3;
 
 const TICK_MS = 100;
 
@@ -345,6 +426,15 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
   const [loopNotice, setLoopNotice] = useState(false);
   const [away, setAway] = useState(false);
   const [over, setOver] = useState<Over | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [delta, setDelta] = useState<{ id: number; good: boolean } | null>(null);
+  const [record, setRecord] = useState(false);
+  const [bestBefore] = useState(() => getInfiniteBest());
+  const recordDone = useRef(false);
+  const pop = useSharedValue(1);
+  const pulse = useSharedValue(1);
+  const rise = useSharedValue(0);
 
   const clock = useRef<number>(INFINITE_RULES.startSeconds);
   const survived = useRef(0);
@@ -356,14 +446,26 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
   const drain = 1 + (loop - 1) * INFINITE_RULES.loopSpeedUp;
   const running = !over && !paused && !away;
 
-  const end = useCallback((cause: Over['cause'], totals: { correct: number; errors: number; loops: number }) => {
+  const end = useCallback((cause: Over['cause'], totals: Totals) => {
     const seconds = Math.floor(survived.current);
-    const saved = recordInfinite({ seconds, correct: totals.correct, loops: totals.loops });
+    const saved = recordInfinite({ seconds, correct: totals.correct, loops: totals.loops, streak: totals.streak });
     if (saved.isNew) haptic.win();
     else haptic.miss();
+    stopMusic(false);
+    playEffect('gameOver');
     setOver({ cause, seconds, ...totals, ...saved });
     onFinished();
   }, [onFinished]);
+
+  // The game-over tune is long: it stops when this game goes away.
+  useEffect(() => () => stopEffect('gameOver'), []);
+
+  // Music while the clock runs: the faster track from the sixth round.
+  useEffect(() => {
+    if (running) playMusic(loop <= 5 ? 'infinite' : 'infiniteFast');
+    else if (!over) stopMusic(false);
+  }, [loop, over, running]);
+  useEffect(() => () => stopMusic(false), []);
 
   // Leaving the app stops the clock until the student comes back and taps "Seguir".
   useEffect(() => {
@@ -373,8 +475,8 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
     return () => subscription.remove();
   }, []);
 
-  const totals = useRef({ correct: 0, errors: 0, loops: 1 });
-  useEffect(() => { totals.current = { correct, errors, loops: loop }; }, [correct, errors, loop]);
+  const totals = useRef<Totals>({ correct: 0, errors: 0, loops: 1, streak: 0 });
+  useEffect(() => { totals.current = { correct, errors, loops: loop, streak: bestStreak }; }, [bestStreak, correct, errors, loop]);
 
   useEffect(() => {
     if (!running) return;
@@ -383,15 +485,25 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
       survived.current += TICK_MS / 1000;
       setTimeLeft(clock.current);
       const isLow = clock.current <= INFINITE_RULES.lowSeconds;
-      if (isLow && !low.current) haptic.warn();
+      if (isLow && !low.current) {
+        haptic.warn();
+        playEffect('surrender');
+      }
       low.current = isLow;
+      // Passing the best game saved on this phone, once.
+      if (bestBefore && !recordDone.current && survived.current > bestBefore.seconds) {
+        recordDone.current = true;
+        playEffect('winning');
+        haptic.win();
+        setRecord(true);
+      }
       if (clock.current <= 0) {
         clearInterval(timer);
         end('time', totals.current);
       }
     }, TICK_MS);
     return () => clearInterval(timer);
-  }, [drain, end, running]);
+  }, [bestBefore, drain, end, running]);
 
   useEffect(() => {
     if (!loopNotice) return;
@@ -399,14 +511,37 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
     return () => clearTimeout(timer);
   }, [loopNotice]);
 
+  useEffect(() => {
+    if (!record) return;
+    const timer = setTimeout(() => setRecord(false), 2600);
+    return () => clearTimeout(timer);
+  }, [record]);
+
+  // Under the last seconds, the clock beats once a second.
+  const whole = Math.ceil(timeLeft);
+  useEffect(() => {
+    if (reduceMotion || whole > INFINITE_RULES.lowSeconds || whole <= 0) return;
+    pulse.set(withSequence(withTiming(1.12, { duration: 90 }), withTiming(1, { duration: 260 })));
+  }, [pulse, reduceMotion, whole]);
+
   const verb = pool[verbIndex];
   const form = VERB_FORMS[formIndex];
 
   const submit = () => {
     if (!running || !input.trim()) return;
     const right = isCorrect(verb, form, input);
+    setDelta({ id: (delta?.id ?? 0) + 1, good: right });
+    if (!reduceMotion) {
+      rise.set(0);
+      rise.set(withTiming(1, { duration: 750, easing: Easing.out(Easing.cubic) }));
+    }
     if (right) {
       haptic.hit();
+      playEffect('select');
+      const nextStreak = streak + 1;
+      setStreak(nextStreak);
+      if (nextStreak > bestStreak) setBestStreak(nextStreak);
+      if (!reduceMotion) pop.set(withSequence(withTiming(1.035, { duration: 90 }), withSpring(1, { stiffness: 420, damping: 18 })));
       clock.current = Math.min(clock.current + INFINITE_RULES.hitBonus, INFINITE_RULES.maxSeconds);
       setCorrect(value => value + 1);
       setFeedback({ state: 'right', answer: formatForm(verb, form) });
@@ -416,11 +551,12 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
       clock.current = Math.max(clock.current - INFINITE_RULES.missPenalty, 0);
       const nextErrors = errors + 1;
       setErrors(nextErrors);
+      setStreak(0);
       setFeedback({ state: 'wrong', answer: formatForm(verb, form) });
       if (!reduceMotion) shake.set(withSequence(withTiming(-8, { duration: 50 }), withTiming(8, { duration: 50 }), withTiming(-5, { duration: 50 }), withTiming(0, { duration: 50 })));
       if (nextErrors >= INFINITE_RULES.maxErrors) {
         setTimeLeft(clock.current);
-        end('errors', { correct, errors: nextErrors, loops: loop });
+        end('errors', { correct, errors: nextErrors, loops: loop, streak: bestStreak });
         return;
       }
     }
@@ -440,21 +576,28 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
     setVerbIndex(0);
     setLoop(loop + 1);
     setLoopNotice(true);
+    playEffect('fallingBehind');
   };
 
   const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shake.get() }],
+    transform: [{ translateX: shake.get() }, { scale: pop.get() }],
     borderColor: flash.get() > 0.5 ? AppColors.accentMint : AppColors.hairline,
+  }));
+  const clockStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.get() }] }));
+  const deltaStyle = useAnimatedStyle(() => ({
+    opacity: rise.get() < 0.6 ? 1 : (1 - rise.get()) / 0.4,
+    transform: [{ translateY: -rise.get() * 26 }],
   }));
 
   if (over) {
     const answered = over.correct + over.errors;
     return (
+      <View style={styles.fill}>
       <ScrollView contentContainerStyle={styles.gamePage} showsVerticalScrollIndicator={false}>
         <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(160)} style={styles.hero}>
           <ThemedText style={styles.heroEyebrow}>{over.cause === 'time' ? t('components.tools.verbGames.seAcaboElTiempo') : t('components.tools.verbGames.llegasteAMaxerrorsErrores', { maxErrors: INFINITE_RULES.maxErrors })}</ThemedText>
-          <ThemedText style={styles.heroNumber} accessibilityLabel={t('components.tools.verbGames.aguantasteDuration', { duration: formatDuration(over.seconds) })}>{formatDuration(over.seconds)}</ThemedText>
-          <ThemedText style={styles.heroLine}>{t('components.tools.verbGames.aguantaste')}</ThemedText>
+          <FlexText style={styles.heroNumber} accessibilityLabel={t('components.tools.verbGames.aguantasteDuration', { duration: formatDuration(over.seconds) })}>{formatDuration(over.seconds)}</FlexText>
+          <ThemedText style={styles.heroLine}>{t('components.tools.verbGames.aguantasteEnCountVueltas', { count: over.loops })}</ThemedText>
           <ThemedText style={[styles.bestLine, over.isNew && styles.bestLineNew]}>
             {over.isNew ? t('components.tools.verbGames.esTuMejorPartida') : t('components.tools.verbGames.tuMejorPartidaDurationCorrect', { duration: formatDuration(over.best.seconds), correct: over.best.correct })}
           </ThemedText>
@@ -464,13 +607,15 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
           <View style={styles.statDivider} />
           <StatBlock value={answered ? `${Math.round((over.correct / answered) * 100)} %` : '–'} label={t('components.tools.verbGames.precision')} />
           <View style={styles.statDivider} />
-          <StatBlock value={String(over.loops)} label={t('components.tools.verbGames.vueltas', { count: over.loops })} />
+          <StatBlock value={String(over.streak)} label={t('components.tools.verbGames.mejorRacha')} />
         </View>
         <View style={styles.actions}>
           <HanetButton label={t('components.tools.verbGames.jugarOtraVez')} variant="accent" onPress={onReplay} />
           <HanetButton label={t('components.tools.verbGames.volverAVerbos')} variant="surface" onPress={onExit} />
         </View>
       </ScrollView>
+      {over.isNew && <Confetti colors={CONFETTI} count={48} />}
+      </View>
     );
   }
 
@@ -479,7 +624,16 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
   return (
     <KeyboardScroll contentContainerStyle={styles.gamePage} keyboardShouldPersistTaps="always" showsVerticalScrollIndicator={false} scrollEnabled={false}>
       <View style={styles.clockRow}>
-        <ThemedText style={[styles.clockBig, isLow && styles.clockLow]} accessibilityLabel={t('components.tools.verbGames.quedanTimeleftSegundos', { timeLeft: Math.ceil(timeLeft) })}>{`${Math.ceil(timeLeft)} s`}</ThemedText>
+        <View style={styles.clockLeft}>
+          <Animated.View style={clockStyle}>
+            <ThemedText style={[styles.clockBig, isLow && styles.clockLow]} accessibilityLabel={t('components.tools.verbGames.quedanTimeleftSegundos', { timeLeft: Math.ceil(timeLeft) })}>{`${Math.ceil(timeLeft)} s`}</ThemedText>
+          </Animated.View>
+          {!!delta && (
+            <Animated.View key={delta.id} pointerEvents="none" style={[styles.delta, deltaStyle]}>
+              <ThemedText style={[styles.deltaText, !delta.good && styles.deltaBad]}>{delta.good ? `+${INFINITE_RULES.hitBonus} s` : `−${INFINITE_RULES.missPenalty} s`}</ThemedText>
+            </Animated.View>
+          )}
+        </View>
         <View style={styles.clockMeta}>
           <ThemedText style={styles.counter}>{t('components.tools.verbGames.vueltaLoop', { loop })}</ThemedText>
           <View style={styles.errorsPill} accessibilityLabel={t('components.tools.verbGames.errorsDeMaxerrorsErrores', { errors, maxErrors: INFINITE_RULES.maxErrors })}>
@@ -489,6 +643,20 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
         </View>
       </View>
       <VerbTimeBar seconds={timeLeft} max={INFINITE_RULES.startSeconds} low={isLow} tick={TICK_MS} />
+
+      {streak >= STREAK_FROM && (
+        <Animated.View entering={reduceMotion ? undefined : ZoomIn.duration(160)} style={styles.streak} accessibilityLabel={t('components.tools.verbGames.rachaDeStreak', { streak })}>
+          <Ionicons name="flame" size={16} color={AppColors.accent} />
+          <FlexText key={streak} style={styles.streakText}>{t('components.tools.verbGames.rachaStreak', { streak })}</FlexText>
+        </Animated.View>
+      )}
+
+      {record && (
+        <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(120)} exiting={reduceMotion ? undefined : FadeOut.duration(200)} style={styles.notice}>
+          <Ionicons name="trophy" size={16} color={AppColors.textPrimary} />
+          <ThemedText style={styles.noticeText}>{t('components.tools.verbGames.nuevoRecordSigueAsi')}</ThemedText>
+        </Animated.View>
+      )}
 
       {loopNotice && (
         <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(120)} exiting={reduceMotion ? undefined : FadeOut.duration(200)} style={styles.notice}>
@@ -563,7 +731,11 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
 }
 
 const styles = StyleSheet.create({
-  countdown: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
+  fill: { flex: 1 },
+  countdown: { flex: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 80 },
+  countdownBox: { width: 260, height: 260, alignItems: 'center', justifyContent: 'center' },
+  countdownRing: { ...StyleSheet.absoluteFill, borderRadius: 130, borderWidth: 3, borderColor: AppColors.surfaceSoft },
+  countdownRingGo: { borderColor: AppColors.accent },
   countdownText: { ...AppDisplay.number, fontSize: 120, lineHeight: 128, color: AppColors.textPrimary, fontVariant: ['tabular-nums'] },
   countdownGo: { color: AppColors.accent, fontSize: 88, lineHeight: 96 },
   gamePage: { width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: AppSpacing.lg, paddingBottom: AppSpacing.xxl, gap: AppSpacing.lg },
@@ -588,7 +760,8 @@ const styles = StyleSheet.create({
   reviewGiven: { ...AppType.callout, color: AppColors.textSecondary },
   hero: { alignItems: 'center', gap: AppSpacing.xs, paddingVertical: AppSpacing.xl },
   heroEyebrow: { ...AppType.headline, color: AppColors.textSecondary },
-  heroNumber: { ...AppDisplay.number, fontSize: 88, lineHeight: 96, color: AppColors.textPrimary, fontVariant: ['tabular-nums'] },
+  heroNumber: { ...AppDisplay.number, fontSize: 96, lineHeight: 104, color: AppColors.textPrimary, fontVariant: ['tabular-nums'] },
+  heroUnit: { ...AppDisplay.score, fontSize: 40, lineHeight: 44, color: AppColors.textSecondary },
   heroLine: { ...AppType.callout, color: AppColors.textSecondary, textAlign: 'center' },
   bestLine: { ...AppType.callout, color: AppColors.textSecondary, textAlign: 'center', marginTop: AppSpacing.sm },
   bestLineNew: { fontFamily: 'DMSans_700Bold', color: AppColors.accent },
@@ -613,6 +786,12 @@ const styles = StyleSheet.create({
   statLabel: { ...AppType.caption, color: AppColors.textSecondary },
   statDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: AppColors.separator },
   clockRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
+  clockLeft: { flexDirection: 'row', alignItems: 'flex-end', gap: AppSpacing.sm },
+  delta: { paddingBottom: 8 },
+  deltaText: { ...AppType.headline, color: AppColors.accentMint },
+  deltaBad: { color: AppColors.errorText },
+  streak: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', height: 34, paddingHorizontal: 14, borderRadius: AppRadii.pill, backgroundColor: AppColors.accentTint },
+  streakText: { ...AppDisplay.name, color: AppColors.textPrimary },
   clockBig: { ...AppDisplay.number, fontSize: 48, lineHeight: 52, color: AppColors.textPrimary, fontVariant: ['tabular-nums'] },
   clockLow: { color: AppColors.accent },
   clockMeta: { alignItems: 'flex-end', gap: 6, paddingBottom: 4 },
