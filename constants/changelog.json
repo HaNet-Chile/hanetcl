@@ -1,6 +1,23 @@
 {
   "releases": [
     {
+      "version": "0.13.0-beta",
+      "date": "2026-11-17",
+      "title": "Verbos en inglés",
+      "highlights": [
+        "Nueva herramienta: Verbos en inglés, para practicar el infinitivo, el pasado y el participio.",
+        "Juega en Solitario con las listas de tus quiz o en Infinito, contra el reloj.",
+        "Al terminar ves tus errores con la respuesta correcta y puedes repetir solo esos."
+      ],
+      "items": [
+        "Nueva herramienta en Herramientas: Verbos en inglés, con casi 300 verbos regulares e irregulares y su significado en español.",
+        "Elige una lista de los quiz del liceo, 20 verbos al azar, solo regulares, solo irregulares o arma tu propia lista.",
+        "Solitario: en Desafío respondes un verbo a la vez; en Repaso, todos a la vista para estudiar. Al final ves tu puntaje, el tiempo y las correcciones.",
+        "Infinito: los verbos dan vueltas sin parar. Cada acierto suma segundos, cada error resta, y en cada vuelta el reloj corre más rápido.",
+        "Tus mejores marcas quedan guardadas en tu teléfono. También lo encuentras desde el buscador del Inicio."
+      ]
+    },
+    {
       "version": "0.12.0-beta",
       "date": "2026-11-16",
       "title": "Seguridad de tu cuenta",

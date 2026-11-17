@@ -70,6 +70,7 @@ const sections = (): Section[] => [
   { key: 'tools', title: t('common.herramientas'), subtitle: t('services.search.recursosParaTuAnoEscolar'), keywords: t('services.search.utilidadesRecursos'), icon: 'construct-outline', href: '/tools' },
   { key: 'scale', title: t('tools.scale.escalaDeNotas'), subtitle: t('services.search.dePuntosANota'), keywords: t('services.search.puntajeExigenciaTablaConversion'), icon: 'stats-chart-outline', href: '/tools/scale' },
   { key: 'calculator', title: t('tools.grades.calculadoraDeNotas'), subtitle: t('services.search.tuPromedioYCuantoNecesitas'), keywords: t('services.search.promedioCalcularPonderacionExamen'), icon: 'calculator-outline', href: '/tools/grades' },
+  { key: 'verbs', title: t('common.verbosEnIngles'), subtitle: t('services.search.practicaSusTresFormas'), keywords: t('services.search.inglesEnglishVerbsIrregularesRegulares'), icon: 'language-outline', href: '/tools/verbs' },
   { key: 'electividad', title: t('tools.electividad.hanetElectividad'), subtitle: t('services.search.testDeInteresesParaElegir'), keywords: t('services.search.electivosTestVocacionalInteresesAreas'), icon: 'compass-outline', href: '/tools/electividad', only: 'student' },
   { key: 'notifications', title: t('components.notifications.notificationsPanel.notificaciones'), subtitle: t('services.search.loUltimoQueTeLlego'), keywords: t('services.search.avisosPush'), icon: 'notifications-outline', href: { pathname: '/', params: { abrir: 'notificaciones' } } },
   { key: 'profile', title: t('layout.perfil'), subtitle: t('services.search.tuHanetIdYTu'), keywords: t('services.search.cuentaQrCodigoFotoBlobatar'), icon: 'person-outline', href: '/explore' },
@@ -265,6 +266,7 @@ export function suggestionsFrom(index: SearchItem[], now = Date.now(), limit = 6
     section('scale'),
     upcoming('calendar')[1],
     section('calculator'),
+    section('verbs'),
     section('electividad'),
     section('whats-new'),
   ].filter((item): item is SearchItem => !!item);

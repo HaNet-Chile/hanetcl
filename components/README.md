@@ -118,6 +118,8 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | Componente | Archivo | Qué es |
 | --- | --- | --- |
 | `AreaIcon` · `KnowledgeIcon` | `tools/area-icon.tsx` | Íconos de trazo (24 × 24, 2 px) de las 9 áreas de HaNet Electividad y de las áreas de carreras de mifuturo.cl. |
+| `VerbTag` · `VerbAnswerField` · `VerbTimeBar` | `tools/verb-ui.tsx` | Verbos en inglés: la etiqueta de lo que se pregunta (`strong`, rosada) o del tipo de verbo; el campo de respuesta, sin autocorrector ni mayúsculas, con marca de bien o mal (`state`); y el reloj de Infinito, que se vacía de corrido y se pone rosado al final. |
+| `SoloGame` · `InfiniteGame` · `VerbCountdown` | `tools/verb-games.tsx` | Los dos juegos de Verbos en inglés y su cuenta regresiva, dentro de `app/tools/verbs/play.tsx`. Solo esa pantalla los usa. |
 
 ## Eventos, Feed y Aniversario
 
