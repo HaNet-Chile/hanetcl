@@ -1043,9 +1043,12 @@
       "cerrarLabel": "Cerrar {{label}}",
       "cerrarLaBusqueda": "Cerrar la búsqueda",
       "comprarEntradasOReclamarEl": "Comprar entradas o reclamar el cupón HaNet",
+      "eligeAlMenosUnVerbo": "Elige al menos un verbo.",
       "elMenu": "el menú",
       "esteEventoNoTieneEntradas": "Este evento no tiene entradas ni cupones",
       "lasVistas": "las vistas",
+      "listoCountvalue": "Listo · {{countValue}}",
+      "listoCountvalueVerbosElegidos": "Listo, {{countValue}} verbos elegidos",
       "opciones": "Opciones",
       "opcionesDelEvento": "Opciones del evento"
     },
