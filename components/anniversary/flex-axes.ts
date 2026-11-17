@@ -1,7 +1,7 @@
 import { AppFlexAxes, AppFlexFonts } from '@/constants/design-tokens';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import type { StyleProp, TextProps, TextStyle } from 'react-native';
+import type { LayoutChangeEvent, StyleProp, TextProps, TextStyle } from 'react-native';
 import { Easing, cancelAnimation, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 // What FlexText (native and web) shares: where its axes start and end, the
@@ -12,6 +12,12 @@ export type FlexTextProps = Omit<TextProps, 'style'> & {
   /** Cuts from AppFlexFonts: the text glides from the first one's axes to the last one's. */
   steps?: readonly string[];
   delay?: number;
+  /**
+   * Stays on one line: the size shrinks just enough for the widest moment
+   * (the last cut) to fit the width it has. For big numbers that widen; the
+   * parent has to give it a width (it doesn't hug its content).
+   */
+  fit?: boolean;
 };
 
 export type FlexAxes = { wght: number; wdth: number; opsz: number };
@@ -51,3 +57,39 @@ export function useFlexProgress(delay: number) {
   }, [delay, progress, reduceMotion]);
   return { progress, start: reduceMotion ? 1 : 0 };
 }
+
+/**
+ * For `fit`: the width there is (the wrapper) and the width the text takes
+ * at its last cut and full size (a hidden probe), and the scale between them.
+ */
+export function useFlexFit() {
+  const [room, setRoom] = useState(0);
+  const [natural, setNatural] = useState(0);
+  const onRoom = useCallback((event: LayoutChangeEvent) => setRoom(event.nativeEvent.layout.width), []);
+  const onNatural = useCallback((event: LayoutChangeEvent) => setNatural(event.nativeEvent.layout.width), []);
+  // A little margin, since the last letter's side bearing and rounding vary
+  // by platform. The floor keeps a parent that hugs its content (it should
+  // give the text a width instead) from shrinking it to nothing.
+  const scale = room > 0 && natural > 0 ? Math.max(0.4, Math.min(1, (room * 0.97) / natural)) : 1;
+  return { scale, onRoom, onNatural };
+}
+
+/** The text's size, line height and tracking, times `scale`. */
+export function scaledText(style: StyleProp<TextStyle>, scale: number): StyleProp<TextStyle> {
+  if (scale >= 1) return style;
+  const flat = StyleSheet.flatten(style) ?? {};
+  return [
+    style,
+    {
+      ...(flat.fontSize ? { fontSize: flat.fontSize * scale } : {}),
+      ...(flat.lineHeight ? { lineHeight: flat.lineHeight * scale } : {}),
+      ...(flat.letterSpacing ? { letterSpacing: flat.letterSpacing * scale } : {}),
+    },
+  ];
+}
+
+export const flexFitStyles = StyleSheet.create({
+  room: { alignSelf: 'stretch' },
+  // Wide enough that the probe never wraps, and out of sight and of reach.
+  probeBox: { position: 'absolute', left: 0, top: 0, width: 4000, opacity: 0, alignItems: 'flex-start' },
+});

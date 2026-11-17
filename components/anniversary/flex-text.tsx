@@ -2,10 +2,10 @@ import { ThemedText } from '@/components/themed-text';
 import { AppFlexFonts } from '@/constants/design-tokens';
 import React, { forwardRef } from 'react';
 import type { ComponentRef } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import type { TextProps } from 'react-native';
 import Animated, { useAnimatedProps } from 'react-native-reanimated';
-import { flexRange, useFlexProgress, variationsAt } from './flex-axes';
+import { flexFitStyles, flexRange, scaledText, useFlexFit, useFlexProgress, variationsAt } from './flex-axes';
 import type { FlexTextProps } from './flex-axes';
 
 type AxisProps = TextProps & { fontVariationSettings?: string };
@@ -24,16 +24,26 @@ const AnimatedAxisText = Animated.createAnimatedComponent(AxisText);
  * to the last (wide and black), as Spotify Wrapped's type does. Give it a new
  * `key` to play it again. The web version is flex-text.web.tsx.
  */
-export function FlexText({ style, steps = AppFlexFonts.ramp, delay = 0, children, ...props }: FlexTextProps) {
+export function FlexText({ style, steps = AppFlexFonts.ramp, delay = 0, fit = false, children, ...props }: FlexTextProps) {
   const { from, to } = flexRange(steps, style);
   const { progress, start } = useFlexProgress(delay);
+  const { scale, onRoom, onNatural } = useFlexFit();
   const animatedProps = useAnimatedProps<AxisProps>(() => ({ fontVariationSettings: variationsAt(progress.get(), from, to) }));
 
   // The font and the layout stay on the outer Text; the axes go on the inner
   // run, so Android measures the letters again as they widen.
-  return (
-    <ThemedText {...props} style={[style, { fontFamily: AppFlexFonts.variable }]}>
+  const text = (
+    <ThemedText {...props} numberOfLines={fit ? 1 : props.numberOfLines} style={[scaledText(style, fit ? scale : 1), { fontFamily: AppFlexFonts.variable }]}>
       <AnimatedAxisText fontVariationSettings={variationsAt(start, from, to)} animatedProps={animatedProps}>{children}</AnimatedAxisText>
     </ThemedText>
+  );
+  if (!fit) return text;
+  return (
+    <View style={flexFitStyles.room} onLayout={onRoom}>
+      {text}
+      <View style={flexFitStyles.probeBox} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <Text numberOfLines={1} onLayout={onNatural} style={[style, { fontFamily: AppFlexFonts.variable, fontVariationSettings: variationsAt(1, from, to) }]}>{children}</Text>
+      </View>
+    </View>
   );
 }

@@ -132,7 +132,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `FeedEventCard` · `FeedPollView` | `feed/feed-attachments.tsx` | Un evento y una votación anónima dentro de una publicación. |
 | `StoryShareSheet` | `share/story-share.tsx` | Compartir como historia (9:16). |
 | `GradientCard` · `FlagSurface` · `FlagGlow` | `anniversary/gradient-card.tsx`, `flag-surface.tsx` (y `.web.tsx`) | Los colores de las alianzas ondeando como bandera, solo en tarjetas de puntos y resultados. Se detienen fuera de pantalla y con "Reducir movimiento". |
-| `FlexText` | `anniversary/flex-text.tsx` (+ `.web.tsx`, `flex-axes.ts`) | Texto en Google Sans Flex que desliza peso y ancho con la fuente variable (`fontVariationSettings`). |
+| `FlexText` | `anniversary/flex-text.tsx` (+ `.web.tsx`, `flex-axes.ts`) | Texto en Google Sans Flex que desliza peso y ancho con la fuente variable (`fontVariationSettings`). Con `fit` queda en una línea: achica el tamaño para que quepa su forma más ancha (el padre le da el ancho). |
 | `AllianceBadge` · `AlliancePill` · `AllianceCard` · `Scoreboard` · `LeaderCard` · `ActivityList` · `SectionTitle` | `anniversary/anniversary-ui.tsx` | El Aniversario. |
 | `CelebrationTile` | `anniversary/celebration-tile.tsx` | El tile del Inicio mientras no se ve la bienvenida del aniversario. |
 

@@ -82,8 +82,8 @@ export function VerbCountdown({ onDone }: { onDone: () => void }) {
     <View style={styles.countdown} accessibilityLiveRegion="assertive">
       <View style={styles.countdownBox}>
         <Animated.View pointerEvents="none" style={[styles.countdownRing, step === 0 && styles.countdownRingGo, ringStyle]} />
-        <Animated.View key={step} entering={reduceMotion ? undefined : ZoomIn.duration(220)}>
-          <FlexText style={[styles.countdownText, step === 0 && styles.countdownGo]}>{step > 0 ? String(step) : t('components.tools.verbGames.ya')}</FlexText>
+        <Animated.View key={step} entering={reduceMotion ? undefined : ZoomIn.duration(220)} style={styles.countdownNumber}>
+          <FlexText fit style={[styles.countdownText, step === 0 && styles.countdownGo]}>{step > 0 ? String(step) : t('components.tools.verbGames.ya')}</FlexText>
         </Animated.View>
       </View>
     </View>
@@ -344,7 +344,7 @@ function SoloResults({ result, best, isNew, forms, onReplay, onExit }: {
     <View style={styles.fill}>
     <ScrollView contentContainerStyle={styles.gamePage} showsVerticalScrollIndicator={false}>
       <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(160)} style={styles.hero}>
-        <FlexText style={styles.heroNumber} accessibilityLabel={t('components.tools.verbGames.percentPorCiento', { percent: result.percent })}>
+        <FlexText fit style={styles.heroNumber} accessibilityLabel={t('components.tools.verbGames.percentPorCiento', { percent: result.percent })}>
           {String(shown)}<ThemedText style={styles.heroUnit}> %</ThemedText>
         </FlexText>
         <ThemedText style={styles.heroLine}>{t('components.tools.verbGames.correctDeTotalRespuestasCorrectas', { correct: result.correct, total: result.total, duration: formatDuration(result.seconds) })}</ThemedText>
@@ -596,7 +596,7 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
       <ScrollView contentContainerStyle={styles.gamePage} showsVerticalScrollIndicator={false}>
         <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(160)} style={styles.hero}>
           <ThemedText style={styles.heroEyebrow}>{over.cause === 'time' ? t('components.tools.verbGames.seAcaboElTiempo') : t('components.tools.verbGames.llegasteAMaxerrorsErrores', { maxErrors: INFINITE_RULES.maxErrors })}</ThemedText>
-          <FlexText style={styles.heroNumber} accessibilityLabel={t('components.tools.verbGames.aguantasteDuration', { duration: formatDuration(over.seconds) })}>{formatDuration(over.seconds)}</FlexText>
+          <FlexText fit style={styles.heroNumber} accessibilityLabel={t('components.tools.verbGames.aguantasteDuration', { duration: formatDuration(over.seconds) })}>{formatDuration(over.seconds)}</FlexText>
           <ThemedText style={styles.heroLine}>{t('components.tools.verbGames.aguantasteEnCountVueltas', { count: over.loops })}</ThemedText>
           <ThemedText style={[styles.bestLine, over.isNew && styles.bestLineNew]}>
             {over.isNew ? t('components.tools.verbGames.esTuMejorPartida') : t('components.tools.verbGames.tuMejorPartidaDurationCorrect', { duration: formatDuration(over.best.seconds), correct: over.best.correct })}
@@ -733,10 +733,12 @@ export function InfiniteGame({ verbs, paused, onFinished, onReplay, onExit }: In
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   countdown: { flex: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 80 },
+  // Full width of the ring, so FlexText's fit has a width to fit into.
+  countdownNumber: { alignSelf: 'stretch' },
   countdownBox: { width: 260, height: 260, alignItems: 'center', justifyContent: 'center' },
   countdownRing: { ...StyleSheet.absoluteFill, borderRadius: 130, borderWidth: 3, borderColor: AppColors.surfaceSoft },
   countdownRingGo: { borderColor: AppColors.accent },
-  countdownText: { ...AppDisplay.number, fontSize: 120, lineHeight: 128, color: AppColors.textPrimary, fontVariant: ['tabular-nums'] },
+  countdownText: { ...AppDisplay.number, fontSize: 120, lineHeight: 128, color: AppColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center' },
   countdownGo: { color: AppColors.accent, fontSize: 88, lineHeight: 96 },
   gamePage: { width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: AppSpacing.lg, paddingBottom: AppSpacing.xxl, gap: AppSpacing.lg },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
@@ -760,7 +762,7 @@ const styles = StyleSheet.create({
   reviewGiven: { ...AppType.callout, color: AppColors.textSecondary },
   hero: { alignItems: 'center', gap: AppSpacing.xs, paddingVertical: AppSpacing.xl },
   heroEyebrow: { ...AppType.headline, color: AppColors.textSecondary },
-  heroNumber: { ...AppDisplay.number, fontSize: 96, lineHeight: 104, color: AppColors.textPrimary, fontVariant: ['tabular-nums'] },
+  heroNumber: { ...AppDisplay.number, fontSize: 96, lineHeight: 104, color: AppColors.textPrimary, fontVariant: ['tabular-nums'], textAlign: 'center' },
   heroUnit: { ...AppDisplay.score, fontSize: 40, lineHeight: 44, color: AppColors.textSecondary },
   heroLine: { ...AppType.callout, color: AppColors.textSecondary, textAlign: 'center' },
   bestLine: { ...AppType.callout, color: AppColors.textSecondary, textAlign: 'center', marginTop: AppSpacing.sm },
