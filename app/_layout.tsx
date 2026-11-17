@@ -130,6 +130,8 @@ export default function RootLayout() {
     GoogleSansFlex_800ExtraBold_Expanded: require('@/assets/fonts/google-sans-flex/GoogleSansFlex_800ExtraBold_Expanded.ttf'),
     GoogleSansFlex_900Black_Condensed: require('@/assets/fonts/google-sans-flex/GoogleSansFlex_900Black_Condensed.ttf'),
     GoogleSansFlex_900Black_ExtraExpanded: require('@/assets/fonts/google-sans-flex/GoogleSansFlex_900Black_ExtraExpanded.ttf'),
+    // The variable font (weight, width and optical size), for FlexText's animation.
+    GoogleSansFlexVariable: require('@/assets/fonts/google-sans-flex/GoogleSansFlex-Variable.ttf'),
   });
 
   // The native splash only covers the font load; HaNet's own splash takes

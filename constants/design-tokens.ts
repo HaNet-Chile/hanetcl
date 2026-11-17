@@ -84,9 +84,10 @@ export const AppType = {
 
 /**
  * Google Sans Flex, for big expressive text (the Aniversario's titles and
- * scores). React Native can't move a variable font's axes, so these are
- * fixed cuts: `ramp` goes from narrow and light to wide and black, and
- * `FlexText` steps through it to animate weight and width together.
+ * scores). Still text uses these fixed cuts. `FlexText` animates with the
+ * variable font instead (`variable`, its axes moved with
+ * fontVariationSettings): `ramp` goes from narrow and light to wide and
+ * black, and it glides from the first cut's axes to the last one's.
  */
 export const AppFlexFonts = {
   ramp: [
@@ -101,7 +102,20 @@ export const AppFlexFonts = {
   /** Normal width, for running text like the strips. */
   bold: 'GoogleSansFlex_700Bold',
   name: 'GoogleSansFlex_700Bold_SemiExpanded',
+  /** The variable font, whose axes FlexText animates. */
+  variable: 'GoogleSansFlexVariable',
 } as const;
+
+/** Each fixed cut's place on the variable font's axes (weight 1–1000, width 25–151). */
+export const AppFlexAxes: Record<string, { wght: number; wdth: number }> = {
+  GoogleSansFlex_300Light_ExtraCondensed: { wght: 300, wdth: 62.5 },
+  GoogleSansFlex_500Medium_Condensed: { wght: 500, wdth: 75 },
+  GoogleSansFlex_700Bold: { wght: 700, wdth: 100 },
+  GoogleSansFlex_700Bold_SemiExpanded: { wght: 700, wdth: 112.5 },
+  GoogleSansFlex_800ExtraBold_Expanded: { wght: 800, wdth: 125 },
+  GoogleSansFlex_900Black_Condensed: { wght: 900, wdth: 75 },
+  GoogleSansFlex_900Black_ExtraExpanded: { wght: 900, wdth: 150 },
+};
 
 /** Display sizes in Google Sans Flex. Wide cuts need less negative tracking. */
 export const AppDisplay = {

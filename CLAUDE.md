@@ -26,7 +26,7 @@ App de Expo/React Native para liceos chilenos. Piloto: Liceo Camilo Henríquez d
 
 - El diseño vive en Figma (archivo `16jIXkcIKhFJPnM38A7qUF`). Leerlo con el conector de Figma, no con capturas del navegador.
 - Tema oscuro "Misty Rose", acento `#EF2274`. Control activo `#C7C6CF` con texto `#282829`. Tipografía DM Sans. Tokens en `constants/design-tokens.ts`.
-- Textos grandes y expresivos (títulos y puntajes del Aniversario) en **Google Sans Flex** (`AppFlexFonts`, `AppDisplay`): cortes fijos en `assets/fonts/google-sans-flex/` porque React Native no mueve los ejes de una fuente variable; `FlexText` los recorre para animar peso y ancho. El resto sigue en DM Sans.
+- Textos grandes y expresivos (títulos y puntajes del Aniversario) en **Google Sans Flex** (`AppFlexFonts`, `AppDisplay`): el texto quieto usa cortes fijos de `assets/fonts/google-sans-flex/`. `FlexText` anima con la fuente variable (`GoogleSansFlex-Variable.ttf`, recortada a latín con peso, ancho y tamaño óptico): desde RN 0.88 `fontVariationSettings` mueve los ejes, así que peso y ancho se deslizan con Reanimated en vez de saltar entre cortes (decidido por muxp 2026-11-17, siguiendo la guía de rnmotion.dev). En el teléfono los ejes viajan como prop animada en un Text interior (Reanimated 4.7 los saca de los estilos animados); en la web, `flex-text.web.tsx` usa un estilo animado. Los ejes de cada corte están en `AppFlexAxes`. El resto sigue en DM Sans.
 - Nada de emojis en la interfaz: íconos (Ionicons o los de `assets/animated-icons/`). La excepción es la mascota de cada alianza.
 - Botones y chips siempre con forma de píldora.
 - Selectores como diálogo tipo alerta, no en línea. Hora con ruedas desplazables. Marcar "hoy" en las fechas.
