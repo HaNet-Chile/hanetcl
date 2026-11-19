@@ -51,8 +51,13 @@ export function cubic(p: number, ease: Ease): number {
  * keyframes, `eases[i]` the timing of the segment that starts at keyframe i
  * (missing ones use `fallback`, like a CSS animation-timing-function).
  */
-export function track(time: number, times: readonly number[], values: readonly number[], eases: readonly Ease[] = [], fallback: Ease = EASE_OUT): number {
+export function track(time: number, times: readonly number[], values: readonly number[], eases?: readonly Ease[], fallback?: Ease): number {
   'worklet';
+  // No default parameters here: in the worklet's copy they would run before
+  // its captured constants exist, and EASE_OUT would not be defined on the UI
+  // thread (that closed the app, 2026-11-19).
+  const segments = eases ?? [];
+  const otherwise = fallback === undefined ? EASE_OUT : fallback;
   if (time <= times[0]) return values[0];
   const last = times.length - 1;
   if (time >= times[last]) return values[last];
@@ -60,6 +65,6 @@ export function track(time: number, times: readonly number[], values: readonly n
   while (i < last - 1 && time >= times[i + 1]) i++;
   const span = times[i + 1] - times[i];
   const p = span > 0 ? (time - times[i]) / span : 1;
-  const ease = i < eases.length && eases[i] !== undefined ? eases[i] : fallback;
+  const ease = i < segments.length && segments[i] !== undefined ? segments[i] : otherwise;
   return values[i] + (values[i + 1] - values[i]) * cubic(p, ease);
 }
