@@ -7,6 +7,7 @@ import { useEventOptions } from '@/components/events/event-options';
 import { calendarBar, useCalendarBar } from '@/components/calendar/calendar-bar-store';
 import { CalendarViewMenu, CalendarViewPill } from '@/components/calendar/view-menu';
 import { OrganizeMenu, OrganizePill, organizeBar, useOrganizeBar } from '@/components/anniversary/organize-menu';
+import { CreateMenu, CreatePill, ScanPill, organizeCenter, useOrganizeCenter } from '@/components/organize/organize-bar';
 import { FeedMenu, FeedMenuPill } from '@/components/feed/feed-menu';
 import { useAnniversaryState } from '@/services/anniversary-service';
 import { EVENT_EDITOR_ROLES, useRole, useSession } from '@/services/auth-service';
@@ -532,16 +533,20 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
   );
 }
 
+/** Organizar's pages: the center scans the event whose door is open, else "Crear". */
+const ORGANIZE_ROUTES = ['/organize', '/organize/events', '/organize/event', '/organize/tickets'];
+
 /** Routes that show the bar; everything else (sign-in, onboarding, sheets) has none. */
 const TAB_ROOTS = ['/', '/explore'];
 const BAR_ROUTES = [
   ...TAB_ROOTS, '/calendar', '/events', '/feed', '/event-info', '/event-detail', '/classhall', '/classhall/hall', '/classhall/evaluation',
   '/anniversary', '/anniversary/activities', '/anniversary/notices', '/hnt-admin', '/settings', '/licenses',
   '/tools', '/tools/electividad', '/tools/electividad/result', '/tools/scale', '/tools/grades',
+  ...ORGANIZE_ROUTES,
 ];
 
 /** With the side navigation, the screens it opens directly. */
-const SIDE_NAV_ROOTS = [...TAB_ROOTS, '/calendar', '/events', '/feed', '/classhall', '/anniversary', '/tools', '/settings', '/hnt-admin'];
+const SIDE_NAV_ROOTS = [...TAB_ROOTS, '/calendar', '/events', '/feed', '/classhall', '/anniversary', '/tools', '/settings', '/hnt-admin', '/organize'];
 
 /** The feed's screens: for those who publish, their search lives in a menu with "Crear". */
 const FEED_ROUTES = ['/feed', '/anniversary/notices'];
@@ -562,6 +567,7 @@ export function GlobalTabBar() {
   const options = useEventOptions(bar.actions);
   const calendar = useCalendarBar();
   const organize = useOrganizeBar();
+  const organizer = useOrganizeCenter();
   const anniversary = useAnniversaryState();
   const side = useSideNav();
 
@@ -576,6 +582,7 @@ export function GlobalTabBar() {
   React.useEffect(() => {
     if (pathname !== '/calendar') calendarBar.closeMenu();
     if (pathname !== '/anniversary') organizeBar.closeMenu();
+    if (!ORGANIZE_ROUTES.includes(pathname)) organizeCenter.closeMenu();
     if (!FEED_ROUTES.includes(pathname)) eventBar.closeMenu();
   }, [pathname]);
 
@@ -586,6 +593,8 @@ export function GlobalTabBar() {
   const organizing = pathname === '/anniversary' && !!anniversary?.canOrganize && !!anniversary.anniversary;
   const canAddEvents = !!user && !!role && EVENT_EDITOR_ROLES.includes(role);
   const feedMenu = FEED_ROUTES.includes(pathname) && !!bar.compose;
+  const organizeRoute = ORGANIZE_ROUTES.includes(pathname);
+  const scanning = organizeRoute && !!organizer.scanEventId;
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
   // Leaves whatever is stacked over the tabs before switching tab.
@@ -618,6 +627,10 @@ export function GlobalTabBar() {
     center = <CalendarViewPill view={calendar.view} open={calendar.menuOpen} onPress={calendarBar.toggleMenu} />;
   } else if (organizing) {
     center = <OrganizePill open={organize.menuOpen} />;
+  } else if (scanning && organizer.scanEventId) {
+    center = <ScanPill eventId={organizer.scanEventId} ticketed={organizer.scanTicketed} />;
+  } else if (organizeRoute) {
+    center = <CreatePill open={organizer.menuOpen} />;
   } else if (feedMenu) {
     // Those who publish get a menu with the search and "Crear"; the rest, the search pill.
     center = <FeedMenuPill label={pathname === '/feed' ? t('layout.feed') : t('components.appTabBar.avisos')} open={bar.menuOpen} />;
@@ -639,7 +652,7 @@ export function GlobalTabBar() {
       center={center}
       sideInset={side.width}
       // The same center on two screens (the logo, the search pill) stays put; a different one morphs in.
-      controlsKey={center ? pathname : SEARCH_PLACEHOLDERS[pathname] ? 'search' : 'logo'}
+      controlsKey={organizeRoute ? (scanning ? 'organize-scan' : 'organize-create') : center ? pathname : SEARCH_PLACEHOLDERS[pathname] ? 'search' : 'logo'}
       search={SEARCH_PLACEHOLDERS[pathname]
         ? { open: bar.searchOpen, value: bar.query, placeholder: SEARCH_PLACEHOLDERS[pathname], onChangeText: eventBar.setQuery, onOpen: eventBar.openSearch, onClose: eventBar.closeSearch }
         : undefined}
@@ -647,6 +660,8 @@ export function GlobalTabBar() {
         ? { open: calendar.menuOpen, label: t('components.appTabBar.lasVistas'), onClose: calendarBar.closeMenu, content: <CalendarViewMenu canCreate={canAddEvents} /> }
         : organizing
           ? { open: organize.menuOpen, label: t('components.appTabBar.elMenu'), onClose: organizeBar.closeMenu, content: <OrganizeMenu /> }
+          : organizeRoute && !scanning
+            ? { open: organizer.menuOpen, label: t('components.appTabBar.elMenu'), onClose: organizeCenter.closeMenu, content: <CreateMenu /> }
           : feedMenu && bar.compose
             ? { open: bar.menuOpen, label: t('components.appTabBar.elMenu'), onClose: eventBar.closeMenu, content: <FeedMenu compose={bar.compose} placeholder={SEARCH_PLACEHOLDERS[pathname]} /> }
             : undefined}

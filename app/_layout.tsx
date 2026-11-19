@@ -219,6 +219,15 @@ export default function RootLayout() {
             <Stack.Screen name="ui-showcase" options={{ headerShown: false }} />
             <Stack.Screen name="create-event" options={sheetOptions('create-event')} />
             <Stack.Screen name="day-change" options={sheetOptions('day-change')} />
+            <Stack.Screen name="organize/index" options={{ headerShown: false }} />
+            <Stack.Screen name="organize/events" options={{ headerShown: false }} />
+            <Stack.Screen name="organize/event" options={{ headerShown: false }} />
+            <Stack.Screen name="organize/tickets" options={{ headerShown: false }} />
+            <Stack.Screen name="organize/new" options={sheetOptions('organize/new')} />
+            <Stack.Screen name="organize/issue" options={sheetOptions('organize/issue')} />
+            <Stack.Screen name="organize/send" options={sheetOptions('organize/send')} />
+            <Stack.Screen name="organize/scanners" options={sheetOptions('organize/scanners')} />
+            <Stack.Screen name="organize/leads" options={sheetOptions('organize/leads')} />
             <Stack.Screen name="edit-profile" options={sheetOptions('edit-profile')} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
             <Stack.Screen name="licenses" options={{ headerShown: false }} />

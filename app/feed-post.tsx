@@ -35,7 +35,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardScroll, useKeyboardOverlap } from '@/components/ui/keyboard';
@@ -93,8 +93,10 @@ function FeedPostScreen() {
   // field, which keeps the line being written in sight, instead of running
   // under the keyboard.
   const typingHeight = keyboard.shown ? Math.max(140, windowHeight - keyboard.overlap - insets.top - 220) : undefined;
-  // `tag` starts a new post with it (the Aniversario's "Publicar aviso").
-  const { id, eventId, tag } = useLocalSearchParams<{ id?: string; eventId?: string; tag?: string }>();
+  // `tag` starts a new post with it (the Aniversario's "Publicar aviso");
+  // `poll=1` starts it as a poll (Organizar's "Crear una votación").
+  const { id, eventId, tag, poll: pollParam } = useLocalSearchParams<{ id?: string; eventId?: string; tag?: string; poll?: string }>();
+  const startPoll = !id && pollParam === '1';
   const role = useRole();
 
   // An event shared from its page ("Compartir en el Feed").
@@ -141,6 +143,12 @@ function FeedPostScreen() {
   const currentNotify = notify ?? startTag === ANNIVERSARY_TAG;
   const [poll, setPoll] = useState<PollDraft | null>(null);
   const canPoll = !original && !!space && (feed?.pollSpaces ?? []).includes(spaceGroup(space.key));
+  const pollStarted = useRef(false);
+  useEffect(() => {
+    if (!startPoll || !canPoll || pollStarted.current) return;
+    pollStarted.current = true;
+    setPoll({ options: ['', ''], days: 3, results: 'live' });
+  }, [canPoll, startPoll]);
   const pollOptions = poll ? poll.options.map(option => option.trim()).filter(Boolean) : [];
   const pollReady = !poll || (pollOptions.length >= MIN_POLL_OPTIONS && new Set(pollOptions.map(option => option.toLocaleLowerCase('es'))).size === pollOptions.length && currentBody.trim().length > 0);
   const attachedEvent = original?.event ?? (sharedEvent ? asFeedEvent(sharedEvent) : null);
@@ -152,7 +160,7 @@ function FeedPostScreen() {
   const [preview, setPreview] = useState(false);
   const [dialog, setDialog] = useState<'space' | 'audience' | 'tags' | 'pollLength' | null>(null);
 
-  const dirty = body !== null || tags !== null || pictures !== null || audience !== null || pinned !== null || spaceKey !== null || poll !== null || notify !== null;
+  const dirty = body !== null || tags !== null || pictures !== null || audience !== null || pinned !== null || spaceKey !== null || (poll !== null && (!startPoll || poll.options.some(option => option.trim()))) || notify !== null;
   const ready = !!space
     && (currentBody.trim().length > 0 || currentPictures.length > 0 || (!original && !!sharedEvent) || !!original?.poll || !!original?.event)
     && pollReady

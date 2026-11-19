@@ -18,6 +18,8 @@ import { SHEET_DETENTS } from '@/constants/sheets';
 import { useSideNav } from '@/hooks/use-desktop-layout';
 import { t } from '@/i18n';
 import { useRole } from '@/services/auth-service';
+import { canOrganize } from '@/services/organize-service';
+import { Ionicons } from '@expo/vector-icons';
 
 type NavIcon = React.ComponentType<{ size?: number; color?: string; animated?: boolean }>;
 
@@ -63,6 +65,9 @@ const PROFILE_ITEMS: NavItem[] = [
   { key: 'settings', label: t('common.configuraciones'), href: '/settings', Icon: SettingsIcon, match: startsWith('/settings', '/licenses', '/whats-new') },
 ];
 
+const OrganizeIcon: NavIcon = ({ size = 22, color }) => <Ionicons name="grid-outline" size={size - 1} color={color} />;
+// While the web panel isn't published, the web opens the app's Organizar too.
+const ORGANIZE_ITEM: NavItem = { key: 'organize', label: t('organize.organizar'), href: '/organize', Icon: OrganizeIcon, match: startsWith('/organize') };
 const PANEL_ITEM: NavItem = { key: 'hnt', label: t('index.panelHnt'), href: '/hnt-admin', Icon: PanelIcon, match: startsWith('/hnt-admin') };
 
 function NavButton({ item, active, labeled, onPress }: { item: NavItem; active: boolean; labeled: boolean; onPress: () => void }) {
@@ -112,12 +117,13 @@ function HanetMark() {
 export function SideNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const isHnt = useRole() === 'HNT';
+  const role = useRole();
+  const isHnt = role === 'HNT';
   const { nav, width } = useSideNav();
   if (width === 0) return null;
 
   const labeled = nav === 'sidebar';
-  const mainItems = isHnt ? [...MAIN_ITEMS, PANEL_ITEM] : MAIN_ITEMS;
+  const mainItems = [...MAIN_ITEMS, ...(canOrganize(role) ? [ORGANIZE_ITEM] : []), ...(isHnt ? [PANEL_ITEM] : [])];
   // A sheet is open over the content: the navigation dims with it, and a
   // click on it closes the sheet as the backdrop does.
   const sheetOpen = !!SHEET_DETENTS[pathname.replace(/^\//, '')];
