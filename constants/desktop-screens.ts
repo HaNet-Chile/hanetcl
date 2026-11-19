@@ -49,6 +49,14 @@ export const DESKTOP_SCREENS: Record<string, DesktopScreen> = {
   'event-form': { layout: 'sheet' },
   'event-options': { layout: 'sheet' },
   'event-checkin': { layout: 'full' },
+
+  // Entradas
+  'tickets/index': { layout: 'reading' },
+  'tickets/detail': { layout: 'sheet' },
+  'tickets/validated': { layout: 'full' },
+  'tickets/arrival': { layout: 'full' },
+  'tickets/receive': { layout: 'full' },
+  'tickets/scan': { layout: 'full' },
   'feed-post': { layout: 'sheet' },
   'search': { layout: 'custom' },
 

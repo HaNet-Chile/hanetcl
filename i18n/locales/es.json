@@ -28,6 +28,7 @@
     "eliminando": "Eliminando…",
     "eliminar": "Eliminar",
     "empieza": "Empieza",
+    "entradas": "Entradas",
     "enviando": "Enviando…",
     "evaluacion": "evaluación",
     "guardando": "Guardando…",
@@ -1491,6 +1492,11 @@
       "cargandoTusClases": "Cargando tus clases"
     },
     "system": {
+      "screenshotGuard": {
+        "elCodigoDeLaEntrada": "El código de la entrada cambia cada 30 segundos, así que una captura no funciona en la puerta. Para dársela a alguien, usa Regalar o Compartir como imagen.",
+        "lasCapturasNoSirvenPara": "Las capturas no sirven para entrar",
+        "tuHnQrCambiaCada": "Tu HN-QR cambia cada 30 segundos, así que una captura no funciona. Muéstralo en vivo desde la app."
+      },
       "updatePrompt": {
         "actualizando": "Actualizando…",
         "actualizar": "Actualizar",
@@ -1501,6 +1507,35 @@
         "listo": "Listo",
         "puedesApagarEsteResumen": "Puedes apagar este resumen en Configuraciones.",
         "verTodo": "Ver todo"
+      }
+    },
+    "tickets": {
+      "profileTickets": {
+        "entradaParaTitle": "Entrada para {{title}}",
+        "mineEnTuCuenta": "{{mine}} en tu cuenta",
+        "mineEnTuCuentaOut": "{{mine}} en tu cuenta · {{out}} enviadas",
+        "titleCountvalueEntradas": "{{title}}, {{countValue}} entradas",
+        "verTodas": "Ver todas",
+        "verTodasUpcomingcount": "Ver todas ({{upcomingCount}})"
+      },
+      "ticket": {
+        "compartida": "Compartida",
+        "impresa": "Impresa",
+        "linkEnviado": "Link enviado",
+        "porAceptar": "Por aceptar"
+      },
+      "ticketShare": {
+        "compartirEntrada": "Compartir entrada",
+        "desdeAhoraTuEntradaEs": "Desde ahora tu entrada es esta hoja: ya no aparece con QR en la app.",
+        "desdeAhoraTuEntradaEs2": "Desde ahora tu entrada es esta imagen: ya no aparece con QR en la app.",
+        "guardarParaImprimir": "Guardar para imprimir",
+        "imprimir": "Imprimir",
+        "noPudimosPrepararLaImagen": "No pudimos preparar la imagen. Inténtalo otra vez.",
+        "preparando": "Preparando",
+        "seAnulaAlPrimerUso": "Se anula al primer uso",
+        "valeUnaVezSeAnula": "Vale una vez. Se anula al primer uso.",
+        "vistaPreviaDeLaEntrada": "Vista previa de la entrada para compartir",
+        "vistaPreviaDeLaEntrada2": "Vista previa de la entrada para imprimir"
       }
     },
     "topHeader": {
@@ -2512,6 +2547,101 @@
     "noPudimosAbrirEseArchivo": "No pudimos abrir ese archivo.",
     "noPudimosLeerLaTabla": "No pudimos leer la tabla. Puedes agregarla a mano desde ClassHall.",
     "paraAgregarUnaTE": "Para agregar una T.E. tienes que ser docente de una clase en ClassHall."
+  },
+  "tickets": {
+    "arrival": {
+      "paraTitleYaEstanEn": "Para {{title}}. Ya están en tu perfil, en Entradas.",
+      "recibisteCountEntradas_one": "Recibiste una entrada",
+      "recibisteCountEntradas_other": "Recibiste {{count}} entradas",
+      "verMisEntradas": "Ver mis entradas"
+    },
+    "countEntradas_one": "1 entrada",
+    "countEntradas_other": "{{count}} entradas",
+    "detail": {
+      "aNombreDe": "A nombre de",
+      "anularElLink": "Anular el link",
+      "compartirComoImagen": "Compartir como imagen",
+      "compartirComoImagen2": "¿Compartir como imagen?",
+      "compartirOtraVez": "Compartir otra vez",
+      "continuar": "Continuar",
+      "deParteDe": "De parte de",
+      "descargarOtraVez": "Descargar otra vez",
+      "descargarParaImprimir": "Descargar para imprimir",
+      "descargarParaImprimir2": "¿Descargar para imprimir?",
+      "enviarUnLinkNuevo": "Enviar un link nuevo",
+      "enviasteUnLinkParaRegalarla": "Enviaste un link para regalarla. Vence a las {{clock}} si nadie lo acepta.",
+      "enviasteUnLinkParaRegalarla2": "Enviaste un link para regalarla.",
+      "estaEntradaYaNoEsta": "Esta entrada ya no está en tu cuenta.",
+      "estaEntradaYaSeUso": "Esta entrada ya se usó.",
+      "indicaciones": "Indicaciones",
+      "laCompartisteComoImagenEsa": "La compartiste como imagen: esa imagen es la entrada.",
+      "laDescargasteParaImprimirEsa": "La descargaste para imprimir: esa hoja es la entrada.",
+      "laEntradaSaleDeTu": "La entrada sale de tu cuenta y pasa a ser la hoja impresa, con un código fijo. Quien la presente primero en la puerta, entra.",
+      "laEntradaSaleDeTu2": "La entrada sale de tu cuenta y pasa a ser la imagen, con un código fijo. Quien la presente primero en la puerta, entra.",
+      "muestraEsteQrEnLa": "Muestra este QR en la puerta. Vale una vez.",
+      "noPudimosAnularElLink": "No pudimos anular el link.",
+      "noPudimosCrearElLink": "No pudimos crear el link.",
+      "noPudimosPrepararLaEntrada": "No pudimos preparar la entrada.",
+      "organiza": "Organiza",
+      "regalar": "Regalar",
+      "seUsoALasClock": "Se usó a las {{clock}}.",
+      "teRegaloUnaEntradaPara": "Te regalo una entrada para {{title}}. Ábrela en HaNet:",
+      "teRegaloUnaEntradaPara2": "Te regalo una entrada para {{title}}. Ábrela en HaNet: {{url}}"
+    },
+    "entradaNumberParaTitle": "Entrada {{number}} para {{title}}",
+    "juntar": "Juntar",
+    "noPudimosCargarTusEntradas": "No pudimos cargar tus entradas.",
+    "receive": {
+      "aceptando": "Aceptando",
+      "aceptarEntrada": "Aceptar entrada",
+      "alAceptarlaPasaATu": "Al aceptarla pasa a tu cuenta y el QR de quien te la regaló deja de servir.",
+      "elLinkVence": "El link vence",
+      "estaEntradaEsTuyaEnvia": "Esta entrada es tuya. Envía el link a la persona a quien se la quieres regalar.",
+      "esteLinkNoEsDe": "Este link no es de una entrada de HaNet.",
+      "laEntradaEsTuya": "La entrada es tuya",
+      "noPudimosAbrirEsteLink": "No pudimos abrir este link.",
+      "noPudimosAceptarLaEntrada": "No pudimos aceptar la entrada.",
+      "paraRecibirlaNecesitasUnaCuenta": "Para recibirla necesitas una cuenta de HaNet. Inicia sesión y vuelve a abrir el link.",
+      "teRegalaronUnaEntrada": "Te regalaron una entrada",
+      "verMiEntrada": "Ver mi entrada",
+      "yaEstaEnTuPerfil": "Ya está en tu perfil, en Entradas. Muéstrala en la puerta desde la app."
+    },
+    "scan": {
+      "abrirAjustes": "Abrir Ajustes",
+      "apagarLaLinterna": "Apagar la linterna",
+      "apuntaAlQrDeLa": "Apunta al QR de la entrada",
+      "elCodigoDe8Caracteres": "El código de 8 caracteres que va bajo el QR de la entrada impresa o compartida.",
+      "encenderLaLinterna": "Encender la linterna",
+      "enElComputadorNoSe": "En el computador no se puede usar la cámara para escanear. Escribe el código de cada entrada.",
+      "entrada": "Entrada",
+      "entradaValida": "Entrada válida",
+      "entroALasHoursMinutes": "Entró a las {{hours}}:{{minutes}}",
+      "estaEntradaYaSeUso": "Esta entrada ya se usó",
+      "hanetNecesitaLaCamaraPara": "HaNet necesita la cámara para leer las entradas.",
+      "ingresarCodigo": "Ingresar código",
+      "llegaronCountvalueDeTotal": "Llegaron {{countValue}} de {{total}}",
+      "n7f3k29qx": "7F3K-29QX",
+      "noPudimosLeerEsaEntrada": "No pudimos leer esa entrada.",
+      "noSirve": "No sirve",
+      "pideQueAbranSuEntrada": "Pide que abran su entrada en HaNet, o escanea la impresa.",
+      "regaladaSinAceptar": "Regalada, sin aceptar",
+      "revisando": "Revisando…",
+      "seguirEscaneando": "Seguir escaneando",
+      "sinEntradasParaEsteEvento": "Sin entradas para este evento",
+      "sinUsar": "Sin usar",
+      "soloSeUsaMientrasEscaneas": "Solo se usa mientras escaneas en la puerta.",
+      "ticketscountEntradasEnEstaCuenta": "{{ticketsCount}} entradas en esta cuenta",
+      "usada": "Usada",
+      "validar": "Validar",
+      "validarEntrada": "Validar entrada"
+    },
+    "todaviaNoTienesEntradasCuando": "Todavía no tienes entradas. Cuando tu institución te dé una, aparecerá aquí y te avisaremos.",
+    "tusEntradasAEventosDe": "Tus entradas a eventos de tu institución. El QR cambia solo cada 30 segundos y vale una vez.",
+    "usadas": "Usadas",
+    "validated": {
+      "entradaValidaTeDamosLa": "Entrada válida. Te damos la bienvenida a {{title}}.",
+      "teDamosLaBienvenidaA": "Te damos la bienvenida a"
+    }
   },
   "tools": {
     "calculadoraDeNotasPromedioYLo": "Calculadora de notas: tu promedio y lo que te falta",

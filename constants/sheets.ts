@@ -29,6 +29,7 @@ export const SHEET_DETENTS: Record<string, number[]> = {
   'anniversary/flash': [1.0],
   'anniversary/leads': [0.75, 1.0],
   'anniversary/score': [0.85, 1.0],
+  'tickets/detail': [0.85, 1.0],
 };
 
 export function sheetDetents(route: string) {
