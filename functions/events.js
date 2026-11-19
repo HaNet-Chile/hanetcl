@@ -18,6 +18,13 @@ const { readIdQr } = require("./hanet-id");
 // organizers scan the attendees' HN-QR (functions/hanet-id.js) and each
 // arrival is kept in hnEvents/{id}/checkins/{uid}.
 //
+// An institution event can be private ("Privado o formal": a graduation, a
+// gala): only its organizers see it in the lists, and whoever holds a ticket
+// reaches it from the ticket (functions/tickets.js). An event with
+// signupMode "tickets" hands out tickets (hn-calendar hnTickets) instead of
+// sign-ups; their options live on the event, in `tickets` ({ enabled, cap,
+// giftable, guestLinks, printable, style, note }), which tickets.js reads.
+//
 // HaNet shows these events; it does not sell tickets or run them.
 
 const BUCKET = "hanet-edu.firebasestorage.app";
@@ -26,7 +33,10 @@ const USER_AGENT = "HaNetEventos/1.0 (+https://hanet-edu.web.app; muxp@muxp.art)
 const REGIONAL_EDITORS = ["HNT"];
 const INSTITUTION_EDITORS = ["CEE", "Admin", "HNT"];
 const JORNADAS = ["manana", "tarde", "ambas"];
-const SIGNUP_MODES = ["list", "count", "none"];
+// Roles that are not students, left out when handing out tickets by course.
+const STAFF = ["Profesor", "Admin", "HNT"];
+const SIGNUP_MODES = ["list", "count", "tickets", "none"];
+const TICKET_STYLES = ["simple", "brand", "formal"];
 const CATEGORIES = ["music", "concert", "exhibition", "sports", "theatre", "family", "academic", "community", "other"];
 const MAX_LISTED = 60;
 // The same closed set of reactions as the feed (functions/feed.js).
@@ -156,9 +166,26 @@ function eventOut(doc, extra = {}) {
     jornada: data.jornada || "ambas",
     signupMode: data.signupMode || "none",
     capacity: typeof data.capacity === "number" ? data.capacity : null,
+    private: data.private === true,
+    tickets: ticketsOut(data),
     authorName: data.authorName || "",
     reactions: EMOJIS.filter(emoji => data.reactions?.[emoji] > 0).map(emoji => ({ emoji, count: data.reactions[emoji], mine: false })),
     ...extra,
+  };
+}
+
+/** A ticketed event's options; giving, guest links and printing are on unless turned off. */
+function ticketsOut(data, input) {
+  const options = input ?? data?.tickets ?? {};
+  const cap = Number(options.cap);
+  return {
+    enabled: (input ? input.enabled === true : data?.signupMode === "tickets"),
+    cap: Number.isFinite(cap) && cap > 0 ? Math.round(cap) : null,
+    giftable: options.giftable !== false,
+    guestLinks: options.guestLinks !== false,
+    printable: options.printable !== false,
+    style: TICKET_STYLES.includes(options.style) ? options.style : "simple",
+    note: paragraph(options.note, 280),
   };
 }
 
@@ -177,7 +204,7 @@ function visibleTo(data, profile, editor) {
 /** What a feed post shows of an event it shares; null when the event is not there for this person. */
 function eventSummary(doc, institutionId) {
   const data = doc.exists ? doc.data() : null;
-  if (!data || data.status !== "published") return null;
+  if (!data || data.status !== "published" || data.private === true) return null;
   if (data.kind === "institution" && data.institutionId !== institutionId) return null;
   return {
     id: doc.id,
@@ -199,6 +226,18 @@ function checkinOpen(data, now = Date.now()) {
 }
 
 // How it stands for the caller: whether they signed up and how many did.
+/** Whether this person holds a ticket to the event (hnTickets, functions/tickets.js). */
+async function holdsTicket(getAdminApp, eventId, uid) {
+  const found = await calendarDb(getAdminApp).collection("hnTickets")
+    .where("eventId", "==", eventId).where("holderUid", "==", uid).limit(12).get();
+  return found.docs.some(doc => doc.data().status !== "voided");
+}
+
+/** Sign-ups are for lists and counters; a ticketed event has tickets instead. */
+function hasSignups(data) {
+  return !["none", "tickets"].includes(data.signupMode || "none");
+}
+
 async function withSignups(ref, uid) {
   const [count, mine] = await Promise.all([
     ref.collection("signups").count().get(),
@@ -404,14 +443,14 @@ function build(getAdminApp) {
     const jornada = ["manana", "tarde"].includes(account.jornada) ? account.jornada : null;
     const docs = snapshot.docs.filter((doc) => {
       const data = doc.data();
-      if (data.kind !== kind || data.status !== "published") return false;
+      if (data.kind !== kind || data.status !== "published" || data.private === true) return false;
       if (kind === "regional") return true;
       return data.institutionId === profile.institutionId && (!jornada || [jornada, "ambas"].includes(data.jornada || "ambas"));
     }).slice(0, MAX_LISTED);
 
     const [list, institutionName] = await Promise.all([
       Promise.all(docs.map(async (doc) => (
-        kind === "institution" && doc.data().signupMode !== "none"
+        kind === "institution" && hasSignups(doc.data())
           ? eventOut(doc, await withSignups(doc.ref, profile.uid))
           : eventOut(doc)
       ))),
@@ -434,7 +473,7 @@ function build(getAdminApp) {
     const [profile, doc] = await Promise.all([requireProfile(getAdminApp, request), ref.get()]);
     const data = doc.data();
     const editor = data ? canEdit(profile, data) : false;
-    if (!visibleTo(data, profile, editor)) {
+    if (!visibleTo(data, profile, editor) || (data.private === true && !editor && !(await holdsTicket(getAdminApp, id, profile.uid)))) {
       throw new HttpsError("not-found", "Ese evento ya no está disponible.");
     }
     const mine = (await ref.collection("reactions").doc(profile.uid).get()).data()?.emojis || [];
@@ -446,7 +485,7 @@ function build(getAdminApp) {
       const colors = await keepCoverPalette(ref, cover);
       if (colors) extra.palette = colors;
     }
-    if (data.kind === "institution" && data.signupMode !== "none") {
+    if (data.kind === "institution" && hasSignups(data)) {
       Object.assign(extra, await withSignups(ref, profile.uid));
       // Organizers see who signed up when the event keeps a list.
       if (editor && data.signupMode === "list") {
@@ -528,7 +567,11 @@ function build(getAdminApp) {
         jornada: JORNADAS.includes(input.jornada) ? input.jornada : "ambas",
         signupMode: SIGNUP_MODES.includes(input.signupMode) ? input.signupMode : "none",
         capacity: Number.isFinite(capacity) && capacity > 0 ? Math.round(capacity) : null,
+        private: input.private === true,
       });
+      // Only ticketed events are private: without tickets nobody could reach it.
+      if (fields.private) fields.signupMode = "tickets";
+      fields.tickets = ticketsOut(null, { ...(input.tickets || {}), enabled: fields.signupMode === "tickets" });
     }
 
     const events = calendarDb(getAdminApp).collection(COLLECTION);
@@ -612,7 +655,7 @@ function build(getAdminApp) {
       if (!event || event.kind !== "institution" || event.institutionId !== profile.institutionId || event.status !== "published") {
         throw new HttpsError("not-found", "Ese evento ya no está disponible.");
       }
-      if (event.signupMode === "none") throw new HttpsError("failed-precondition", "Este evento no lleva inscripción.");
+      if (event.signupMode === "none" || event.signupMode === "tickets") throw new HttpsError("failed-precondition", "Este evento no lleva inscripción.");
       if ((millis(event.endsAt) ?? millis(event.startsAt)) < Date.now()) throw new HttpsError("failed-precondition", "Este evento ya pasó.");
       const mineRef = ref.collection("signups").doc(profile.uid);
       const mine = await tx.get(mineRef);
@@ -738,7 +781,84 @@ function build(getAdminApp) {
     return { ...fields, ticketUrl, sourceName, sourceUrl: url.toString(), typeLabel: typeLabel || "", warnings, testOnly };
   });
 
-  return { listEvents, getEvent, saveEvent, deleteEvent, toggleEventSignup, toggleEventReaction, checkInEventAttendee, importEventFromUrl };
+  // Organizar (app/organize): the events this person runs, drafts and
+  // private ones included, from a day ago on, with what each one needs at a
+  // glance. City events only for HNT.
+  const listOrganizedEvents = onCall({ invoker: "public" }, async (request) => {
+    const profile = await requireProfile(getAdminApp, request);
+    if (!INSTITUTION_EDITORS.includes(profile.role)) {
+      throw new HttpsError("permission-denied", "Solo el CEE, la administración y el equipo HaNet organizan eventos.");
+    }
+    const since = Timestamp.fromMillis(Date.now() - CHECKIN_CLOSES_MS - 12 * 60 * 60 * 1000);
+    const snapshot = await calendarDb(getAdminApp).collection(COLLECTION)
+      .where("startsAt", ">=", since).orderBy("startsAt", "asc").limit(400).get();
+    const docs = snapshot.docs.filter((doc) => {
+      const data = doc.data();
+      if (data.kind === "regional") return REGIONAL_EDITORS.includes(profile.role);
+      return data.institutionId === profile.institutionId;
+    }).slice(0, MAX_LISTED);
+    const now = Date.now();
+    const events = await Promise.all(docs.map(async (doc) => {
+      const data = doc.data();
+      const extra = { canEdit: true };
+      if (data.kind === "institution") {
+        const [signups, checkins] = await Promise.all([
+          hasSignups(data) ? doc.ref.collection("signups").count().get() : null,
+          doc.ref.collection("checkins").count().get(),
+        ]);
+        if (signups) extra.signupCount = signups.data().count;
+        extra.checkinCount = checkins.data().count;
+        extra.canCheckIn = data.status === "published" && checkinOpen(data, now);
+      }
+      return eventOut(doc, extra);
+    }));
+    return {
+      events,
+      role: profile.role,
+      canRegional: REGIONAL_EDITORS.includes(profile.role),
+    };
+  });
+
+  // To hand out tickets: the institution's courses, or the students of one
+  // course with their name and nothing else (as an event's list shows them).
+  const listEventPeople = onCall({ invoker: "public" }, async (request) => {
+    const profile = await requireProfile(getAdminApp, request);
+    if (!INSTITUTION_EDITORS.includes(profile.role)) {
+      throw new HttpsError("permission-denied", "Solo el CEE, la administración y el equipo HaNet entregan entradas.");
+    }
+    const users = identityDb(getAdminApp).collection("users").where("institutionId", "==", profile.institutionId);
+    // The docentes, to let some of them scan at the door (setTicketScanner).
+    if (request.data?.teachers === true) {
+      const snapshot = await users.where("role", "==", "Profesor").select("name").get();
+      return {
+        teachers: snapshot.docs
+          .map(doc => ({ uid: doc.id, name: text(doc.data().name, 80) || "Sin nombre" }))
+          .sort((a, b) => a.name.localeCompare(b.name, "es")),
+      };
+    }
+    const courseId = typeof request.data?.courseId === "string" ? request.data.courseId.trim().slice(0, 60) : "";
+    if (!courseId) {
+      const snapshot = await users.select("courseId", "role").get();
+      const courses = new Map();
+      for (const doc of snapshot.docs) {
+        const { courseId: course, role } = doc.data();
+        if (typeof course !== "string" || !course.trim() || STAFF.includes(role)) continue;
+        courses.set(course, (courses.get(course) || 0) + 1);
+      }
+      return {
+        courses: [...courses].map(([id, students]) => ({ id, students })).sort((a, b) => a.id.localeCompare(b.id, "es", { numeric: true })),
+      };
+    }
+    const snapshot = await users.where("courseId", "==", courseId).select("name", "role").get();
+    return {
+      people: snapshot.docs
+        .filter(doc => !STAFF.includes(doc.data().role))
+        .map(doc => ({ uid: doc.id, name: text(doc.data().name, 80) || "Sin nombre" }))
+        .sort((a, b) => a.name.localeCompare(b.name, "es")),
+    };
+  });
+
+  return { listEvents, getEvent, saveEvent, deleteEvent, toggleEventSignup, toggleEventReaction, checkInEventAttendee, importEventFromUrl, listOrganizedEvents, listEventPeople };
 }
 
 module.exports = { build, readEventPage, eventSummary };

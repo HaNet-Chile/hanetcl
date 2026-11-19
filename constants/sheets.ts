@@ -10,6 +10,11 @@ export const SHEET_DETENTS: Record<string, number[]> = {
   'feed-post': [1.0],
   'create-event': [0.5, 1.0],
   'day-change': [1.0],
+  'organize/new': [0.5, 1.0],
+  'organize/issue': [1.0],
+  'organize/send': [0.75, 1.0],
+  'organize/scanners': [0.75, 1.0],
+  'organize/leads': [1.0],
   'edit-profile': [0.75, 1.0],
   'classhall/join': [0.75, 1.0],
   'classhall/create': [0.75, 1.0],
@@ -44,6 +49,7 @@ export function sheetDetents(route: string) {
 export const CARD_MAX_HEIGHT = 820;
 const CARD_HEIGHTS: Record<string, number> = {
   'classhall/join': 500,
+  'organize/new': 520,
 };
 
 export function cardHeight(route: string) {

@@ -30,6 +30,7 @@ import { usePullDown } from '@/components/notifications/pull-down';
 import { loadNotifications, markNotificationsSeen, useNotifications } from '@/services/notifications-service';
 import { t } from '@/i18n';
 import { DesktopHome } from '@/components/home/desktop-home';
+import { HomeOrganizeToday, useOrganizeToday } from '@/components/organize/organize-entry';
 import { useSideNav } from '@/hooks/use-desktop-layout';
 import { useDocumentScroll } from '@/hooks/use-document-scroll';
 import { PushPermissionDialog } from '@/components/notifications/push-permission-dialog';
@@ -242,6 +243,8 @@ export default function HomeScreen() {
   // notifications are open: they scroll on their own).
   const homeScroll = useDocumentScroll(gateOpen && !panelOpen);
 
+  // "Hoy organizas": the event whose door is open, for who runs it.
+  const organizeToday = useOrganizeToday();
   const festive = linked ? homeAnniversary(anniversary) : null;
   const openScore = () => router.push('/anniversary/score');
 
@@ -280,7 +283,7 @@ export default function HomeScreen() {
             ) : (
             <>
             {festive && <AnniversaryGlow alliances={festive.anniversary.alliances} width={Math.min(width, 760)} waving={festive.phase === 'during'} />}
-            <TopHeader transparent={!!festive} />
+            <TopHeader transparent={!!festive} organizeLive={linked && organizeToday.events.length > 0} />
             {!!user && !institutionKnown && <HomeSkeleton grid={false} />}
             {!!shownInstitution && (
               <View style={[styles.banner, festive && styles.festiveBanner]}>
@@ -292,6 +295,7 @@ export default function HomeScreen() {
                 />
               </View>
             )}
+            {linked && <HomeOrganizeToday today={organizeToday} style={styles.organizeToday} />}
             {festive && <AnniversaryCarousel anniversary={festive.anniversary} phase={festive.phase} onOpen={openScore} />}
             <GridMenu nextCalendarItem={nextCalendarItem} promotedEvent={promotedEvent} anniversary={anniversary} />
             </>
@@ -385,6 +389,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 10,
     marginBottom: 24,
+  },
+  organizeToday: {
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   festiveBanner: {
     marginTop: 8,
