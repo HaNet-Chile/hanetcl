@@ -4,12 +4,12 @@ import { ThemedText } from '@/components/themed-text';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppPressed, AppRadii, AppSpacing } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
-import { checkInEventAttendee, getLoadedEvent } from '@/services/events-service';
+import { checkInEventAttendee, getLoadedEvent, warmCheckIn } from '@/services/events-service';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
@@ -20,6 +20,8 @@ import { t } from '@/i18n';
 
 // The same QR stays in front of the camera for a moment: it is read once.
 const SAME_QR_MS = 4000;
+// While the list is open the door stays warm on the server (its session lasts a minute).
+const KEEP_WARM_MS = 45_000;
 
 export default function EventCheckinScreen() {
   const router = useRouter();
@@ -31,12 +33,30 @@ export default function EventCheckinScreen() {
   const busy = useRef(false);
   const last = useRef<{ value: string; at: number } | null>(null);
 
+  // The first scan is as fast as the rest: the server is ready before anyone
+  // shows their HN-QR.
+  useEffect(() => {
+    if (!id) return;
+    let live = true;
+    const warm = () => warmCheckIn(id).then(answer => { if (live && answer) setCount(current => current ?? answer.count); });
+    void warm();
+    const timer = setInterval(() => void warm(), KEEP_WARM_MS);
+    return () => { live = false; clearInterval(timer); };
+  }, [id]);
+
   const scanned = async (value: string) => {
     if (!id || busy.current) return;
     const now = Date.now();
     if (last.current && last.current.value === value && now - last.current.at < SAME_QR_MS) return;
     last.current = { value, at: now };
+    // Anything that isn't an HN-QR is turned away here, without the server.
+    if (!value.trim().startsWith('hanet://id/')) {
+      setResult({ kind: 'error', message: t('eventCheckin.esoNoEsUnHnqr') });
+      if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
     busy.current = true;
+    if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
     try {
       const checkIn = await checkInEventAttendee(id, value);
       setResult({ kind: 'ok', checkIn });

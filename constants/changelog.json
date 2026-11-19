@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "0.14.1-beta",
+      "date": "2026-11-19",
+      "title": "Escaneo más rápido",
+      "items": [
+        "Escanear entradas y pasar lista con HN-QR responde mucho más rápido, también el primer escaneo.",
+        "Si escaneas algo que no es de HaNet, te lo dice al instante.",
+        "El conteo de \"Llegaron\" aparece apenas abres el escáner."
+      ],
+      "highlights": [
+        "Escanear entradas y pasar lista en la puerta ahora responde mucho más rápido."
+      ]
+    },
+    {
       "version": "0.14.0-beta",
       "date": "2026-11-19",
       "title": "Verbos en inglés",

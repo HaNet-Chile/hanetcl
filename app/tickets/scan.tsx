@@ -5,7 +5,7 @@ import { HanetDialog, HanetDialogActions, dialogStyles } from '@/components/ui/h
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
 import { getEvent, getLoadedEvent } from '@/services/events-service';
-import { validateTicket } from '@/services/tickets-service';
+import { looksLikeTicket, validateTicket, warmTicketDoor } from '@/services/tickets-service';
 import type { DoorResult } from '@/services/tickets-service';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -26,6 +26,8 @@ import { t } from '@/i18n';
 
 const SAME_QR_MS = 4000;
 const VALID_BACK_MS = 2200;
+// While the scanner is open the door stays warm on the server (its session lasts a minute).
+const KEEP_WARM_MS = 45_000;
 const VALID = '#30D158';
 
 type Mode =
@@ -54,6 +56,19 @@ export default function TicketScanScreen() {
     getEvent(eventId).then(event => setTitle(event.title)).catch(() => undefined);
   }, [eventId, title]);
 
+  // The first scan is as fast as the rest: the server is ready before anyone
+  // shows a ticket, and "Llegaron" shows from the start.
+  useEffect(() => {
+    if (!eventId) return;
+    let live = true;
+    const warm = () => warmTicketDoor(eventId).then(answer => {
+      if (live && answer) setCount(current => current ?? { count: answer.count, total: answer.total ?? 0 });
+    });
+    void warm();
+    const timer = setInterval(() => void warm(), KEEP_WARM_MS);
+    return () => { live = false; clearInterval(timer); };
+  }, [eventId]);
+
   // A valid ticket goes back to scanning by itself.
   useEffect(() => {
     if (mode.kind !== 'door' || mode.result.result !== 'valid') return;
@@ -70,7 +85,14 @@ export default function TicketScanScreen() {
 
   const read = async (input: { qr?: string; ticketId?: string }) => {
     if (!eventId || busy.current) return;
+    // Anything that isn't a HaNet ticket is turned away here, without the server.
+    if (input.qr !== undefined && !looksLikeTicket(input.qr)) {
+      setMode({ kind: 'error', message: t('tickets.scan.esoNoEsUnaEntrada') });
+      haptic(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
     busy.current = true;
+    if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
     setMode({ kind: 'busy' });
     try {
       const result = await validateTicket({ eventId, ...input });

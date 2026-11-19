@@ -45,7 +45,10 @@ const calendarDb = getFirestore(app, "hn-calendar");
 const eventsDb = getFirestore(app, "hn-events");
 
 const functions = getFunctions(app);
+// The door's functions (scanning tickets, Pasar lista) also run in Santiago,
+// next to the database: see services/door.ts.
+const doorFunctions = getFunctions(app, 'southamerica-west1');
 const storage = getStorage(app);
 
-export { auth, db, calendarDb, eventsDb, functions, storage };
+export { auth, db, calendarDb, eventsDb, functions, doorFunctions, storage };
 export default app;

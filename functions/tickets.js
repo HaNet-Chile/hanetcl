@@ -244,6 +244,47 @@ async function organizedEvent(getAdminApp, profile, value, { door = false } = {}
   return { id, event };
 }
 
+// ---- The door, fast (muxp 2026-11-19: scanning took too long) ----
+//
+// Each scan used to read again who scans, the event, the module and two
+// counts, one after the other, from a function in Iowa to a database in
+// Santiago. Now an instance keeps that for a minute per person and door
+// (a scanner removed by who organizes stops within that minute), the ticket
+// and its key come in one read, the "used" mark is a single conditional
+// write, and "Llegaron" is refreshed in the background every few seconds.
+// The door's functions also run in Santiago, next to the database; the
+// Iowa copy stays for app versions that still call it.
+const DOOR_REGIONS = ["us-central1", "southamerica-west1"];
+const SESSION_MS = 60 * 1000;
+const COUNT_FRESH_MS = 8 * 1000;
+const sessions = new Map();
+
+async function doorSession(getAdminApp, request, value) {
+  const uid = await requireAuth(getAdminApp, request);
+  const key = `${uid}:${docId(value) || ""}`;
+  const kept = sessions.get(key);
+  if (kept && Date.now() - kept.at < SESSION_MS) return kept;
+  const profile = await requireProfile(getAdminApp, request);
+  const { id, event } = await organizedEvent(getAdminApp, profile, value, { door: true });
+  const db = calendarDb(getAdminApp);
+  const [total, used] = await Promise.all([ticketCap(event) ?? issuedCount(db, id), countWhere(db, id, "used")]);
+  const session = { at: Date.now(), profile, id, event, total, used, countedAt: Date.now() };
+  if (sessions.size > 200) {
+    for (const [name, item] of sessions) if (Date.now() - item.at >= SESSION_MS) sessions.delete(name);
+  }
+  sessions.set(key, session);
+  return session;
+}
+
+/** "Llegaron": what this instance knows now; a fresh count is on its way if it's old. */
+function doorCount(db, session) {
+  if (Date.now() - session.countedAt > COUNT_FRESH_MS) {
+    session.countedAt = Date.now();
+    countWhere(db, session.id, "used").then(count => { session.used = count; }).catch(() => undefined);
+  }
+  return session.used;
+}
+
 /** Whether this account holds a ticket for the event (any state but voided). */
 async function hasTicket(db, eventId, uid) {
   if (!eventId || !uid) return false;
@@ -468,30 +509,34 @@ function build(getAdminApp) {
   // An organizer scans a ticket's QR, a printed one, a typed code, or a
   // HN-QR (that answers with the account's tickets for this event). With
   // `ticketId` it validates that ticket directly, after a HN-QR.
-  const validateTicket = onCall({ invoker: "public" }, async (request) => {
-    const profile = await requireProfile(getAdminApp, request);
-    const { id: eventId, event } = await organizedEvent(getAdminApp, profile, request.data?.eventId, { door: true });
+  const validateTicket = onCall({ invoker: "public", region: DOOR_REGIONS }, async (request) => {
+    const session = await doorSession(getAdminApp, request, request.data?.eventId);
+    const { profile, id: eventId, event } = session;
     if (!doorOpen(event)) throw new HttpsError("failed-precondition", "La puerta se abre 3 horas antes del evento y se cierra un día después.");
     const db = calendarDb(getAdminApp);
+    // Opening the scanner: wakes this instance and keeps the session ready.
+    if (request.data?.warm === true) return { warm: true, count: doorCount(db, session), total: session.total };
     const raw = typeof request.data?.qr === "string" ? request.data.qr.trim() : "";
-    const total = ticketCap(event) ?? await issuedCount(db, eventId);
     let ref = null;
     let rotating = null;
+    let found = null;
 
     if (docId(request.data?.ticketId)) {
       ref = db.collection(TICKETS).doc(request.data.ticketId);
     } else if (raw.startsWith("hanet://id/")) {
       const uid = await readIdQr(getAdminApp, raw);
-      const person = (await identityDb(getAdminApp).collection("users").doc(uid).get()).data();
-      const snapshot = await db.collection(TICKETS).where("eventId", "==", eventId).where("holderUid", "==", uid).get();
+      const [person, snapshot] = await Promise.all([
+        identityDb(getAdminApp).collection("users").doc(uid).get().then(doc => doc.data()),
+        db.collection(TICKETS).where("eventId", "==", eventId).where("holderUid", "==", uid).get(),
+      ]);
       const tickets = snapshot.docs.filter(doc => doc.data().status !== "voided").map(rowOut).sort((a, b) => (a.number || 0) - (b.number || 0));
       return {
         result: "account",
-        name: await nameOf(getAdminApp, uid, person),
+        name: text(person?.name, 80) || await nameOf(getAdminApp, uid, person),
         courseId: person?.institutionId === event.institutionId ? person.courseId || "" : "",
         tickets,
-        count: await countWhere(db, eventId, "used"),
-        total,
+        count: doorCount(db, session),
+        total: session.total,
       };
     } else {
       const ticketMatch = TICKET_QR.exec(raw);
@@ -504,42 +549,59 @@ function build(getAdminApp) {
         if (!code) throw new HttpsError("invalid-argument", "Ese código no es una entrada de HaNet.");
         const snapshot = await db.collection(TICKETS).where("staticHash", "==", sha(`${eventId}:${code}`)).limit(1).get();
         if (!snapshot.docs[0]) throw new HttpsError("not-found", "No encontramos esa entrada en este evento.");
-        ref = snapshot.docs[0].ref;
+        found = snapshot.docs[0];
+        ref = found.ref;
       }
     }
 
-    if (rotating) {
-      const key = (await ref.collection("secret").doc("key").get()).data()?.key;
-      const step = Math.floor(Date.now() / STEP_MS);
-      let fresh = false;
-      for (let offset = -STEPS_BEHIND; offset <= STEPS_AHEAD && key && !fresh; offset += 1) {
-        fresh = timingSafeEqual(Buffer.from(codeFor(key, step + offset)), Buffer.from(rotating));
-      }
-      if (!fresh) {
-        const current = (await ref.get()).data();
-        if (current?.eventId === eventId && current.status === "used") {
-          // An old QR of a ticket already used: say so instead of "venció".
-        } else {
+    // The ticket and its key in one read.
+    if (!found) {
+      const [doc, keyDoc] = rotating ? await db.getAll(ref, ref.collection("secret").doc("key")) : [await ref.get(), null];
+      found = doc;
+      if (rotating) {
+        const key = keyDoc.data()?.key;
+        const step = Math.floor(Date.now() / STEP_MS);
+        let fresh = false;
+        for (let offset = -STEPS_BEHIND; offset <= STEPS_AHEAD && key && !fresh; offset += 1) {
+          fresh = timingSafeEqual(Buffer.from(codeFor(key, step + offset)), Buffer.from(rotating));
+        }
+        // An old QR of a ticket already used says so instead of "venció".
+        if (!fresh && !(doc.data()?.eventId === eventId && doc.data()?.status === "used")) {
           throw new HttpsError("permission-denied", "Ese QR ya venció o es una captura. Pide que abran la entrada en la app.");
         }
       }
     }
 
-    const outcome = await db.runTransaction(async (tx) => {
-      const ticket = (await tx.get(ref)).data();
-      if (!ticket || ticket.eventId !== eventId) throw new HttpsError("not-found", "Esa entrada no es de este evento.");
-      if (ticket.status === "voided") throw new HttpsError("failed-precondition", "Esa entrada fue anulada.");
-      if (ticket.status === "link") throw new HttpsError("failed-precondition", "Esa entrada se regaló y nadie la ha aceptado todavía.");
-      if (ticket.status === "used") return { result: "used", ticket };
-      tx.update(ref, {
+    const ticket = found.data();
+    if (!ticket || ticket.eventId !== eventId) throw new HttpsError("not-found", "Esa entrada no es de este evento.");
+    if (ticket.status === "voided") throw new HttpsError("failed-precondition", "Esa entrada fue anulada.");
+    if (ticket.status === "link") throw new HttpsError("failed-precondition", "Esa entrada se regaló y nadie la ha aceptado todavía.");
+    let outcome = { result: ticket.status === "used" ? "used" : "valid", ticket };
+    if (outcome.result === "valid") {
+      const used = {
         status: "used",
         usedAt: FieldValue.serverTimestamp(),
         usedBy: profile.uid,
         usedVia: rotating ? "app" : request.data?.ticketId ? "account" : "code",
         history: history("used", profile.uid),
-      });
-      return { result: "valid", ticket };
-    });
+      };
+      try {
+        // Written only if nobody touched it since the read (two doors at once,
+        // a gift right then); else the transaction below decides.
+        await ref.update(used, { lastUpdateTime: found.updateTime });
+      } catch (error) {
+        if (error.code !== 9) throw error;
+        outcome = await db.runTransaction(async (tx) => {
+          const current = (await tx.get(ref)).data();
+          if (!current || current.status === "voided") throw new HttpsError("failed-precondition", "Esa entrada fue anulada.");
+          if (current.status === "link") throw new HttpsError("failed-precondition", "Esa entrada se regaló y nadie la ha aceptado todavía.");
+          if (current.status === "used") return { result: "used", ticket: current };
+          tx.update(ref, used);
+          return { result: "valid", ticket: current };
+        });
+      }
+      if (outcome.result === "valid") session.used += 1;
+    }
     const t = outcome.ticket;
     return {
       result: outcome.result,
@@ -550,8 +612,8 @@ function build(getAdminApp) {
         courseId: t.courseId || "",
         usedAt: outcome.result === "used" ? millis(t.usedAt) : Date.now(),
       },
-      count: await countWhere(db, eventId, "used"),
-      total,
+      count: doorCount(db, session),
+      total: session.total,
     };
   });
 

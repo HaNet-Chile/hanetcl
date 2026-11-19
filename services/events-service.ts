@@ -4,6 +4,7 @@ import { httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes } from 'firebase/storage';
 import { cached, peekCached } from './cache';
 import { auth, functions, storage } from './firebase';
+import { doorCall, warmDoor } from './door';
 import { monthsShort, t, weekdaysShort } from '@/i18n';
 
 // HaNet Eventos (functions/events.js): city events loaded by the HaNet team
@@ -151,9 +152,13 @@ export async function toggleEventReaction(id: string, emoji: string) {
 export type CheckIn = { name: string; courseId: string; already: boolean; signedUp: boolean | null; count: number };
 
 /** An organizer checks someone in with the HN-QR they scanned. */
-export async function checkInEventAttendee(id: string, qr: string) {
-  const result = await httpsCallable<{ id: string; qr: string }, CheckIn>(functions, 'checkInEventAttendee')({ id, qr });
-  return result.data;
+export function checkInEventAttendee(id: string, qr: string) {
+  return doorCall<{ id: string; qr: string }, CheckIn>('checkInEventAttendee', { id, qr });
+}
+
+/** Opening Pasar lista: wakes the door and answers "Llegaron" so far. */
+export function warmCheckIn(id: string) {
+  return warmDoor<{ warm: true; count: number }>('checkInEventAttendee', { id });
 }
 
 export type ImportedEvent = Pick<HnEvent, 'title' | 'description' | 'venueName' | 'address' | 'city' | 'priceFrom' | 'ticketUrl' | 'sourceName' | 'sourceUrl'> & {

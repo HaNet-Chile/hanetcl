@@ -4,6 +4,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { cached, dropCached, peekCached, putCached } from './cache';
 import { calendarDb, functions } from './firebase';
+import { doorCall, warmDoor } from './door';
 
 // Entradas (functions/tickets.js): single-use tickets for an institution
 // event. The QR in the app changes every 30 seconds, like the HN-QR: the
@@ -216,7 +217,25 @@ export async function acceptGift(token: string) {
 }
 
 export const validateTicket = (input: { eventId: string; qr?: string; ticketId?: string }) =>
-  call<typeof input, DoorResult>('validateTicket')(input);
+  doorCall<typeof input, DoorResult>('validateTicket', input);
+
+/** Opening the scanner: wakes the door and answers "Llegaron" so far. */
+export const warmTicketDoor = (eventId: string) =>
+  warmDoor<{ warm: true; count: number; total: number | null }>('validateTicket', { eventId });
+
+// What the door reads, so anything else is turned away without asking the server.
+const DOOR_QR = [
+  /^hanet:\/\/ticket\/[A-Za-z0-9]{12,40}\?c=[0-9a-f]{10}$/,
+  /^hanet:\/\/t\/[2-9A-Z]{4}-?[2-9A-Z]{4}$/,
+  /^hanet:\/\/id\//,
+  /^[2-9A-Z]{4}-?[2-9A-Z]{4}$/,
+];
+
+/** Whether a scanned or typed value can be a HaNet ticket (or HN-QR). */
+export function looksLikeTicket(value: string) {
+  const raw = value.trim();
+  return DOOR_QR.some(pattern => pattern.test(raw) || pattern.test(raw.toUpperCase()));
+}
 
 /** The token of a gift link, from the whole link or the token alone. */
 export function giftToken(value: string | undefined | null) {
