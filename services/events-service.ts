@@ -12,7 +12,10 @@ import { monthsShort, t, weekdaysShort } from '@/i18n';
 export type EventKind = 'regional' | 'institution';
 export type Jornada = 'manana' | 'tarde';
 export type EventJornada = Jornada | 'ambas';
-export type SignupMode = 'list' | 'count' | 'none';
+export type SignupMode = 'list' | 'count' | 'tickets' | 'none';
+export type TicketStyle = 'simple' | 'brand' | 'formal';
+/** A ticketed event's options (functions/tickets.js reads them). */
+export type EventTickets = { enabled: boolean; cap: number | null; giftable: boolean; guestLinks: boolean; printable: boolean; style: TicketStyle; note: string };
 
 export const JORNADA_LABELS: Record<EventJornada, string> = { manana: t('common.jornadaManana'), tarde: t('common.jornadaTarde'), ambas: t('services.eventsService.ambasJornadas') };
 
@@ -60,6 +63,10 @@ export type HnEvent = {
   jornada: EventJornada;
   signupMode: SignupMode;
   capacity: number | null;
+  /** "Privado o formal": only its organizers and ticket holders see it. */
+  private: boolean;
+  /** Tickets: the cap, what holders may do, the ticket's look and its note ("Vestimenta formal"). */
+  tickets: EventTickets;
   authorName: string;
   /** The feed's closed set of reactions; `mine` is only known on the detail. */
   reactions: { emoji: string; count: number; mine: boolean }[];
@@ -67,6 +74,8 @@ export type HnEvent = {
   emojis?: string[];
   signupCount?: number;
   signedUp?: boolean;
+  /** Organizar: how many were scanned at the door. */
+  checkinCount?: number;
   canEdit?: boolean;
   /** Organizers: who arrived (scanned at the door), and whether the door is open now. */
   checkins?: { name: string; courseId: string; at: number | null }[];
@@ -108,7 +117,7 @@ export async function getEvent(id: string) {
   return event;
 }
 
-export type EventInput = Partial<Omit<HnEvent, 'signupCount' | 'signedUp' | 'canEdit' | 'signups' | 'reactions' | 'emojis' | 'checkins' | 'canCheckIn' | 'checkedIn'>> & {
+export type EventInput = Partial<Omit<HnEvent, 'signupCount' | 'signedUp' | 'canEdit' | 'signups' | 'reactions' | 'emojis' | 'checkins' | 'canCheckIn' | 'checkedIn' | 'checkinCount'>> & {
   kind: EventKind;
   title: string;
   startsAt: number;

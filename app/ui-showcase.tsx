@@ -38,9 +38,11 @@ import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { GroupTitle, Note, OverlayContext, Section } from '@/components/showcase/showcase-ui';
 import { StructureGroup } from '@/components/showcase/structure-group';
 import { GradesGroup } from '@/components/showcase/grades-group';
+import { TicketsGroup } from '@/components/showcase/tickets-group';
 import { NotificationsGroup } from '@/components/showcase/notifications-group';
 import { CalendarGroup, ToolsGroup } from '@/components/showcase/calendar-tools-group';
 import { WebGroup } from '@/components/showcase/web-group';
+import { OrganizeGroup } from '@/components/showcase/organize-group';
 
 // Sistema HaNet UI (Panel HNT): the app's real components with example data,
 // to check how they look and behave. Nothing here reads or writes real data:
@@ -48,7 +50,7 @@ import { WebGroup } from '@/components/showcase/web-group';
 // components/showcase/; the catalog with every component is
 // components/README.md. A new shared component gets a Section here.
 
-const GROUPS = ['Feed', 'Eventos', 'Tu día', 'Estructura', 'Notas', 'Notificaciones', 'Calendar', 'Herramientas', 'Web', 'Base'] as const;
+const GROUPS = ['Feed', 'Eventos', 'Tu día', 'Estructura', 'Notas', 'Entradas', 'Notificaciones', 'Calendar', 'Herramientas', 'Organizar', 'Web', 'Base'] as const;
 type Group = (typeof GROUPS)[number];
 
 type PreviewMode = 'Inicio' | 'Eventos' | 'Calendario';
@@ -74,6 +76,8 @@ function examples(now: number) {
     id: 'ejemplo-evento',
     kind: 'institution',
     status: 'published',
+    private: false,
+    tickets: { enabled: false, cap: null, giftable: true, guestLinks: true, printable: false, style: 'simple', note: '' },
     title: 'Feria científica (ejemplo)',
     category: 'Ciencia',
     description: 'Un evento de ejemplo para revisar los componentes.',
@@ -401,9 +405,11 @@ export default function UiShowcaseScreen() {
 
         <Anchor group="Estructura" onY={recordGroup}><StructureGroup /></Anchor>
         <Anchor group="Notas" onY={recordGroup}><GradesGroup onScratching={setScratching} /></Anchor>
+        <Anchor group="Entradas" onY={recordGroup}><TicketsGroup /></Anchor>
         <Anchor group="Notificaciones" onY={recordGroup}><NotificationsGroup /></Anchor>
         <Anchor group="Calendar" onY={recordGroup}><CalendarGroup /></Anchor>
         <Anchor group="Herramientas" onY={recordGroup}><ToolsGroup /></Anchor>
+        <Anchor group="Organizar" onY={recordGroup}><OrganizeGroup /></Anchor>
         <Anchor group="Web" onY={recordGroup}><WebGroup /></Anchor>
 
         <Anchor group="Base" onY={recordGroup}>

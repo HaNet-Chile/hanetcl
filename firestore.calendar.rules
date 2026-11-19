@@ -120,6 +120,14 @@ service cloud.firestore {
       allow delete: if canEditCourse(courseCollection) && !isFromBackend();
     }
 
+    // Entradas (functions/tickets.js): todo pasa por funciones, salvo que
+    // quien tiene una entrada puede leer la suya, para ver en vivo el momento
+    // en que la validan en la puerta. La clave del QR vive en la subcolección
+    // secret, que sigue cerrada. Aprobada por muxp el 2026-11-19.
+    match /hnTickets/{ticketId} {
+      allow get: if isSignedIn() && resource.data.holderUid == request.auth.uid;
+    }
+
     // Subcolecciones y cualquier otra ruta quedan cerradas.
     match /{document=**} {
       allow read, write: if false;

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { SearchPill } from '@/components/ui/search-pill';
+import { OrganizeHeaderButton } from '@/components/organize/organize-entry';
 import { SEARCH_PLACEHOLDER, pillSuggestions, useSearchIndex } from '@/services/search';
 import { useSession } from '@/services/auth-service';
 import { t } from '@/i18n';
@@ -43,9 +44,10 @@ export function HomeTitle({ onPressVersion }: { onPressVersion?: () => void }) {
 /**
  * The Home's header: the app's name and the search, a pill that goes through
  * what this account can find while nobody touches it and opens the search.
- * `transparent` lets what is behind show (the anniversary's glow).
+ * `transparent` lets what is behind show (the anniversary's glow). Who
+ * organizes also gets Organizar's button, with a dot while a door is open.
  */
-export default function TopHeader({ transparent }: { transparent?: boolean } = {}) {
+export default function TopHeader({ transparent, organizeLive = false }: { transparent?: boolean; organizeLive?: boolean } = {}) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useSession();
@@ -65,6 +67,8 @@ export default function TopHeader({ transparent }: { transparent?: boolean } = {
           style={styles.search}
         />
       )}
+      {/* Organizar, for who organizes; its dot says an event's door is open. */}
+      {!!user && <OrganizeHeaderButton live={organizeLive} />}
     </View>
   );
 }

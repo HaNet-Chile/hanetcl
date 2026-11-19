@@ -8,7 +8,7 @@ import { AppColors, AppRadii, AppSpacing, AppTouch } from '@/constants/design-to
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { describeAuthError } from '@/services/auth-service';
 import { EVENT_CATEGORIES, MAX_EVENT_GALLERY, fetchWikipediaSummary, getLoadedEvent, importEventFromUrl, pickEventCover, saveEvent } from '@/services/events-service';
-import type { EventJornada, EventKind, SignupMode } from '@/services/events-service';
+import type { EventJornada, EventKind, SignupMode, TicketStyle } from '@/services/events-service';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -48,6 +48,14 @@ type Form = {
   jornada: EventJornada;
   signupMode: SignupMode;
   capacity: string;
+  // Tickets ("Con entrada", and every private event)
+  isPrivate: boolean;
+  ticketNote: string;
+  ticketStyle: TicketStyle;
+  ticketCap: string;
+  giftable: boolean;
+  guestLinks: boolean;
+  printable: boolean;
 };
 
 // Next Friday at 19:00, a usual evening for an event.
@@ -60,7 +68,8 @@ function defaultStart() {
 
 const YES_NO = [{ value: 'no', label: t('classhall.taskForm.no') }, { value: 'yes', label: t('eventForm.si') }];
 const JORNADA_OPTIONS = [{ value: 'ambas', label: t('eventForm.ambas') }, { value: 'manana', label: t('common.manana') }, { value: 'tarde', label: t('eventForm.tarde') }];
-const SIGNUP_OPTIONS = [{ value: 'list', label: t('eventForm.conLista') }, { value: 'count', label: t('eventForm.soloContador') }, { value: 'none', label: t('eventForm.sinInscripcion') }];
+const SIGNUP_OPTIONS = [{ value: 'list', label: t('eventForm.conLista') }, { value: 'count', label: t('eventForm.soloContador') }, { value: 'tickets', label: t('eventForm.conEntrada') }, { value: 'none', label: t('eventForm.sinInscripcion') }];
+const STYLE_OPTIONS = [{ value: 'simple', label: t('eventForm.estiloSimple') }, { value: 'brand', label: t('eventForm.estiloConElLogo') }, { value: 'formal', label: t('eventForm.estiloFormal') }];
 
 function Field({ label, optional, children }: { label: string; optional?: boolean; children: React.ReactNode }) {
   return (
@@ -75,12 +84,14 @@ function Field({ label, optional, children }: { label: string; optional?: boolea
 function EventFormScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ kind: EventKind; id?: string }>();
-  const kind: EventKind = params.kind === 'institution' ? 'institution' : 'regional';
+  // `private=1`: "Privado o formal", an institution event only ticket holders see.
+  const params = useLocalSearchParams<{ kind: EventKind; id?: string; private?: string }>();
+  const kind: EventKind = params.kind === 'institution' || params.private === '1' ? 'institution' : 'regional';
   const regional = kind === 'regional';
 
   const [initial] = useState<Form>(() => {
     const event = params.id ? getLoadedEvent(params.id) : null;
+    const isPrivate = event?.private ?? params.private === '1';
     return {
       title: event?.title ?? '',
       category: event?.category ?? (regional ? 'concert' : 'community'),
@@ -105,8 +116,15 @@ function EventFormScreen() {
       couponCode: event?.coupon?.code ?? '',
       couponDescription: event?.coupon?.description ?? '',
       jornada: event?.jornada ?? 'ambas',
-      signupMode: event?.signupMode ?? 'list',
+      signupMode: isPrivate ? 'tickets' : event?.signupMode ?? 'list',
       capacity: event?.capacity ? String(event.capacity) : '',
+      isPrivate,
+      ticketNote: event?.tickets?.note ?? '',
+      ticketStyle: event?.tickets?.style ?? (isPrivate ? 'formal' : 'simple'),
+      ticketCap: event?.tickets?.cap ? String(event.tickets.cap) : '',
+      giftable: event?.tickets?.giftable ?? true,
+      guestLinks: event?.tickets?.guestLinks ?? true,
+      printable: event?.tickets?.printable ?? true,
     };
   });
   const [form, setForm] = useState<Form>(initial);
@@ -129,6 +147,7 @@ function EventFormScreen() {
     setError(null);
   };
 
+  const ticketed = !regional && (form.isPrivate || form.signupMode === 'tickets');
   const dirty = JSON.stringify(form) !== JSON.stringify(initial) || !!cover || JSON.stringify(gallery) !== JSON.stringify(initialGallery);
   const ready = form.title.trim().length >= 3 && dirty;
 
@@ -220,7 +239,7 @@ function EventFormScreen() {
     setSubmitting(true);
     setError(null);
     try {
-      await saveEvent({
+      const savedId = await saveEvent({
         kind,
         id: params.id,
         title: form.title,
@@ -250,18 +269,34 @@ function EventFormScreen() {
               ? { subject: form.editorialSubject, summary: form.editorialSummary, sourceName: form.editorialSourceName, sourceUrl: form.editorialSourceUrl }
               : null,
           }
-          : { jornada: form.jornada, signupMode: form.signupMode, capacity: Number(form.capacity) || null }),
+          : {
+            jornada: form.jornada,
+            signupMode: ticketed ? 'tickets' : form.signupMode,
+            capacity: Number(form.capacity) || null,
+            private: form.isPrivate,
+            tickets: {
+              enabled: ticketed,
+              cap: Number(form.ticketCap) || null,
+              giftable: form.giftable,
+              guestLinks: form.guestLinks,
+              printable: form.printable,
+              style: form.ticketStyle,
+              note: form.ticketNote.trim(),
+            },
+          }),
       });
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       allowLeave();
-      router.back();
+      // A new event with tickets goes on to handing them out.
+      if (ticketed && !params.id) router.replace({ pathname: '/organize/event', params: { id: savedId } });
+      else router.back();
     } catch (saveError) {
       setError(describeAuthError(saveError, t('eventForm.noPudimosPublicarElEvento')));
       setSubmitting(false);
     }
   };
 
-  const label = params.id ? t('common.guardarCambios') : t('eventForm.publicarEvento');
+  const label = params.id ? t('common.guardarCambios') : ticketed ? t('eventForm.publicarYEntregarEntradas') : t('eventForm.publicarEvento');
   const { allowLeave, dialog } = useUnsavedChangesGuard({
     dirty: dirty && !submitting,
     onSave: submit,
@@ -293,12 +328,14 @@ function EventFormScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <ThemedText accessibilityRole="header" style={styles.title}>
-        {params.id ? t('eventForm.editarEvento') : regional ? t('eventForm.eventoDeLaCiudad') : t('eventForm.eventoDelLiceo')}
+        {params.id ? t('eventForm.editarEvento') : regional ? t('eventForm.eventoDeLaCiudad') : form.isPrivate ? t('eventForm.eventoPrivadoOFormal') : t('eventForm.eventoDelLiceo')}
       </ThemedText>
       <ThemedText style={styles.lead}>
         {regional
           ? t('eventForm.apareceEnCercaDeMi')
-          : t('eventForm.apareceEnEnMiInstitucion')}
+          : form.isPrivate
+            ? t('eventForm.soloLoVenQuienesReciben')
+            : t('eventForm.apareceEnEnMiInstitucion')}
       </ThemedText>
 
       {regional && !params.id && (
@@ -422,20 +459,51 @@ function EventFormScreen() {
         </>
       ) : (
         <>
-          <Field label={t('eventForm.jornada')}>
-            <HanetChoice label={t('eventForm.jornada')} options={JORNADA_OPTIONS} value={form.jornada} onChange={value => update({ jornada: value as EventJornada })} disabled={submitting} />
-          </Field>
-          <Field label={t('eventForm.inscripcion')}>
-            <HanetChoice label={t('eventForm.inscripcion')} options={SIGNUP_OPTIONS} value={form.signupMode} onChange={value => update({ signupMode: value as SignupMode })} disabled={submitting} />
-            <ThemedText style={styles.hint}>
-              {form.signupMode === 'list'
-                ? t('eventForm.losEstudiantesSeInscribenY')
-                : form.signupMode === 'count'
-                  ? t('eventForm.losEstudiantesMarcanParticipoY')
-                  : t('eventForm.elEventoSoloInforma')}
-            </ThemedText>
-          </Field>
-          {form.signupMode === 'list' && <Field label={t('eventForm.cupos')} optional>{input('capacity', t('eventForm.sinLimite'), { keyboardType: 'number-pad', maxLength: 5, accessibilityLabel: t('eventForm.cupos') })}</Field>}
+          {!form.isPrivate && (
+            <Field label={t('eventForm.jornada')}>
+              <HanetChoice label={t('eventForm.jornada')} options={JORNADA_OPTIONS} value={form.jornada} onChange={value => update({ jornada: value as EventJornada })} disabled={submitting} />
+            </Field>
+          )}
+          {!form.isPrivate && (
+            <Field label={t('eventForm.inscripcion')}>
+              <HanetChoice label={t('eventForm.inscripcion')} options={SIGNUP_OPTIONS} value={form.signupMode} onChange={value => update({ signupMode: value as SignupMode })} disabled={submitting} />
+              <ThemedText style={styles.hint}>
+                {form.signupMode === 'list'
+                  ? t('eventForm.losEstudiantesSeInscribenY')
+                  : form.signupMode === 'count'
+                    ? t('eventForm.losEstudiantesMarcanParticipoY')
+                    : form.signupMode === 'tickets'
+                      ? t('eventForm.cadaPersonaRecibeUnaEntrada')
+                      : t('eventForm.elEventoSoloInforma')}
+              </ThemedText>
+            </Field>
+          )}
+          {!ticketed && form.signupMode === 'list' && <Field label={t('eventForm.cupos')} optional>{input('capacity', t('eventForm.sinLimite'), { keyboardType: 'number-pad', maxLength: 5, accessibilityLabel: t('eventForm.cupos') })}</Field>}
+          {ticketed && (
+            <>
+              <Field label={t('eventForm.cupoDelLugar')} optional>
+                {input('ticketCap', t('eventForm.sinLimite'), { keyboardType: 'number-pad', maxLength: 5, accessibilityLabel: t('eventForm.cupoDelLugar') })}
+                <ThemedText style={styles.hint}>{t('eventForm.noSeEmitenMasEntradas')}</ThemedText>
+              </Field>
+              <Field label={t('eventForm.indicacionesEnLaEntrada')} optional>
+                {input('ticketNote', t('eventForm.vestimentaFormalLlegar30'), { maxLength: 280, multiline: true, style: [styles.input, local.note], accessibilityLabel: t('eventForm.indicacionesEnLaEntrada') })}
+              </Field>
+              <Field label={t('eventForm.estiloDeLaEntrada')}>
+                <HanetChoice label={t('eventForm.estiloDeLaEntrada')} options={STYLE_OPTIONS} value={form.ticketStyle} onChange={value => update({ ticketStyle: value as TicketStyle })} disabled={submitting} />
+              </Field>
+              <Field label={t('eventForm.sePuedenRegalar')}>
+                <HanetChoice label={t('eventForm.sePuedenRegalar')} options={YES_NO} value={form.giftable ? 'yes' : 'no'} onChange={value => update({ giftable: value === 'yes' })} disabled={submitting} />
+              </Field>
+              <Field label={t('eventForm.invitadosConLink')}>
+                <HanetChoice label={t('eventForm.invitadosConLink')} options={YES_NO} value={form.guestLinks ? 'yes' : 'no'} onChange={value => update({ guestLinks: value === 'yes' })} disabled={submitting} />
+                <ThemedText style={styles.hint}>{t('eventForm.paraQuienNoTieneHanet')}</ThemedText>
+              </Field>
+              <Field label={t('eventForm.entradaImpresa')}>
+                <HanetChoice label={t('eventForm.entradaImpresa')} options={YES_NO} value={form.printable ? 'yes' : 'no'} onChange={value => update({ printable: value === 'yes' })} disabled={submitting} />
+                <ThemedText style={styles.hint}>{t('eventForm.cadaPersonaPuedeDescargarLa')}</ThemedText>
+              </Field>
+            </>
+          )}
         </>
       )}
 
@@ -471,6 +539,12 @@ function EventFormScreen() {
 }
 
 const local = StyleSheet.create({
+  note: {
+    minHeight: 84,
+    paddingTop: AppSpacing.md,
+    paddingBottom: AppSpacing.md,
+    textAlignVertical: 'top',
+  },
   importCard: {
     gap: AppSpacing.sm,
     padding: AppSpacing.lg,

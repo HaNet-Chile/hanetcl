@@ -90,6 +90,19 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `NewGradesBanner` · `StudentGrades` | `classhall/grades-ui.tsx` | Las notas del estudiante dentro de un Hall: el banner rayado y la lista con promedio aproximado. |
 | `GradesLocked` | `grades/grades-lock.tsx` | En lugar de las notas mientras "Proteger Notas" las tiene bloqueadas. `auto` pide Face ID al abrir; `onUnlock` para la vista previa. |
 
+## Entradas (módulo `tickets`)
+
+| Componente | Archivo | Qué es |
+| --- | --- | --- |
+| `TicketView` · `ticketPath` · `ticketWhen` | `tickets/ticket.tsx` | La entrada: rectángulo corto con dos muescas, información a la izquierda sobre la luz de la portada que viene desde la izquierda y el QR en el talón (variante A, talón oscuro). Estados `active`, `pending` (QR de relleno borroso con "Por aceptar"), `link`, `shared`, `printed`, `used`. Normal y `large`. Sin cuenta regresiva. |
+| `ProfileTickets` · `TicketPile` | `tickets/profile-tickets.tsx` | La sección Entradas de Perfil (solo con entradas para un evento que viene) y la pila de varias entradas con ×N. |
+| `TicketShareModal` · `PrintedTicket` | `tickets/ticket-share.tsx` | La entrada fuera de la app: imagen oscura para compartir o papel blanco para imprimir, con código fijo y código escrito. |
+| `TicketGlow` | `tickets/ticket-glow.tsx` | La luz del color de la portada detrás de una entrada (Llegada, Entrada válida, Recibir): las manchas difusas de `EventGlow` reunidas alrededor de la entrada, que se mueven lento. Llena a su padre; `style` la hace aparecer. |
+| `Tilt` | `tickets/tilt.tsx` (`.web.tsx` quieto) | Inclina su contenido con el teléfono (al recibir una entrada). |
+| `ScreenshotGuard` · `ScreenshotWarning` | `system/screenshot-guard.tsx` | Avisa que una captura no sirve cuando alguien saca una con un QR de HaNet en pantalla (HN-QR y entradas). iPhone y Android 14+. `ScreenshotWarning` es solo el diálogo. |
+
+**Probar las animaciones:** las pantallas `tickets/detail`, `validated`, `arrival` y `receive` abren con `?demo=1` (`arrival` acepta cuántas, `?demo=5`) con una entrada inventada (`showcase/ticket-demo.ts`) que no toca el servidor. Sistema HaNet UI → Entradas → "Probar las animaciones" tiene un botón para cada una.
+
 ## Notificaciones
 
 | Componente | Archivo | Qué es |
@@ -135,6 +148,16 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `FlexText` | `anniversary/flex-text.tsx` (+ `.web.tsx`, `flex-axes.ts`) | Texto en Google Sans Flex que desliza peso y ancho con la fuente variable (`fontVariationSettings`). Con `fit` queda en una línea: achica el tamaño para que quepa su forma más ancha (el padre le da el ancho). |
 | `AllianceBadge` · `AlliancePill` · `AllianceCard` · `Scoreboard` · `LeaderCard` · `ActivityList` · `SectionTitle` | `anniversary/anniversary-ui.tsx` | El Aniversario. |
 | `CelebrationTile` | `anniversary/celebration-tile.tsx` | El tile del Inicio mientras no se ve la bienvenida del aniversario. |
+
+## Organizar (`app/organize/`)
+
+| Componente | Archivo | Qué es |
+| --- | --- | --- |
+| `ArrivalCounter` | `organize/organize-ui.tsx` | "Llegaron 212 de 300" con su barra; `size="large"` en la página del evento. |
+| `TodayEventCard` | `organize/organize-ui.tsx` | El evento con la puerta abierta. `compact` en el Inicio ("Hoy organizas", con Escanear); `door` para el docente que solo escanea (sin conteos, abre el escáner). |
+| `OrganizedEventRow` | `organize/organize-ui.tsx` | Un evento en las listas de Organizar: portada, cuándo, tipo y estado. |
+| `ScanPill` · `CreatePill` · `CreateMenu` · `organizeCenter` | `organize/organize-bar.tsx` | El centro de la barra en Organizar: "Escanear" mientras una puerta está abierta, si no "Crear" con su menú (aviso, evento, votación; Admin y HNT también suspender clases). `scanHref` elige el escáner de entradas o Pasar lista. |
+| `OrganizeHeaderButton` · `HomeOrganizeToday` · `useOrganizeToday` | `organize/organize-entry.tsx` | Organizar fuera de sí: el botón del encabezado del Inicio (punto rosado con una puerta abierta) y "Hoy organizas". |
 
 ## Web
 

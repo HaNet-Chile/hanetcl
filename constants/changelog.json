@@ -1,14 +1,9 @@
 {
   "releases": [
     {
-      "version": "0.13.0-beta",
-      "date": "2026-11-17",
+      "version": "0.14.0-beta",
+      "date": "2026-11-19",
       "title": "Verbos en inglés",
-      "highlights": [
-        "Nueva herramienta: Verbos en inglés, para practicar el infinitivo, el pasado y el participio.",
-        "Juega en Solitario con las listas de tus quiz o en Infinito, contra el reloj, con los sonidos y la música del quiz original.",
-        "Al terminar ves tus errores con la respuesta correcta y puedes repetir solo esos."
-      ],
       "items": [
         "Nueva herramienta en Herramientas: Verbos en inglés, con casi 300 verbos regulares e irregulares y su significado en español.",
         "Elige una lista de los quiz del liceo, 20 verbos al azar, solo regulares, solo irregulares o arma tu propia lista.",
@@ -19,6 +14,64 @@
         "Tocar el aviso de un inicio de sesión nuevo ahora abre Seguridad.",
         "Un link que no lleva a ninguna parte de HaNet muestra una pantalla propia con el camino de vuelta al Inicio.",
         "Los títulos y números grandes del Aniversario y de Verbos ganan peso y ancho de forma continua al aparecer, sin saltos."
+      ],
+      "highlights": [
+        "Nueva herramienta: Verbos en inglés, para practicar el infinitivo, el pasado y el participio.",
+        "Juega en Solitario con las listas de tus quiz o en Infinito, contra el reloj, con los sonidos y la música del quiz original.",
+        "Al terminar ves tus errores con la respuesta correcta y puedes repetir solo esos."
+      ]
+    },
+    {
+      "version": "0.13.2-beta",
+      "date": "2026-11-19",
+      "title": "Probar Entradas",
+      "items": [
+        "Sistema HaNet UI ahora puede abrir cada animación de Entradas con una entrada de prueba: la entrada abierta, la entrada válida en la puerta, la llegada (una o cinco), recibir una regalada y el aviso de captura.",
+        "La entrada de prueba no se guarda ni llega al servidor.",
+        "Entrada válida, la llegada de entradas y recibir una regalada ahora se mueven igual que en el diseño: el talón se rasga y cae, el abanico llega lanzado y la regalada cae desde arriba.",
+        "La luz del color del evento detrás de la entrada ahora se mueve, y la entrada abierta usa el color de la app en vez de blanco.",
+        "Entrada válida ya no cierra la app ni deja una línea en el borde de la entrada."
+      ],
+      "highlights": [
+        "Las animaciones de Entradas se pueden probar desde Sistema HaNet UI."
+      ]
+    },
+    {
+      "version": "0.13.1-beta",
+      "date": "2026-11-19",
+      "title": "Organizar",
+      "items": [
+        "Organizar, para el CEE y la administración: eventos, entradas, avisos y votaciones en un solo lugar. Se abre con el botón junto al buscador del Inicio.",
+        "Eventos privados o formales, como una gala o una velada: solo los ven quienes reciben una entrada.",
+        "Las entradas se emiten por curso desde la nómina, para cada estudiante o para el Presidente de cada curso, que las reparte.",
+        "También se puede enviar una entrada a una persona del liceo o un link a un invitado sin HaNet, y reenviar o anular cualquier entrada desde la lista.",
+        "El día del evento, el Inicio y Organizar muestran cuántos llegaron, en vivo, con el botón para escanear.",
+        "Los docentes que escanean en la puerta y los Presidentes de curso se eligen desde Organizar.",
+        "Crear una votación desde Organizar ya abre el formulario con la votación lista."
+      ],
+      "highlights": [
+        "Organizar: el CEE y la administración crean eventos y entregan entradas desde el teléfono.",
+        "Nuevos eventos privados o formales: solo los ven quienes tienen entrada.",
+        "El día del evento, el Inicio muestra quiénes llegaron y el botón para escanear."
+      ]
+    },
+    {
+      "version": "0.13.0-beta",
+      "date": "2026-11-19",
+      "title": "Entradas",
+      "highlights": [
+        "Nuevo: Entradas. Las entradas que te dé tu liceo para un evento aparecen en tu perfil, con un QR que vale una vez.",
+        "Puedes regalar una entrada con un link, compartirla como imagen o descargarla para imprimir.",
+        "En la puerta escanean tu entrada y tu teléfono te recibe con una animación."
+      ],
+      "items": [
+        "Nuevo: Entradas, en tu perfil. Ahí aparecen las entradas que te dé tu liceo para un evento, como la Velada de Aniversario.",
+        "El QR de cada entrada cambia solo cada 30 segundos y vale una vez, así que una captura no sirve. Si sacas una, te avisamos.",
+        "Regala una entrada con un link que dura 24 horas: al aceptarla pasa a la otra cuenta.",
+        "Compártela como imagen o descárgala para imprimir, con un código para escribir a mano si hace falta.",
+        "Cuando la escanean en la puerta, tu teléfono lo muestra al instante.",
+        "Quienes organizan escanean en la puerta, y pueden autorizar a docentes para hacerlo.",
+        "Tu HN-QR también te avisa si le sacas una captura."
       ]
     },
     {

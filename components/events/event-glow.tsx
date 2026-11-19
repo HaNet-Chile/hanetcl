@@ -9,7 +9,7 @@ import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 // blots that drift slowly. Their colors come from the event's cover
 // (functions/events.js reads them), tuned to sit with HaNet's rose accent.
 
-type Blot = { color: string; cx: number; cy: number; rx: number; ry: number; opacity: number; dx: number; dy: number; ms: number };
+export type Blot = { color: string; cx: number; cy: number; rx: number; ry: number; opacity: number; dx: number; dy: number; ms: number };
 
 const FRAME_WIDTH = 412;
 const FRAME_HEIGHT = 520;
@@ -56,17 +56,24 @@ function tune(hex: string, saturation: [number, number], lightness: [number, num
   return toHex(tuned.map((channel, index) => channel * (1 - accent) + rose[index] * accent) as Rgb);
 }
 
-/** The blots on the 412-wide design frame, colored from the cover when it has color. */
-function blotsFor(colors: string[]): Blot[] {
+/** The light's five tones, from the cover when it has color, else HaNet's own. */
+export function glowPalette(colors: string[]) {
   // Grey covers say nothing about color: those keep HaNet's own light.
   const vivid = colors.filter(color => toHsl(toRgb(color)).s >= 0.15);
   const [first, second, third] = vivid;
-  const top = first ? tune(first, [0.45, 0.85], [0.3, 0.45]) : '#832768';
-  const center = first ? tune(first, [0.6, 0.9], [0.42, 0.55], 0.55) : '#D32B4C';
-  const light = second ? tune(second, [0.3, 0.7], [0.68, 0.8], 0.12) : '#FEBABC';
   const sideSource = third ?? second;
-  const side = sideSource ? tune(sideSource, [0.12, 0.35], [0.4, 0.55], 0.1) : '#957D79';
-  const deep = first ? tune(first, [0.4, 0.6], [0.05, 0.08], 0) : '#11000F';
+  return {
+    top: first ? tune(first, [0.45, 0.85], [0.3, 0.45]) : '#832768',
+    center: first ? tune(first, [0.6, 0.9], [0.42, 0.55], 0.55) : '#D32B4C',
+    light: second ? tune(second, [0.3, 0.7], [0.68, 0.8], 0.12) : '#FEBABC',
+    side: sideSource ? tune(sideSource, [0.12, 0.35], [0.4, 0.55], 0.1) : '#957D79',
+    deep: first ? tune(first, [0.4, 0.6], [0.05, 0.08], 0) : '#11000F',
+  };
+}
+
+/** The blots on the 412-wide design frame, colored from the cover when it has color. */
+function blotsFor(colors: string[]): Blot[] {
+  const { top, center, light, side, deep } = glowPalette(colors);
   return [
     // Above the frame: what pulling the page past its edge reveals.
     { color: top, cx: 206, cy: -150, rx: 320, ry: 280, opacity: 0.8, dx: 14, dy: 10, ms: 12000 },
@@ -78,7 +85,8 @@ function blotsFor(colors: string[]): Blot[] {
   ];
 }
 
-function BlotView({ blot, id, scale, flip, offset }: { blot: Blot; id: string; scale: number; flip: boolean; offset: number }) {
+/** One blurred blot that drifts back and forth, placed on a frame `scale` times the design's. */
+export function BlotView({ blot, id, scale, flip, offset }: { blot: Blot; id: string; scale: number; flip: boolean; offset: number }) {
   const reduceMotion = useReducedMotion();
   const drift = useSharedValue(0);
 

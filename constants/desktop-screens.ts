@@ -49,6 +49,14 @@ export const DESKTOP_SCREENS: Record<string, DesktopScreen> = {
   'event-form': { layout: 'sheet' },
   'event-options': { layout: 'sheet' },
   'event-checkin': { layout: 'full' },
+
+  // Entradas
+  'tickets/index': { layout: 'reading' },
+  'tickets/detail': { layout: 'sheet' },
+  'tickets/validated': { layout: 'full' },
+  'tickets/arrival': { layout: 'full' },
+  'tickets/receive': { layout: 'full' },
+  'tickets/scan': { layout: 'full' },
   'feed-post': { layout: 'sheet' },
   'search': { layout: 'custom' },
 
@@ -89,6 +97,17 @@ export const DESKTOP_SCREENS: Record<string, DesktopScreen> = {
   'anniversary/score': { layout: 'sheet' },
 
   // Herramientas
+  // Organizar (Admin, CEE, HNT)
+  'organize/index': { layout: 'wide' },
+  'organize/events': { layout: 'reading' },
+  'organize/event': { layout: 'wide' },
+  'organize/tickets': { layout: 'reading' },
+  'organize/new': { layout: 'sheet' },
+  'organize/issue': { layout: 'sheet' },
+  'organize/send': { layout: 'sheet' },
+  'organize/scanners': { layout: 'sheet' },
+  'organize/leads': { layout: 'sheet' },
+
   'tools/index': { layout: 'wide' },
   'tools/scale': { layout: 'wide' },
   'tools/grades': { layout: 'wide' },

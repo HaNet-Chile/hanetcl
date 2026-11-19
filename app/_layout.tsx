@@ -221,6 +221,15 @@ export default function RootLayout() {
             <Stack.Screen name="ui-showcase" options={{ headerShown: false }} />
             <Stack.Screen name="create-event" options={sheetOptions('create-event')} />
             <Stack.Screen name="day-change" options={sheetOptions('day-change')} />
+            <Stack.Screen name="organize/index" options={{ headerShown: false }} />
+            <Stack.Screen name="organize/events" options={{ headerShown: false }} />
+            <Stack.Screen name="organize/event" options={{ headerShown: false }} />
+            <Stack.Screen name="organize/tickets" options={{ headerShown: false }} />
+            <Stack.Screen name="organize/new" options={sheetOptions('organize/new')} />
+            <Stack.Screen name="organize/issue" options={sheetOptions('organize/issue')} />
+            <Stack.Screen name="organize/send" options={sheetOptions('organize/send')} />
+            <Stack.Screen name="organize/scanners" options={sheetOptions('organize/scanners')} />
+            <Stack.Screen name="organize/leads" options={sheetOptions('organize/leads')} />
             <Stack.Screen name="edit-profile" options={sheetOptions('edit-profile')} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
             <Stack.Screen name="licenses" options={{ headerShown: false }} />
@@ -243,6 +252,13 @@ export default function RootLayout() {
             <Stack.Screen name="anniversary/flash" options={sheetOptions('anniversary/flash')} />
             <Stack.Screen name="anniversary/leads" options={sheetOptions('anniversary/leads')} />
             <Stack.Screen name="anniversary/score" options={sheetOptions('anniversary/score')} />
+            <Stack.Screen name="tickets/index" options={{ headerShown: false }} />
+            {/* Transparent on purpose: a colored contentStyle hides this sheet's content on iOS. The screen paints the surface itself. */}
+            <Stack.Screen name="tickets/detail" options={Platform.OS === 'ios' ? { ...sheetOptions('tickets/detail'), contentStyle: { backgroundColor: 'transparent' } } : sheetOptions('tickets/detail')} />
+            <Stack.Screen name="tickets/validated" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
+            <Stack.Screen name="tickets/arrival" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
+            <Stack.Screen name="tickets/receive" options={{ headerShown: false, animation: 'fade' }} />
+            <Stack.Screen name="tickets/scan" options={{ headerShown: false, animation: 'fade' }} />
             <Stack.Screen name="share" options={{ headerShown: false }} />
             <Stack.Screen name="tools/index" options={{ headerShown: false }} />
             <Stack.Screen name="tools/electividad/index" options={{ headerShown: false }} />

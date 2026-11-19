@@ -25,6 +25,9 @@ import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
 import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { months, t } from '@/i18n';
 import { useDocumentScroll } from '@/hooks/use-document-scroll';
+import { useMyTickets } from '@/hooks/use-my-tickets';
+import { ProfileTickets } from '@/components/tickets/profile-tickets';
+import { ScreenshotGuard } from '@/components/system/screenshot-guard';
 
 const ICONS = {
   logo: require('@/assets/icons/auth/logo-mark.svg'),
@@ -74,6 +77,8 @@ export default function ProfileScreen() {
   const myAlliance = festive && festive.phase !== 'after'
     ? festive.anniversary.alliances.find(alliance => alliance.id === festive.anniversary.myAllianceId) ?? null
     : null;
+  // Entradas: the section shows only with tickets for an event still ahead.
+  const { tickets } = useMyTickets();
   // The HN-QR's value changes every 30 seconds while it is on screen.
   const [qrValue, setQrValue] = useState<string | null>(null);
 
@@ -281,9 +286,13 @@ export default function ProfileScreen() {
                   <Ionicons name="arrow-forward" size={20} color={AppColors.textSecondary} />
                 </Pressable>
               )}
+
+              <ProfileTickets tickets={tickets} />
             </>
           )}
         />
+        {/* A screenshot of the HN-QR does not work at the door: say so. */}
+        <ScreenshotGuard active={showQr} />
 
         {!!error && <ThemedText accessibilityLiveRegion="polite" style={styles.staleNote}>{t('explore.noPudimosActualizarTuPerfil')}</ThemedText>}
 
