@@ -97,6 +97,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `TicketView` · `ticketPath` · `ticketWhen` | `tickets/ticket.tsx` | La entrada: rectángulo corto con dos muescas, información a la izquierda sobre la luz de la portada que viene desde la izquierda y el QR en el talón (variante A, talón oscuro). Estados `active`, `pending` (QR de relleno borroso con "Por aceptar"), `link`, `shared`, `printed`, `used`. Normal y `large`. Sin cuenta regresiva. |
 | `ProfileTickets` · `TicketPile` | `tickets/profile-tickets.tsx` | La sección Entradas de Perfil (solo con entradas para un evento que viene) y la pila de varias entradas con ×N. |
 | `TicketShareModal` · `PrintedTicket` | `tickets/ticket-share.tsx` | La entrada fuera de la app: imagen oscura para compartir o papel blanco para imprimir, con código fijo y código escrito. |
+| `TicketGlow` | `tickets/ticket-glow.tsx` | La luz del color de la portada detrás de una entrada (Llegada, Entrada válida, Recibir): las manchas difusas de `EventGlow` reunidas alrededor de la entrada, que se mueven lento. Llena a su padre; `style` la hace aparecer. |
 | `Tilt` | `tickets/tilt.tsx` (`.web.tsx` quieto) | Inclina su contenido con el teléfono (al recibir una entrada). |
 | `ScreenshotGuard` · `ScreenshotWarning` | `system/screenshot-guard.tsx` | Avisa que una captura no sirve cuando alguien saca una con un QR de HaNet en pantalla (HN-QR y entradas). iPhone y Android 14+. `ScreenshotWarning` es solo el diálogo. |
 

@@ -1,6 +1,7 @@
 import { demoCount, demoTickets } from '@/components/showcase/ticket-demo';
 import { ThemedText } from '@/components/themed-text';
 import { TicketView } from '@/components/tickets/ticket';
+import { TicketGlow } from '@/components/tickets/ticket-glow';
 import { LINEAR, track } from '@/components/tickets/timeline';
 import type { Ease } from '@/components/tickets/timeline';
 import { HanetButton } from '@/components/ui/hanet-button';
@@ -15,7 +16,6 @@ import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 
 // Llegada (canvas Entradas HaNet, board Llegada): the first time this phone
 // sees new tickets they arrive thrown from below, overshoot a little and
@@ -72,7 +72,6 @@ export default function TicketArrivalScreen() {
   const settled = (shown.length - 1) * STEP + LAND;
   const total = settled + 1000;
   const clock = useSharedValue(reducedMotion ? total : 0);
-  const light = first?.event.palette[0] ?? AppColors.accent;
 
   useEffect(() => {
     if (!demoArrived) void markTicketsSeen([...wanted]);
@@ -107,17 +106,7 @@ export default function TicketArrivalScreen() {
 
   return (
     <View style={styles.screen}>
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, lightStyle]}>
-        <Svg width={screenWidth} height={screenHeight}>
-          <Defs>
-            <RadialGradient id="arrivalLight" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-              <Stop offset="0" stopColor={light} stopOpacity={0.45} />
-              <Stop offset="1" stopColor={light} stopOpacity={0} />
-            </RadialGradient>
-          </Defs>
-          <Ellipse cx={screenWidth / 2} cy={screenHeight * 0.45} rx={screenWidth * 0.85} ry={screenHeight * 0.36} fill="url(#arrivalLight)" />
-        </Svg>
-      </Animated.View>
+      <TicketGlow id="arrival" colors={first?.event.palette ?? []} y={screenHeight * 0.36} style={lightStyle} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.fan}>
           {shown.map((ticket, index) => {

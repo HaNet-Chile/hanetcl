@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { TicketView } from '@/components/tickets/ticket';
+import { TicketGlow } from '@/components/tickets/ticket-glow';
 import { Tilt } from '@/components/tickets/tilt';
 import { demoCount, demoGiftPreview, demoQr } from '@/components/showcase/ticket-demo';
 import { HanetButton } from '@/components/ui/hanet-button';
@@ -14,7 +15,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
-import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 import { LINEAR, track } from '@/components/tickets/timeline';
 import type { Ease } from '@/components/tickets/timeline';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -187,17 +187,7 @@ export default function ReceiveTicketScreen() {
   return (
     <View style={styles.screen}>
       {/* The cover's light at the top, behind the ticket. */}
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, lightStyle]}>
-        <Svg width="100%" height={460}>
-          <Defs>
-            <RadialGradient id="receiveLight" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-              <Stop offset="0" stopColor={preview?.event.palette[0] ?? AppColors.accent} stopOpacity={0.4} />
-              <Stop offset="1" stopColor={preview?.event.palette[0] ?? AppColors.accent} stopOpacity={0} />
-            </RadialGradient>
-          </Defs>
-          <Ellipse cx="50%" cy={insets.top + 150} rx="70%" ry={230} fill="url(#receiveLight)" />
-        </Svg>
-      </Animated.View>
+      <TicketGlow id="receive" colors={preview?.event.palette ?? []} y={insets.top + 150} style={lightStyle} />
       <View style={[styles.top, { paddingTop: insets.top + 70 }]}>
         {preview && (
           <Animated.View style={dropStyle}>

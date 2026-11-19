@@ -250,7 +250,7 @@ export default function RootLayout() {
             <Stack.Screen name="anniversary/leads" options={sheetOptions('anniversary/leads')} />
             <Stack.Screen name="anniversary/score" options={sheetOptions('anniversary/score')} />
             <Stack.Screen name="tickets/index" options={{ headerShown: false }} />
-            <Stack.Screen name="tickets/detail" options={Platform.OS === 'ios' ? { ...sheetOptions('tickets/detail'), contentStyle: { backgroundColor: 'transparent' } } : sheetOptions('tickets/detail')} />
+            <Stack.Screen name="tickets/detail" options={Platform.OS === 'ios' ? { ...sheetOptions('tickets/detail'), contentStyle: { backgroundColor: AppColors.surface } } : sheetOptions('tickets/detail')} />
             <Stack.Screen name="tickets/validated" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
             <Stack.Screen name="tickets/arrival" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
             <Stack.Screen name="tickets/receive" options={{ headerShown: false, animation: 'fade' }} />

@@ -1,6 +1,7 @@
 import { demoCount, demoTickets } from '@/components/showcase/ticket-demo';
 import { ThemedText } from '@/components/themed-text';
 import { TicketView, ticketWhen } from '@/components/tickets/ticket';
+import { TicketGlow } from '@/components/tickets/ticket-glow';
 import { EASE_IN_OUT, EASE_OUT, LINEAR, track } from '@/components/tickets/timeline';
 import type { Ease } from '@/components/tickets/timeline';
 import { HanetButton } from '@/components/ui/hanet-button';
@@ -9,11 +10,11 @@ import { useMyTickets } from '@/hooks/use-my-tickets';
 import { t } from '@/i18n';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { Easing, useAnimatedProps, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Defs, Ellipse, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 // "Entrada válida" (canvas Entradas HaNet, board Validada; muxp 2026-11-19):
 // 3 s on the holder's phone the moment the ticket is read at the door, copied
@@ -61,8 +62,13 @@ export default function TicketValidatedScreen() {
   const perimeter = 2 * (width - 44 - 22) + 2 * (height - 44) + Math.PI * 44 + Math.PI * 22;
   const unit = perimeter / 125;
   const clock = useSharedValue(reducedMotion ? DURATION : 0);
-  const light = ticket?.event.palette[0] ?? AppColors.accent;
   const when = ticketWhen(ticket?.event.startsAt ?? null);
+
+  const [traced, setTraced] = useState(reducedMotion);
+  useEffect(() => {
+    const timer = setTimeout(() => setTraced(true), 650);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const haptic = (run: () => Promise<void>) => { if (Platform.OS !== 'web') void run().catch(() => undefined); };
@@ -95,9 +101,13 @@ export default function TicketValidatedScreen() {
     const time = clock.get();
     return {
       strokeDashoffset: track(time, [0, 570], [dash * unit, -(125 - dash) * unit], [], TRACE),
-      strokeOpacity: track(time, [0, 45, 450, 570], [0, 1, 1, 0], [], TRACE),
     };
   };
+  // The light fades as a layer, and leaves once it has gone around: an
+  // animated stroke opacity could stay on its first frame and leave a line on
+  // the edge.
+  const traceStyle = useAnimatedStyle(() => ({ opacity: track(clock.get(), [0, 45, 450, 570], [0, 1, 1, 0], [], TRACE) }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: track(clock.get(), [0, 600], [0, 1]) }));
   const trace1 = useAnimatedProps(() => traceProps(5));
   const trace1Glow = useAnimatedProps(() => traceProps(5));
   const trace2 = useAnimatedProps(() => traceProps(12));
@@ -170,15 +180,7 @@ export default function TicketValidatedScreen() {
   return (
     <View style={styles.screen}>
       {/* The cover's light behind, and the green that rises from below. */}
-      <Svg pointerEvents="none" width={screenWidth} height={screenHeight} style={StyleSheet.absoluteFill}>
-        <Defs>
-          <RadialGradient id="validLight" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-            <Stop offset="0" stopColor={light} stopOpacity={0.3} />
-            <Stop offset="1" stopColor={light} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Ellipse cx={screenWidth * 0.22} cy={screenHeight * 0.3} rx={screenWidth * 0.75} ry={screenHeight * 0.28} fill="url(#validLight)" />
-      </Svg>
+      <TicketGlow id="valid" colors={ticket?.event.palette ?? []} x={0.3} y={screenHeight * 0.32} style={glowStyle} />
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, washStyle]}>
         <Svg width={screenWidth} height={screenHeight}>
           <Defs>
@@ -213,12 +215,16 @@ export default function TicketValidatedScreen() {
               </Svg>
             </Animated.View>
           </View>
-          <Svg width={width + 8} height={height + 8} viewBox={`-4 -4 ${width + 8} ${height + 8}`} style={styles.trace}>
-            <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeOpacity={0} strokeWidth={7} strokeLinecap="round" strokeDasharray={[5 * unit, 120 * unit]} opacity={0.25} animatedProps={trace1Glow} />
-            <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeOpacity={0} strokeWidth={2.5} strokeLinecap="round" strokeDasharray={[5 * unit, 120 * unit]} animatedProps={trace1} />
-            <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeOpacity={0} strokeWidth={2} strokeLinecap="round" strokeDasharray={[12 * unit, 113 * unit]} opacity={0.55} animatedProps={trace2} />
-            <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeOpacity={0} strokeWidth={1.5} strokeLinecap="round" strokeDasharray={[24 * unit, 101 * unit]} opacity={0.22} animatedProps={trace3} />
-          </Svg>
+          {!traced && (
+            <Animated.View style={[styles.trace, { width: width + 8, height: height + 8 }, traceStyle]}>
+              <Svg width={width + 8} height={height + 8} viewBox={`-4 -4 ${width + 8} ${height + 8}`}>
+                <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeWidth={7} strokeLinecap="round" strokeDasharray={[5 * unit, 120 * unit]} opacity={0.25} animatedProps={trace1Glow} />
+                <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" strokeDasharray={[5 * unit, 120 * unit]} animatedProps={trace1} />
+                <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeWidth={2} strokeLinecap="round" strokeDasharray={[12 * unit, 113 * unit]} opacity={0.55} animatedProps={trace2} />
+                <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeWidth={1.5} strokeLinecap="round" strokeDasharray={[24 * unit, 101 * unit]} opacity={0.22} animatedProps={trace3} />
+              </Svg>
+            </Animated.View>
+          )}
         </Animated.View>
       )}
 

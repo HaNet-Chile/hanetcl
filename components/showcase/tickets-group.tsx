@@ -4,6 +4,7 @@ import { ScreenshotWarning } from '@/components/system/screenshot-guard';
 import { ThemedText } from '@/components/themed-text';
 import { TicketPile } from '@/components/tickets/profile-tickets';
 import { TicketView } from '@/components/tickets/ticket';
+import { TicketGlow } from '@/components/tickets/ticket-glow';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetChip } from '@/components/ui/hanet-chip';
 import { AppColors, AppSpacing, AppType } from '@/constants/design-tokens';
@@ -85,6 +86,18 @@ export function TicketsGroup() {
         </Stage>
       </Section>
       <Section
+        title="Luz de la entrada"
+        description="La luz del color de la portada detrás de una entrada que llega, se valida o se recibe: manchas difusas que se mueven lento, como la luz de la página de un evento."
+        source="components/tickets/ticket-glow.tsx · TicketGlow"
+      >
+        <Stage canvas>
+          <View style={styles.glowStage}>
+            <TicketGlow id="showcase" colors={SAMPLE_EVENT.palette} y={140} />
+            <TicketView event={SAMPLE_EVENT} status="active" qrValue="hanet://ticket/ejemplo?c=0123456789" number={142} cap={300} />
+          </View>
+        </Stage>
+      </Section>
+      <Section
         title="Probar las animaciones"
         description="Cada pantalla de Entradas con una entrada de prueba: nada se guarda ni llega al servidor."
         source="app/tickets/{detail,validated,arrival,receive}.tsx · ?demo="
@@ -110,6 +123,7 @@ export function TicketsGroup() {
 
 const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  glowStage: { height: 280, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 22 },
   demos: { gap: AppSpacing.lg },
   demo: { gap: AppSpacing.xs },
   demoNote: { ...AppType.footnote, color: AppColors.textSecondary, paddingHorizontal: AppSpacing.sm },
