@@ -68,4 +68,4 @@ function build(getAdminApp) {
   return { getMyIdKey };
 }
 
-module.exports = { build, readIdQr };
+module.exports = { build, readIdQr, codeFor, STEP_MS, STEPS_BEHIND, STEPS_AHEAD };

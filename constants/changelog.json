@@ -3,21 +3,20 @@
     {
       "version": "0.13.0-beta",
       "date": "2026-11-19",
-      "title": "Organizar",
-      "items": [
-        "Organizar, para el CEE y la administración: eventos, entradas, avisos y votaciones en un solo lugar. Se abre con el botón junto al buscador del Inicio.",
-        "Eventos privados o formales, como una gala o una velada: solo los ven quienes reciben una entrada.",
-        "Las entradas se emiten por curso desde la nómina, para cada estudiante o para el Presidente de cada curso, que las reparte.",
-        "También se puede enviar una entrada a una persona del liceo o un link a un invitado sin HaNet, y reenviar o anular cualquier entrada desde la lista.",
-        "El día del evento, el Inicio y Organizar muestran cuántos llegaron, en vivo, con el botón para escanear.",
-        "Docentes autorizados por evento pueden escanear entradas en la puerta.",
-        "Los Presidentes de curso se nombran desde Organizar.",
-        "Crear una votación desde Organizar ya abre el formulario con la votación lista."
-      ],
+      "title": "Entradas",
       "highlights": [
-        "Organizar: el CEE y la administración crean eventos y entregan entradas desde el teléfono.",
-        "Nuevos eventos privados o formales: solo los ven quienes tienen entrada.",
-        "El día del evento, el Inicio muestra quiénes llegaron y el botón para escanear."
+        "Nuevo: Entradas. Las entradas que te dé tu liceo para un evento aparecen en tu perfil, con un QR que vale una vez.",
+        "Puedes regalar una entrada con un link, compartirla como imagen o descargarla para imprimir.",
+        "En la puerta escanean tu entrada y tu teléfono te recibe con una animación."
+      ],
+      "items": [
+        "Nuevo: Entradas, en tu perfil. Ahí aparecen las entradas que te dé tu liceo para un evento, como la Velada de Aniversario.",
+        "El QR de cada entrada cambia solo cada 30 segundos y vale una vez, así que una captura no sirve. Si sacas una, te avisamos.",
+        "Regala una entrada con un link que dura 24 horas: al aceptarla pasa a la otra cuenta.",
+        "Compártela como imagen o descárgala para imprimir, con un código para escribir a mano si hace falta.",
+        "Cuando la escanean en la puerta, tu teléfono lo muestra al instante.",
+        "Quienes organizan escanean en la puerta, y pueden autorizar a docentes para hacerlo.",
+        "Tu HN-QR también te avisa si le sacas una captura."
       ]
     },
     {
