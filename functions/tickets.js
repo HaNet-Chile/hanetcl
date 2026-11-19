@@ -37,7 +37,11 @@ const STAFF_ROLES = ["Profesor", "Admin", "HNT"];
 const STATUSES = ["active", "link", "shared", "printed", "used", "voided"];
 const BUCKET = "hanet-edu.firebasestorage.app";
 const WEB_BASE = "https://hanet-app.web.app";
-const LINK_DAYS = 7;
+// A gift link works for 24 hours (muxp, 2026-11-19); a guest's link, sent by
+// who organizes, lasts until the event or a week, whichever is later.
+const GIFT_LINK_MS = 24 * 60 * 60 * 1000;
+const GUEST_LINK_DAYS = 7;
+const MAX_SCANNERS = 20;
 const MAX_PER_PERSON = 10;
 const MAX_ISSUE = 2000;
 // The door opens a while before the event and closes a day after it ends,
@@ -203,15 +207,28 @@ async function moduleOn(getAdminApp, institutionId) {
   return !Array.isArray(institution.modules) || institution.modules.includes(MODULE);
 }
 
-/** The event, checked to be one with tickets that this person organizes. */
-async function organizedEvent(getAdminApp, profile, value) {
+function guestLinkExpiry(event) {
+  return Math.max(Date.now() + GUEST_LINK_DAYS * 864e5, millis(event.endsAt) || millis(event.startsAt) || 0);
+}
+
+function organizes(profile, event) {
+  return ORGANIZERS.includes(profile.role) && (profile.role === "HNT" || event.institutionId === profile.institutionId);
+}
+
+/**
+ * The event, checked to be one with tickets that this person organizes. With
+ * `door`, a docente whom the organizers allowed to scan also gets in.
+ */
+async function organizedEvent(getAdminApp, profile, value, { door = false } = {}) {
   const id = docId(value);
   if (!id) throw new HttpsError("invalid-argument", "Falta el evento.");
   const event = (await calendarDb(getAdminApp).collection(EVENTS).doc(id).get()).data();
   if (!event || event.kind !== "institution") throw new HttpsError("not-found", "Ese evento ya no está disponible.");
-  const organizer = ORGANIZERS.includes(profile.role)
-    && (profile.role === "HNT" || event.institutionId === profile.institutionId);
-  if (!organizer) throw new HttpsError("permission-denied", "Solo quienes organizan el evento manejan sus entradas.");
+  const scanner = door && event.institutionId === profile.institutionId
+    && Array.isArray(event.ticketScanners) && event.ticketScanners.includes(profile.uid);
+  if (!organizes(profile, event) && !scanner) {
+    throw new HttpsError("permission-denied", door ? "Solo quienes organizan el evento, o los docentes que autoricen, escanean en la puerta." : "Solo quienes organizan el evento manejan sus entradas.");
+  }
   if (!(await moduleOn(getAdminApp, event.institutionId))) {
     throw new HttpsError("failed-precondition", "Entradas no está activo en tu institución.");
   }
@@ -313,7 +330,7 @@ function build(getAdminApp) {
     const db = calendarDb(getAdminApp);
     const ref = db.collection(TICKETS).doc(id);
     const token = newToken();
-    const expiresAt = Date.now() + LINK_DAYS * 24 * 60 * 60 * 1000;
+    const expiresAt = Date.now() + GIFT_LINK_MS;
     await db.runTransaction(async (tx) => {
       const ticket = (await tx.get(ref)).data();
       if (!ticket || ticket.holderUid !== uid) throw new HttpsError("not-found", "Esa entrada no está en tu cuenta.");
@@ -442,7 +459,7 @@ function build(getAdminApp) {
   // `ticketId` it validates that ticket directly, after a HN-QR.
   const validateTicket = onCall({ invoker: "public" }, async (request) => {
     const profile = await requireProfile(getAdminApp, request);
-    const { id: eventId, event } = await organizedEvent(getAdminApp, profile, request.data?.eventId);
+    const { id: eventId, event } = await organizedEvent(getAdminApp, profile, request.data?.eventId, { door: true });
     if (!doorOpen(event)) throw new HttpsError("failed-precondition", "La puerta se abre 3 horas antes del evento y se cierra un día después.");
     const db = calendarDb(getAdminApp);
     const raw = typeof request.data?.qr === "string" ? request.data.qr.trim() : "";
@@ -552,11 +569,14 @@ function build(getAdminApp) {
       const holders = await db.collection(TICKETS).where("eventId", "==", eventId).select("holderUid", "status").get();
       const already = new Set(holders.docs.filter(doc => doc.data().status !== "voided").map(doc => doc.data().holderUid).filter(Boolean));
       if (input.holder === "courseLead") {
+        // Each course's Presidente de curso, unless the call names someone else.
         const leads = input.leadUids && typeof input.leadUids === "object" ? input.leadUids : {};
         for (const courseId of courseIds) {
           const leadUid = docId(leads[courseId]) ? leads[courseId] : null;
-          const lead = leadUid && snapshot.docs.find(doc => doc.id === leadUid && doc.data().courseId === courseId);
-          if (!lead) throw new HttpsError("invalid-argument", `Elige quién recibe las entradas de ${courseId}.`);
+          const lead = leadUid
+            ? snapshot.docs.find(doc => doc.id === leadUid && doc.data().courseId === courseId)
+            : snapshot.docs.find(doc => doc.data().courseId === courseId && doc.data().courseLead === true);
+          if (!lead) throw new HttpsError("invalid-argument", `${courseId} no tiene Presidente de curso. Asígnalo o elige a quién darle sus entradas.`);
           if (already.has(lead.id)) { skipped += perStudent; continue; }
           for (let n = 0; n < perStudent; n += 1) planned.push({ uid: lead.id, profile: lead.data(), courseId });
         }
@@ -619,7 +639,7 @@ function build(getAdminApp) {
         };
         if (item.guestName) {
           const token = newToken();
-          const expiresAt = Math.max(Date.now() + LINK_DAYS * 864e5, (millis(event.endsAt) || millis(event.startsAt) || 0));
+          const expiresAt = guestLinkExpiry(event);
           batch.set(ref, { ...base, holderUid: null, holderName: "", courseId: "", guestName: item.guestName, status: "link", linkHash: sha(token), linkExpiresAt: Timestamp.fromMillis(expiresAt) });
           link = { ticketId: ref.id, url: linkUrl(token) };
         } else {
@@ -655,14 +675,18 @@ function build(getAdminApp) {
       if (status !== "voided") totals.issued += 1;
       if (data.giftedFrom) totals.gifted += 1;
     }
-    return { rows, totals };
+    const scannerUids = Array.isArray(event.ticketScanners) ? event.ticketScanners : [];
+    const people = identityDb(getAdminApp);
+    const scannerDocs = scannerUids.length ? await people.getAll(...scannerUids.map(uid => people.collection("users").doc(uid))) : [];
+    const scanners = await Promise.all(scannerDocs.map(async doc => ({ uid: doc.id, name: await nameOf(getAdminApp, doc.id, doc.data()) })));
+    return { rows, totals, scanners };
   });
 
   // Voids a ticket. With `replace`, the same holder (or guest) gets a new
   // one with the same number.
   const voidTicket = onCall({ invoker: "public" }, async (request) => {
     const profile = await requireProfile(getAdminApp, request);
-    const { id: eventId } = await organizedEvent(getAdminApp, profile, request.data?.eventId);
+    const { id: eventId, event } = await organizedEvent(getAdminApp, profile, request.data?.eventId);
     const id = docId(request.data?.ticketId);
     if (!id) throw new HttpsError("invalid-argument", "Falta la entrada.");
     const db = calendarDb(getAdminApp);
@@ -695,7 +719,7 @@ function build(getAdminApp) {
           courseId: ticket.courseId || "",
           guestName: ticket.guestName || "",
           status: guest ? "link" : "active",
-          ...(guest ? { linkHash: sha(token), linkExpiresAt: Timestamp.fromMillis(Date.now() + LINK_DAYS * 864e5) } : {}),
+          ...(guest ? { linkHash: sha(token), linkExpiresAt: Timestamp.fromMillis(guestLinkExpiry(event)) } : {}),
           replaces: id,
           issuedBy: profile.uid,
           issuedAt: FieldValue.serverTimestamp(),
@@ -725,11 +749,84 @@ function build(getAdminApp) {
     const ref = db.collection(TICKETS).doc(id);
     const ticket = (await ref.get()).data();
     if (!ticket) throw new HttpsError("not-found", "Esa entrada no existe.");
-    await organizedEvent(getAdminApp, profile, ticket.eventId);
+    const { event } = await organizedEvent(getAdminApp, profile, ticket.eventId);
     if (ticket.status !== "link" || ticket.holderUid) throw new HttpsError("failed-precondition", "Solo las entradas de invitados sin aceptar tienen link.");
     const token = newToken();
-    await ref.update({ linkHash: sha(token), linkExpiresAt: Timestamp.fromMillis(Date.now() + LINK_DAYS * 864e5), history: history("linkResent", profile.uid) });
+    await ref.update({ linkHash: sha(token), linkExpiresAt: Timestamp.fromMillis(guestLinkExpiry(event)), history: history("linkResent", profile.uid) });
     return { url: linkUrl(token) };
+  });
+
+  // Lets a docente of the institution scan at the door of this event, or
+  // takes it back. Who organizes always can.
+  const setTicketScanner = onCall({ invoker: "public" }, async (request) => {
+    const profile = await requireProfile(getAdminApp, request);
+    const { id: eventId, event } = await organizedEvent(getAdminApp, profile, request.data?.eventId);
+    const uid = docId(request.data?.uid);
+    const on = request.data?.on !== false;
+    if (!uid) throw new HttpsError("invalid-argument", "Falta la persona.");
+    if (on) {
+      const person = (await identityDb(getAdminApp).collection("users").doc(uid).get()).data();
+      if (!person || person.institutionId !== event.institutionId || person.role !== "Profesor") {
+        throw new HttpsError("invalid-argument", "Solo se puede dar acceso a docentes de tu institución.");
+      }
+      if ((event.ticketScanners || []).length >= MAX_SCANNERS && !(event.ticketScanners || []).includes(uid)) {
+        throw new HttpsError("resource-exhausted", `Son ${MAX_SCANNERS} docentes como máximo.`);
+      }
+    }
+    await calendarDb(getAdminApp).collection(EVENTS).doc(eventId).update({
+      ticketScanners: on ? FieldValue.arrayUnion(uid) : FieldValue.arrayRemove(uid),
+    });
+    return { on };
+  });
+
+  // The events whose door this docente may scan (who organizes sees theirs
+  // in listOrganizedEvents, functions/events.js).
+  const listMyDoorEvents = onCall({ invoker: "public" }, async (request) => {
+    const profile = await requireProfile(getAdminApp, request);
+    const snapshot = await calendarDb(getAdminApp).collection(EVENTS).where("ticketScanners", "array-contains", profile.uid).limit(30).get();
+    const events = snapshot.docs
+      .filter(doc => doc.data().institutionId === profile.institutionId && doc.data().status !== "deleted")
+      .map(doc => eventOut(doc.id, doc.data()))
+      .filter(event => !event.endsAt || event.endsAt + DOOR_CLOSES_MS > Date.now())
+      .sort((a, b) => (a.startsAt || 0) - (b.startsAt || 0));
+    return { events };
+  });
+
+  // Presidente de curso (muxp, 2026-11-19): a cargo on top of the role, one
+  // per course, that CEE, Admin or HNT give. It is who receives the course's
+  // tickets with holder "courseLead". It does not change what the role can do.
+  const setCourseLead = onCall({ invoker: "public" }, async (request) => {
+    const profile = await requireProfile(getAdminApp, request);
+    if (!ORGANIZERS.includes(profile.role)) throw new HttpsError("permission-denied", "Solo CEE, Administración o el equipo HaNet asignan Presidentes de curso.");
+    const uid = docId(request.data?.uid);
+    const on = request.data?.on !== false;
+    if (!uid) throw new HttpsError("invalid-argument", "Falta la persona.");
+    const people = identityDb(getAdminApp);
+    const person = (await people.collection("users").doc(uid).get()).data();
+    if (!person || person.institutionId !== profile.institutionId || !person.courseId || STAFF_ROLES.includes(person.role)) {
+      throw new HttpsError("invalid-argument", "Esa persona no es estudiante de tu institución.");
+    }
+    const batch = people.batch();
+    if (on) {
+      const current = await people.collection("users").where("institutionId", "==", profile.institutionId).where("courseLead", "==", true).get();
+      for (const doc of current.docs) {
+        if (doc.id !== uid && doc.data().courseId === person.courseId) batch.update(doc.ref, { courseLead: FieldValue.delete() });
+      }
+      batch.update(people.collection("users").doc(uid), { courseLead: true });
+    } else {
+      batch.update(people.collection("users").doc(uid), { courseLead: FieldValue.delete() });
+    }
+    await batch.commit();
+    return { on, courseId: person.courseId };
+  });
+
+  // Each course's Presidente de curso, for who reparte the tickets.
+  const listCourseLeads = onCall({ invoker: "public" }, async (request) => {
+    const profile = await requireProfile(getAdminApp, request);
+    if (!ORGANIZERS.includes(profile.role)) throw new HttpsError("permission-denied", "Solo CEE, Administración o el equipo HaNet ven los Presidentes de curso.");
+    const snapshot = await identityDb(getAdminApp).collection("users").where("institutionId", "==", profile.institutionId).where("courseLead", "==", true).get();
+    const leads = await Promise.all(snapshot.docs.map(async doc => ({ courseId: doc.data().courseId || "", uid: doc.id, name: await nameOf(getAdminApp, doc.id, doc.data()) })));
+    return { leads: leads.sort((a, b) => a.courseId.localeCompare(b.courseId, "es")) };
   });
 
   return {
@@ -746,6 +843,10 @@ function build(getAdminApp) {
     listEventTickets,
     voidTicket,
     resendTicketLink,
+    setTicketScanner,
+    listMyDoorEvents,
+    setCourseLead,
+    listCourseLeads,
   };
 }
 
