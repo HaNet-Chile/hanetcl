@@ -1,32 +1,25 @@
 import { GroupTitle, Section, Stage } from '@/components/showcase/showcase-ui';
+import { DEMO_EVENT } from '@/components/showcase/ticket-demo';
+import { ScreenshotWarning } from '@/components/system/screenshot-guard';
+import { ThemedText } from '@/components/themed-text';
 import { TicketPile } from '@/components/tickets/profile-tickets';
 import { TicketView } from '@/components/tickets/ticket';
+import { TicketGlow } from '@/components/tickets/ticket-glow';
+import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetChip } from '@/components/ui/hanet-chip';
-import type { Ticket, TicketEvent } from '@/services/tickets-service';
+import { AppColors, AppSpacing, AppType } from '@/constants/design-tokens';
+import type { Ticket } from '@/services/tickets-service';
+import { Ionicons } from '@expo/vector-icons';
+import type { Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-// Entradas (v0.13.0): the ticket in each of its states and the pile of
-// Perfil. The event here is made up.
+// Entradas (v0.13.0): the ticket in each of its states, the pile of Perfil
+// and every animation of the module, opened with a made-up ticket (`?demo=`,
+// components/showcase/ticket-demo.ts). The event here is made up.
 
-const SAMPLE_EVENT: TicketEvent = {
-  id: 'ejemplo',
-  institutionName: 'Liceo de ejemplo',
-  title: 'Velada de Aniversario',
-  startsAt: new Date(2027, 6, 8, 19, 0).getTime(),
-  endsAt: null,
-  venueName: 'Gimnasio',
-  address: '',
-  city: '',
-  imageUrl: null,
-  palette: ['#EF2274'],
-  authorName: 'CEE',
-  cap: 300,
-  giftable: true,
-  printable: true,
-  style: 'simple',
-  note: '',
-};
+const SAMPLE_EVENT = DEMO_EVENT;
 
 const STATES = [
   { value: 'active', label: 'Activa' },
@@ -52,8 +45,21 @@ const SAMPLE_PILE: Ticket[] = [1, 2, 3].map(number => ({
   event: SAMPLE_EVENT,
 }));
 
+type Demo = { label: string; note: string; icon: keyof typeof Ionicons.glyphMap; href?: Href; screenshot?: true };
+
+const DEMOS: Demo[] = [
+  { label: 'Abrir una entrada', note: 'La hoja con el QR que cambia solo cada 30 s. Saca una captura para ver el aviso, o toca "Simular lectura en la puerta".', icon: 'ticket-outline', href: { pathname: '/tickets/detail', params: { demo: '1' } } },
+  { label: 'Entrada válida', note: 'Lo que pasa en el teléfono cuando la leen en la puerta: el talón se corta y cae, el check verde y dos vibraciones. Dura 3 s.', icon: 'checkmark-circle-outline', href: { pathname: '/tickets/validated', params: { demo: '1' } } },
+  { label: 'Llega una entrada', note: 'La primera vez que el teléfono ve una entrada nueva: sube desde abajo.', icon: 'arrow-up-circle-outline', href: { pathname: '/tickets/arrival', params: { demo: '1' } } },
+  { label: 'Llegan 5 (Presidente de curso)', note: 'Las del curso se abren en abanico.', icon: 'albums-outline', href: { pathname: '/tickets/arrival', params: { demo: '5' } } },
+  { label: 'Recibir una regalada', note: 'La entrada flota arriba y se inclina con el teléfono; el QR borroso se enfoca al aceptarla.', icon: 'gift-outline', href: { pathname: '/tickets/receive', params: { demo: '1' } } },
+  { label: 'Aviso de captura', note: 'El diálogo que sale al sacar una captura con un QR en pantalla (iPhone y Android 14+).', icon: 'ban-outline', screenshot: true },
+];
+
 export function TicketsGroup() {
+  const router = useRouter();
   const [state, setState] = useState<(typeof STATES)[number]['value']>('active');
+  const [warning, setWarning] = useState(false);
   return (
     <>
       <GroupTitle>Entradas</GroupTitle>
@@ -79,10 +85,46 @@ export function TicketsGroup() {
           <TicketPile tickets={SAMPLE_PILE} top={SAMPLE_PILE[0]} onPress={() => undefined} />
         </Stage>
       </Section>
+      <Section
+        title="Luz de la entrada"
+        description="La luz del color de la portada detrás de una entrada que llega, se valida o se recibe: manchas difusas que se mueven lento, como la luz de la página de un evento."
+        source="components/tickets/ticket-glow.tsx · TicketGlow"
+      >
+        <Stage canvas>
+          <View style={styles.glowStage}>
+            <TicketGlow id="showcase" colors={SAMPLE_EVENT.palette} y={140} />
+            <TicketView event={SAMPLE_EVENT} status="active" qrValue="hanet://ticket/ejemplo?c=0123456789" number={142} cap={300} />
+          </View>
+        </Stage>
+      </Section>
+      <Section
+        title="Probar las animaciones"
+        description="Cada pantalla de Entradas con una entrada de prueba: nada se guarda ni llega al servidor."
+        source="app/tickets/{detail,validated,arrival,receive}.tsx · ?demo="
+      >
+        <View style={styles.demos}>
+          {DEMOS.map(item => (
+            <View key={item.label} style={styles.demo}>
+              <HanetButton
+                label={item.label}
+                variant="surface"
+                icon={<Ionicons name={item.icon} size={18} color={AppColors.textPrimary} />}
+                onPress={() => (item.href ? router.push(item.href) : setWarning(true))}
+              />
+              <ThemedText style={styles.demoNote}>{item.note}</ThemedText>
+            </View>
+          ))}
+        </View>
+        <ScreenshotWarning visible={warning} ticket onClose={() => setWarning(false)} />
+      </Section>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  glowStage: { height: 280, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 22 },
+  demos: { gap: AppSpacing.lg },
+  demo: { gap: AppSpacing.xs },
+  demoNote: { ...AppType.footnote, color: AppColors.textSecondary, paddingHorizontal: AppSpacing.sm },
 });

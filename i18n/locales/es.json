@@ -2604,7 +2604,8 @@
       "regalar": "Regalar",
       "seUsoALasClock": "Se usó a las {{clock}}.",
       "teRegaloUnaEntradaPara": "Te regalo una entrada para {{title}}. Ábrela en HaNet:",
-      "teRegaloUnaEntradaPara2": "Te regalo una entrada para {{title}}. Ábrela en HaNet: {{url}}"
+      "teRegaloUnaEntradaPara2": "Te regalo una entrada para {{title}}. Ábrela en HaNet: {{url}}",
+      "simularLecturaEnLaPuerta": "Simular lectura en la puerta"
     },
     "entradaNumberParaTitle": "Entrada {{number}} para {{title}}",
     "juntar": "Juntar",
@@ -2658,7 +2659,7 @@
     "usadas": "Usadas",
     "validated": {
       "entradaValidaTeDamosLa": "Entrada válida. Te damos la bienvenida a {{title}}.",
-      "teDamosLaBienvenidaA": "Te damos la bienvenida a"
+      "teDamosLaBienvenidaATitle": "Te damos la bienvenida a {{title}}"
     }
   },
   "tools": {

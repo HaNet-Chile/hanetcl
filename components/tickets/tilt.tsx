@@ -8,16 +8,19 @@ import Animated, { SensorType, useAnimatedSensor, useAnimatedStyle, useReducedMo
  */
 export function Tilt({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   const reducedMotion = useReducedMotion();
-  const rotation = useAnimatedSensor(SensorType.ROTATION, { interval: 32 });
+  // Only the shared value goes into the worklet, not the sensor object with
+  // its functions; and nothing returns an empty style, so the transform
+  // always has the same shape.
+  const { sensor } = useAnimatedSensor(SensorType.ROTATION, { interval: 32 });
   const animated = useAnimatedStyle(() => {
-    if (reducedMotion) return {};
-    const { pitch, roll } = rotation.sensor.value;
-    const clamp = (value: number) => Math.max(-0.5, Math.min(0.5, value));
+    const { pitch, roll } = sensor.get();
+    const x = reducedMotion || !Number.isFinite(pitch) ? 0 : Math.max(-0.5, Math.min(0.5, pitch - 0.6));
+    const y = reducedMotion || !Number.isFinite(roll) ? 0 : Math.max(-0.5, Math.min(0.5, roll));
     return {
       transform: [
         { perspective: 800 },
-        { rotateX: `${clamp(pitch - 0.6) * -14}deg` },
-        { rotateY: `${clamp(roll) * 18}deg` },
+        { rotateX: `${x * -14}deg` },
+        { rotateY: `${y * 18}deg` },
       ],
     };
   });

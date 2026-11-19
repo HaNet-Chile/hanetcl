@@ -39,10 +39,15 @@ export function ScreenshotGuard({ active, ticket = false }: Props) {
     return () => subscription?.remove();
   }, [active]);
 
+  return <ScreenshotWarning visible={visible} ticket={ticket} onClose={() => setVisible(false)} />;
+}
+
+/** The dialog itself; Sistema HaNet UI opens it without a screenshot. */
+export function ScreenshotWarning({ visible, ticket = false, onClose }: { visible: boolean; ticket?: boolean; onClose: () => void }) {
   return (
     <HanetDialog
       visible={visible}
-      onRequestClose={() => setVisible(false)}
+      onRequestClose={onClose}
       dismissOnBackdrop
     >
       <View style={styles.icon} accessible={false}>
@@ -55,7 +60,7 @@ export function ScreenshotGuard({ active, ticket = false }: Props) {
           : t('components.system.screenshotGuard.tuHnQrCambiaCada')}
       </ThemedText>
       <HanetDialogActions>
-        <HanetButton label={t('events.entendido')} variant="surface" onPress={() => setVisible(false)} style={dialogStyles.action} />
+        <HanetButton label={t('events.entendido')} variant="surface" onPress={onClose} style={dialogStyles.action} />
       </HanetDialogActions>
     </HanetDialog>
   );

@@ -8,7 +8,8 @@ import React, { useId } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import Svg, { ClipPath, Defs, G, Line, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Animated, { FadeOut } from 'react-native-reanimated';
+import Svg, { ClipPath, Defs, G, Line, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 // La entrada de HaNet (canvas de Entradas, variante A "talón oscuro",
 // decidida por muxp el 2026-11-19): un rectángulo corto con dos muescas
@@ -40,6 +41,16 @@ export function ticketPath(width: number, height: number, cut: number) {
   ].join('');
 }
 
+// Where the ticket tears at the door (canvas, board Validada): the edge zigzags
+// a few points to each side of the perforation, every 1/25 of the height.
+const TEAR = [-4.7, 3.5, -2.3, 2.9, -2.9, 2.3, -3.5, 4.7, -4.1, 4.1];
+
+/** The torn edge along the perforation at `cut`, top to bottom. */
+export function tearPoints(height: number, cut: number) {
+  const steps = 25;
+  return Array.from({ length: steps + 1 }, (_, i) => `${(cut + TEAR[i % TEAR.length]).toFixed(1)},${((height * i) / steps).toFixed(1)}`);
+}
+
 /** "Jue 8 jul" and "19:00" for the ticket. */
 export function ticketWhen(ms: number | null) {
   if (ms === null) return { date: '', time: '' };
@@ -63,9 +74,13 @@ export type TicketProps = {
   /** Width in points; by default the screen's, up to 358. */
   width?: number;
   style?: StyleProp<ViewStyle>;
+  /** One half of the torn ticket (Entrada válida): the information or the stub. */
+  piece?: 'info' | 'stub';
+  /** Only the paper, with nothing printed: the tickets behind in a fan. */
+  bare?: boolean;
 };
 
-export function TicketView({ event, status, qrValue = null, number = null, cap = null, kicker, size = 'normal', width, style }: TicketProps) {
+export function TicketView({ event, status, qrValue = null, number = null, cap = null, kicker, size = 'normal', width, style, piece, bare = false }: TicketProps) {
   const id = useId().replace(/[^A-Za-z0-9]/g, '');
   const screen = useWindowDimensions();
   const w = width ?? Math.min(BASE_WIDTH, screen.width - 32);
@@ -80,6 +95,10 @@ export function TicketView({ event, status, qrValue = null, number = null, cap =
   const path = ticketPath(w, height, cut);
   const large = size === 'large';
   const numberText = number ? (cap ? `N.º ${number} de ${cap}` : `N.º ${number}`) : '';
+  const tear = piece ? tearPoints(height, cut) : null;
+  const tearShape = tear
+    ? (piece === 'info' ? ['0,0', ...tear, `0,${height}`] : [...tear, `${w},${height}`, `${w},0`]).join(' ')
+    : '';
 
   const stub = (() => {
     if (status === 'link' || status === 'shared' || status === 'printed') {
@@ -100,15 +119,19 @@ export function TicketView({ event, status, qrValue = null, number = null, cap =
         ) : (
           <Ionicons name="qr-code-outline" size={qr * 0.42} color={AppColors.surfaceMuted} />
         )}
+        {/* Accepting it brings the code into focus (canvas, board Recibir). */}
         {pending && (
-          Platform.OS === 'android'
-            ? <View style={[StyleSheet.absoluteFill, styles.frost]} />
-            : <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFill, styles.blurClip]} />
+          <Animated.View exiting={FadeOut.duration(420)} style={StyleSheet.absoluteFill}>
+            {Platform.OS === 'android'
+              ? <View style={[StyleSheet.absoluteFill, styles.frost]} />
+              : <BlurView intensity={28} tint="light" style={[StyleSheet.absoluteFill, styles.blurClip]} />}
+          </Animated.View>
         )}
         {pending && (
-          <View style={styles.pendingPill}>
+          <Animated.View exiting={FadeOut.duration(220)} style={styles.pendingPill}>
+            <Ionicons name="gift-outline" size={15} color={AppColors.textPrimary} />
             <ThemedText style={styles.pendingText}>{t('components.tickets.ticket.porAceptar')}</ThemedText>
-          </View>
+          </Animated.View>
         )}
       </View>
     );
@@ -119,22 +142,25 @@ export function TicketView({ event, status, qrValue = null, number = null, cap =
       <Svg width={w} height={height} style={StyleSheet.absoluteFill}>
         <Defs>
           <ClipPath id={`shape${id}`}><Path d={path} /></ClipPath>
+          {!!tear && <ClipPath id={`tear${id}`}><Polygon points={tearShape} /></ClipPath>}
           <RadialGradient id={`light${id}`} gradientUnits="userSpaceOnUse" cx={0} cy={height / 2} rx={w * 0.7} ry={height * 1.2} fx={0} fy={height / 2}>
             <Stop offset="0" stopColor={light} stopOpacity={used ? 0.3 : 0.55} />
             <Stop offset="0.45" stopColor={light} stopOpacity={used ? 0.12 : 0.22} />
             <Stop offset="1" stopColor={light} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <G clipPath={`url(#shape${id})`}>
-          <Rect x={0} y={0} width={w} height={height} fill={BODY} />
-          <Rect x={0} y={0} width={w} height={height} fill={`url(#light${id})`} />
-          <Rect x={cut} y={0} width={w - cut} height={height} fill="#FFFFFF" fillOpacity={0.05} />
+        <G clipPath={tear ? `url(#tear${id})` : undefined}>
+          <G clipPath={`url(#shape${id})`}>
+            <Rect x={0} y={0} width={w} height={height} fill={BODY} />
+            <Rect x={0} y={0} width={w} height={height} fill={`url(#light${id})`} />
+            <Rect x={cut} y={0} width={w - cut} height={height} fill="#FFFFFF" fillOpacity={0.05} />
+          </G>
+          {!tear && <Line x1={cut} y1={NOTCH + 6} x2={cut} y2={height - NOTCH - 6} stroke="#FFFFFF" strokeOpacity={0.42} strokeWidth={1.5} strokeDasharray="4 4" />}
+          <Path d={path} fill="none" stroke="#FFFFFF" strokeOpacity={0.14} strokeWidth={1} />
         </G>
-        <Line x1={cut} y1={NOTCH + 6} x2={cut} y2={height - NOTCH - 6} stroke="#FFFFFF" strokeOpacity={0.42} strokeWidth={1.5} strokeDasharray="4 4" />
-        <Path d={path} fill="none" stroke="#FFFFFF" strokeOpacity={0.14} strokeWidth={1} />
       </Svg>
 
-      <View style={[styles.left, { width: cut }, large && styles.leftLarge]}>
+      {!bare && piece !== 'stub' && <View style={[styles.left, { width: cut }, large && styles.leftLarge]}>
         <View>
           {!!(kicker ?? numberText) && <ThemedText numberOfLines={1} style={styles.kicker}>{kicker ?? numberText}</ThemedText>}
           <ThemedText numberOfLines={2} style={[styles.title, large && styles.titleLarge]}>{event.title}</ThemedText>
@@ -144,11 +170,11 @@ export function TicketView({ event, status, qrValue = null, number = null, cap =
           {!!when.time && <Meta label={t('components.ui.hanetDateTimePicker.hora')} value={when.time} />}
           {!!event.venueName && <Meta label={t('anniversary.activity.lugar')} value={event.venueName} shrink />}
         </View>
-      </View>
+      </View>}
 
-      <View style={[styles.stub, { left: cut }]}>{stub}</View>
+      {!bare && piece !== 'info' && <View style={[styles.stub, { left: cut }]}>{stub}</View>}
 
-      {status === 'used' && (
+      {status === 'used' && !piece && !bare && (
         <View pointerEvents="none" style={styles.stampWrap}>
           <ThemedText style={styles.stamp}>{t('tickets.scan.usada')}</ThemedText>
         </View>
@@ -214,6 +240,9 @@ const styles = StyleSheet.create({
   blurClip: { borderRadius: 12 },
   pendingPill: {
     position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
