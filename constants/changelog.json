@@ -1,6 +1,25 @@
 {
   "releases": [
     {
+      "version": "0.13.1-beta",
+      "date": "2026-11-19",
+      "title": "Organizar",
+      "items": [
+        "Organizar, para el CEE y la administración: eventos, entradas, avisos y votaciones en un solo lugar. Se abre con el botón junto al buscador del Inicio.",
+        "Eventos privados o formales, como una gala o una velada: solo los ven quienes reciben una entrada.",
+        "Las entradas se emiten por curso desde la nómina, para cada estudiante o para el Presidente de cada curso, que las reparte.",
+        "También se puede enviar una entrada a una persona del liceo o un link a un invitado sin HaNet, y reenviar o anular cualquier entrada desde la lista.",
+        "El día del evento, el Inicio y Organizar muestran cuántos llegaron, en vivo, con el botón para escanear.",
+        "Los docentes que escanean en la puerta y los Presidentes de curso se eligen desde Organizar.",
+        "Crear una votación desde Organizar ya abre el formulario con la votación lista."
+      ],
+      "highlights": [
+        "Organizar: el CEE y la administración crean eventos y entregan entradas desde el teléfono.",
+        "Nuevos eventos privados o formales: solo los ven quienes tienen entrada.",
+        "El día del evento, el Inicio muestra quiénes llegaron y el botón para escanear."
+      ]
+    },
+    {
       "version": "0.13.0-beta",
       "date": "2026-11-19",
       "title": "Entradas",
