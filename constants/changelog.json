@@ -1,6 +1,27 @@
 {
   "releases": [
     {
+      "version": "0.14.0-beta",
+      "date": "2026-11-19",
+      "title": "Verbos en inglés",
+      "items": [
+        "Nueva herramienta en Herramientas: Verbos en inglés, con casi 300 verbos regulares e irregulares y su significado en español.",
+        "Elige una lista de los quiz del liceo, 20 verbos al azar, solo regulares, solo irregulares o arma tu propia lista.",
+        "Solitario: en Desafío respondes un verbo a la vez; en Repaso, todos a la vista para estudiar. Al final ves tu puntaje, el tiempo y las correcciones.",
+        "Infinito: los verbos dan vueltas sin parar. Cada acierto suma segundos, cada error resta, y en cada vuelta el reloj corre más rápido. Lleva tu racha de aciertos y te avisa cuando vas por un récord.",
+        "Con los sonidos y la música de Verbos by muxp. Efectos y música se apagan aparte, y respetan el modo silencio del teléfono.",
+        "Tus mejores marcas quedan guardadas en tu teléfono. También lo encuentras desde el buscador del Inicio.",
+        "Tocar el aviso de un inicio de sesión nuevo ahora abre Seguridad.",
+        "Un link que no lleva a ninguna parte de HaNet muestra una pantalla propia con el camino de vuelta al Inicio.",
+        "Los títulos y números grandes del Aniversario y de Verbos ganan peso y ancho de forma continua al aparecer, sin saltos."
+      ],
+      "highlights": [
+        "Nueva herramienta: Verbos en inglés, para practicar el infinitivo, el pasado y el participio.",
+        "Juega en Solitario con las listas de tus quiz o en Infinito, contra el reloj, con los sonidos y la música del quiz original.",
+        "Al terminar ves tus errores con la respuesta correcta y puedes repetir solo esos."
+      ]
+    },
+    {
       "version": "0.13.2-beta",
       "date": "2026-11-19",
       "title": "Probar Entradas",

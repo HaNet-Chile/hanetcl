@@ -38,7 +38,7 @@ export default function ToolsScreen() {
   }, []);
 
   const done = !!state?.result;
-  // Beside the side navigation (wide web window) the three tools share a row.
+  // Beside the side navigation (wide web window) the tools share rows of three.
   const wide = useWide();
 
   const scaleCard = (
@@ -67,6 +67,27 @@ export default function ToolsScreen() {
       </View>
       <ThemedText style={styles.smallTitle}>{t('tools.grades.calculadoraDeNotas')}</ThemedText>
       <ThemedText style={styles.cardText}>{t('tools.tuPromedioYCuantoNecesitas')}</ThemedText>
+    </Pressable>
+  );
+
+  const verbsCard = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('tools.verbosEnInglesPracticaEl')}
+      onPress={() => router.push('/tools/verbs')}
+      style={({ pressed }) => [styles.card, wide && styles.fill, pressed && AppPressed]}
+    >
+      <View style={styles.cardTop}>
+        <View style={styles.iconTile}>
+          <Ionicons name="language-outline" size={22} color={AppColors.accent} />
+        </View>
+      </View>
+      <ThemedText style={styles.cardTitle}>{t('common.verbosEnIngles')}</ThemedText>
+      <ThemedText style={styles.cardText}>{t('tools.practicaElInfinitivoElPasado')}</ThemedText>
+      <View style={styles.cardFoot}>
+        <ThemedText style={styles.cardLink}>{t('tools.practicar')}</ThemedText>
+        <Ionicons name="chevron-forward" size={18} color={AppColors.textPrimary} />
+      </View>
     </Pressable>
   );
 
@@ -111,6 +132,7 @@ export default function ToolsScreen() {
           </Pressable>
         )}
 
+        {verbsCard}
         {wide && scaleCard}
         {wide && calcCard}
         {!wide && (

@@ -67,7 +67,8 @@
     "tuHanetIdTodaviaNo": "Tu HaNet ID todavía no está vinculado a un curso.",
     "tusAreasDeMayorInteres": "Tus áreas de mayor interés",
     "verificadoPorUnDocente": "Verificado por un docente:",
-    "volver": "Volver"
+    "volver": "Volver",
+    "verbosEnIngles": "Verbos en inglés"
   },
   "anniversary": {
     "activities": {
@@ -1047,7 +1048,10 @@
       "esteEventoNoTieneEntradas": "Este evento no tiene entradas ni cupones",
       "lasVistas": "las vistas",
       "opciones": "Opciones",
-      "opcionesDelEvento": "Opciones del evento"
+      "opcionesDelEvento": "Opciones del evento",
+      "eligeAlMenosUnVerbo": "Elige al menos un verbo.",
+      "listoCountvalue": "Listo · {{countValue}}",
+      "listoCountvalueVerbosElegidos": "Listo, {{countValue}} verbos elegidos"
     },
     "calendar": {
       "calendarBarStore": {
@@ -1164,7 +1168,12 @@
         "tuCuentaFueBloqueadaPor": "Tu cuenta fue bloqueada por",
         "upsAlgoFallo": "Ups, algo falló",
         "verLoGuardado": "Ver lo guardado",
-        "yCuentanosQueEstabasHaciendo": "y cuéntanos qué estabas haciendo. ¡Gracias por probar la beta!"
+        "yCuentanosQueEstabasHaciendo": "y cuéntanos qué estabas haciendo. ¡Gracias por probar la beta!",
+        "elLinkQueAbristeNo": "El link que abriste no lleva a ninguna parte de HaNet. Puede que esa pantalla ya no exista o que el link venga incompleto.",
+        "estaPantallaNoExiste": "Esta pantalla no existe",
+        "irAlInicio": "Ir al Inicio",
+        "siTeSiguePasandoCuentanos": "Si te sigue pasando, cuéntanos en",
+        "yMencionaEstaRuta": "y menciona esta ruta:"
       }
     },
     "events": {
@@ -1609,6 +1618,66 @@
       "tocaParaContinuar": "Toca para continuar",
       "valueGreetingTocaParaContinuar": "{{value}}{{greeting}}. Toca para continuar.",
       "yaEresParteDeInstitutionname": "Ya eres parte de {{institutionName}}."
+    },
+    "tools": {
+      "verbGames": {
+        "aciertos": "Aciertos",
+        "aguantasteDuration": "Aguantaste {{duration}}",
+        "aguantasteEnCountVueltas_one": "Aguantaste, en la primera vuelta",
+        "aguantasteEnCountVueltas_other": "Aguantaste, en {{count}} vueltas",
+        "bienAnswerHitbonusS": "Bien: {{answer}}. +{{hitBonus}} s",
+        "correctDeTotalRespuestasCorrectas": "{{correct}} de {{total}} respuestas correctas · {{duration}}",
+        "elRelojSeDetuvoMientras": "El reloj se detuvo mientras no estabas.",
+        "enBlanco": "En blanco",
+        "enPausa": "En pausa",
+        "enviar": "Enviar",
+        "eraAnswerMisspenaltyS": "Era {{answer}}. −{{missPenalty}} s",
+        "errorsDeMaxerrorsErrores": "{{errors}} de {{maxErrors}} errores",
+        "escribeYPresionaEnviar": "Escribe y presiona enviar",
+        "esTuMejorPartida": "Es tu mejor partida.",
+        "faltanBlanks": "Faltan {{blanks}}",
+        "jugarOtraVez": "Jugar otra vez",
+        "lasQueDejesEnBlanco": "Las que dejes en blanco cuentan como malas.",
+        "llegasteAMaxerrorsErrores": "Llegaste a {{maxErrors}} errores",
+        "mejorRacha": "Mejor racha",
+        "nuevoRecordSigueAsi": "Nuevo récord. Sigue así.",
+        "paraRepasar": "Para repasar",
+        "percentPorCiento": "{{percent}} por ciento",
+        "precision": "Precisión",
+        "quedanTimeleftSegundos": "Quedan {{timeLeft}} segundos",
+        "rachaDeStreak": "Racha de {{streak}}",
+        "rachaStreak": "Racha {{streak}}",
+        "repetirLosCountQueFalle_one": "Repetir el que fallé",
+        "repetirLosCountQueFalle_other": "Repetir los {{count}} que fallé",
+        "revisarIgual": "Revisar igual",
+        "revisarRespuestas": "Revisar respuestas",
+        "seAcaboElTiempo": "Se acabó el tiempo",
+        "seguir": "Seguir",
+        "seguirRespondiendo": "Seguir respondiendo",
+        "teFaltanCountRespuestas_one": "Te falta 1 respuesta",
+        "teFaltanCountRespuestas_other": "Te faltan {{count}} respuestas",
+        "todoCorrectoNoHayNada": "Todo correcto. No hay nada que repasar.",
+        "todoRespondido": "Todo respondido",
+        "tuMejorMarcaConEsta": "Tu mejor marca con esta lista.",
+        "tuMejorMarcaConEsta2": "Tu mejor marca con esta lista: {{percent}} % en {{duration}}.",
+        "tuMejorPartidaDurationCorrect": "Tu mejor partida: {{duration}} · {{correct}} aciertos.",
+        "verboAnterior": "Verbo anterior",
+        "verboNumberDeVerbscount": "Verbo {{number}} de {{verbsCount}}",
+        "verbscountVerbosDuration": "{{verbsCount}} verbos · {{duration}}",
+        "volverAVerbos": "Volver a Verbos",
+        "vueltaLoop": "Vuelta {{loop}}",
+        "vueltaLoopElRelojCorre": "Vuelta {{loop}}: el reloj corre más rápido.",
+        "ya": "¡Ya!"
+      },
+      "verbUi": {
+        "infinitivo": "Infinitivo",
+        "irregular": "Irregular",
+        "participio": "Participio",
+        "participioPasado": "Participio pasado",
+        "pasado": "Pasado",
+        "pasadoSimple": "Pasado simple",
+        "regular": "Regular"
+      }
     }
   },
   "createEvent": {
@@ -2488,7 +2557,9 @@
       "tusClasesDeLaSemana": "Tus clases de la semana",
       "tusClasesTareasYMateriales": "Tus clases, tareas y materiales",
       "utilidadesRecursos": "utilidades recursos",
-      "versionCambiosActualizacion": "version cambios actualizacion"
+      "versionCambiosActualizacion": "version cambios actualizacion",
+      "inglesEnglishVerbsIrregularesRegulares": "ingles english verbs irregulares regulares pasado participio quiz",
+      "practicaSusTresFormas": "Practica sus tres formas"
     },
     "securityService": {
       "browserEnOs": "{{browser}} en {{os}}",
@@ -2834,7 +2905,73 @@
     },
     "testDeInteresesParaElegir": "Test de intereses para elegir tus electivos de 3° medio",
     "testDeInteresesParaElegir2": "Test de intereses para elegir tus electivos de 3° medio. 72 preguntas, unos 10 minutos.",
-    "tuPromedioYCuantoNecesitas": "Tu promedio y cuánto necesitas."
+    "tuPromedioYCuantoNecesitas": "Tu promedio y cuánto necesitas.",
+    "practicaElInfinitivoElPasado": "Practica el infinitivo, el pasado y el participio con las listas de tus quiz, en Solitario o contra el reloj.",
+    "practicar": "Practicar",
+    "verbosEnInglesPracticaEl": "Verbos en inglés. Practica el infinitivo, el pasado y el participio.",
+    "verbs": {
+      "armaTuPropiaLista": "Arma tu propia lista.",
+      "cadaAciertoSumaHitbonusSegundos": "Cada acierto suma {{hitBonus}} segundos.",
+      "cadaErrorRestaMisspenaltyCon": "Cada error resta {{missPenalty}}. Con {{maxErrors}} errores, se acaba.",
+      "como": "Cómo",
+      "contraElRelojSinFinal": "Contra el reloj, sin final.",
+      "customcountElegidos": "{{customCount}} elegidos",
+      "desafio": "Desafío",
+      "durationCorrectAciertos": "{{duration}} · {{correct}} aciertos",
+      "efectos": "Efectos",
+      "elegirVerbos": "Elegir verbos",
+      "eligeAlMenosUnaForma": "Elige al menos una forma.",
+      "eligeVerbosParaEmpezar": "Elige verbos para empezar",
+      "empezarConCountvalueVerbos": "Empezar con {{countValue}} verbos",
+      "empiezasConStartsecondsSegundosY": "Empiezas con {{startSeconds}} segundos y el reloj no se detiene.",
+      "enCadaVueltaALa": "En cada vuelta a la lista, el reloj corre un {{value}} % más rápido.",
+      "infinito": "Infinito",
+      "irregularcountVerbos": "{{irregularCount}} verbos",
+      "juego": "Juego",
+      "listasDeLosQuiz": "Listas de los quiz",
+      "losVerbosDanVueltasSin": "Los verbos dan vueltas sin parar y preguntamos sus tres formas. ¿Cuánto aguantas?",
+      "otrosCadaVezQueJuegas": "Otros cada vez que juegas.",
+      "pick": {
+        "buscarEnInglesOEn": "Buscar en inglés o en español",
+        "buscarUnVerbo": "Buscar un verbo",
+        "countVerbos_one": "1 verbo",
+        "countVerbos_other": "{{count}} verbos",
+        "elegirEstos": "Elegir estos",
+        "irregulares": "Irregulares",
+        "llevasCountVerbosElegidos_one": "Llevas 1 verbo elegido.",
+        "llevasCountVerbosElegidos_other": "Llevas {{count}} verbos elegidos.",
+        "noEncontramosEseVerbo": "No encontramos ese verbo.",
+        "quitarEstos": "Quitar estos",
+        "regulares": "Regulares"
+      },
+      "play": {
+        "loQueLlevasNoSe": "Lo que llevas no se guarda.",
+        "salir": "Salir",
+        "salirDeLaPartida": "Salir de la partida",
+        "salirDeLaPartida2": "¿Salir de la partida?",
+        "seguirJugando": "Seguir jugando",
+        "solitarioDesafio": "Solitario · Desafío",
+        "solitarioRepaso": "Solitario · Repaso",
+        "sonido": "Sonido"
+      },
+      "practicaElInfinitivoElPasado": "Practica el infinitivo, el pasado simple y el participio pasado de los verbos de tus quiz.",
+      "queFormas": "Qué formas",
+      "randomcountAlAzar": "{{randomCount}} al azar",
+      "regularcountVerbos": "{{regularCount}} verbos",
+      "repaso": "Repaso",
+      "respondesLaListaCompletaY": "Respondes la lista completa y al final ves tu puntaje y las correcciones.",
+      "solitario": "Solitario",
+      "soloIrregulares": "Solo irregulares",
+      "soloRegulares": "Solo regulares",
+      "todosLosVerbos": "Todos los verbos",
+      "todosLosVerbosALa": "Todos los verbos a la vista, en el orden de la lista. Para estudiar.",
+      "tuListaCompletaConNota": "Tu lista completa, con nota al final.",
+      "tuMejorPartida": "Tu mejor partida",
+      "tusMarcasQuedanGuardadasSolo": "Tus marcas quedan guardadas solo en este dispositivo. Basado en Verbos by muxp.",
+      "unVerboALaVez": "Un verbo a la vez, en desorden. Para ponerte a prueba.",
+      "verbscountVerbos": "{{vERBSCount}} verbos",
+      "verbscountVerbosDescription": "{{verbsCount}} verbos · {{description}}"
+    }
   },
   "verifyEmail": {
     "asiSabemosQueElCorreo": "Así sabemos que el correo es tuyo.",

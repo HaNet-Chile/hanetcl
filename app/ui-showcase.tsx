@@ -1,7 +1,7 @@
 import { AppColors, AppPressed, AppRadii, AppSpacing } from '@/constants/design-tokens';
 import { WelcomeCelebration } from '@/components/WelcomeCelebration';
 import { InstitutionSync } from '@/components/InstitutionSync';
-import { FatalScreen } from '@/components/errors/AppErrorScreens';
+import { FatalScreen, NotFoundScreen } from '@/components/errors/AppErrorScreens';
 import { CheckInResultCard } from '@/components/events/checkin-result';
 import type { CheckInResult } from '@/components/events/checkin-result';
 import { FeedEventCard, FeedPollView } from '@/components/feed/feed-attachments';
@@ -201,6 +201,7 @@ export default function UiShowcaseScreen() {
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const [syncVisible, setSyncVisible] = useState(false);
   const [fatalVisible, setFatalVisible] = useState(false);
+  const [notFoundVisible, setNotFoundVisible] = useState(false);
   const [shift, setShift] = useState<string | null>('Mañana');
   const [subjectId, setSubjectId] = useState<string | null>(null);
   // The preview shows the shield of the viewer's own institution, as the real link does.
@@ -472,12 +473,13 @@ export default function UiShowcaseScreen() {
           />
         </Section>
 
-        <Section title="Pantallas de error" description="Bloqueo, servidores, sin conexión y error fatal. En la vista previa los botones solo cierran la pantalla.">
+        <Section title="Pantallas de error" description="Bloqueo, servidores, sin conexión, error fatal y pantalla no encontrada. En la vista previa los botones solo cierran la pantalla.">
           <View style={styles.buttonStack}>
             <HanetButton label="Cuenta bloqueada" variant="surface" onPress={() => showAppError('blocked', true)} />
             <HanetButton label="Servidores" variant="surface" onPress={() => showAppError('server', true)} />
             <HanetButton label="Sin conexión" variant="surface" onPress={() => showAppError('offline', true)} />
             <HanetButton label="Error fatal" variant="surface" onPress={() => setFatalVisible(true)} />
+            <HanetButton label="Pantalla no encontrada" variant="surface" onPress={() => setNotFoundVisible(true)} />
           </View>
         </Section>
 
@@ -529,6 +531,11 @@ export default function UiShowcaseScreen() {
       {fatalVisible && (
         <Animated.View entering={reducedMotion ? undefined : FadeIn.duration(120)} style={styles.fatalPreview}>
           <FatalScreen preview onDismiss={() => setFatalVisible(false)} />
+        </Animated.View>
+      )}
+      {notFoundVisible && (
+        <Animated.View entering={reducedMotion ? undefined : FadeIn.duration(120)} style={styles.fatalPreview}>
+          <NotFoundScreen path="/ejemplo" onHome={() => setNotFoundVisible(false)} onBack={() => setNotFoundVisible(false)} />
         </Animated.View>
       )}
       {overlay}

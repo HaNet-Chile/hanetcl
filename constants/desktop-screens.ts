@@ -115,6 +115,9 @@ export const DESKTOP_SCREENS: Record<string, DesktopScreen> = {
   'tools/electividad/test': { layout: 'full' },
   'tools/electividad/reveal': { layout: 'full' },
   'tools/electividad/result': { layout: 'wide' },
+  'tools/verbs/index': { layout: 'wide' },
+  'tools/verbs/pick': { layout: 'reading' },
+  'tools/verbs/play': { layout: 'full' },
 
   // Profile and Configuraciones
   'settings': { layout: 'wide' },

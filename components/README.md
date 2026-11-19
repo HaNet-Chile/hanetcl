@@ -78,7 +78,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `SettingsGroup` · `SettingsLinkRow` · `SettingsToggleRow` · `SettingsNote` | `settings/settings-list.tsx` | Listas agrupadas tipo ajustes del teléfono. Toda la fila cambia el interruptor. |
 | `DeviceRow` | `settings/device-row.tsx` | Un dispositivo donde está abierta la cuenta (Configuraciones → Seguridad), dentro de un `SettingsGroup`: ícono según teléfono, tablet o computador, sistema y app, y la última actividad. El que tienes en la mano dice "Este dispositivo" en rosado. |
 | `useQuickActions` | `quick-actions.tsx` | Los atajos al mantener el ícono de la app (Calendar, ClassHall, Eventos, Notificaciones). |
-| `AppErrorLayer` · `ErrorScreen` y pantallas | `errors/` | Cuenta bloqueada, servidores, sin conexión y error fatal. |
+| `AppErrorLayer` · `ErrorScreen` y pantallas | `errors/` | Cuenta bloqueada, servidores, sin conexión, error fatal y pantalla no encontrada (`NotFoundScreen`, la de `app/+not-found.tsx` para links que no llevan a ninguna parte). |
 | `LaunchSplash` · `WelcomeCelebration` · `InstitutionSync` · `OnboardingProgress` | raíz de `components/` | La entrada: splash, bienvenida al unirse, vínculo con la institución y el avance del registro. |
 
 ## Notas (módulo `grades`)
@@ -131,6 +131,8 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | Componente | Archivo | Qué es |
 | --- | --- | --- |
 | `AreaIcon` · `KnowledgeIcon` | `tools/area-icon.tsx` | Íconos de trazo (24 × 24, 2 px) de las 9 áreas de HaNet Electividad y de las áreas de carreras de mifuturo.cl. |
+| `VerbTag` · `VerbAnswerField` · `VerbTimeBar` | `tools/verb-ui.tsx` | Verbos en inglés: la etiqueta de lo que se pregunta (`strong`, rosada) o del tipo de verbo; el campo de respuesta, sin autocorrector ni mayúsculas, con marca de bien o mal (`state`); y el reloj de Infinito, que se vacía de corrido y se pone rosado al final. |
+| `SoloGame` · `InfiniteGame` · `VerbCountdown` | `tools/verb-games.tsx` | Los dos juegos de Verbos en inglés y su cuenta regresiva, dentro de `app/tools/verbs/play.tsx`. Solo esa pantalla los usa. |
 
 ## Eventos, Feed y Aniversario
 
@@ -143,7 +145,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `FeedEventCard` · `FeedPollView` | `feed/feed-attachments.tsx` | Un evento y una votación anónima dentro de una publicación. |
 | `StoryShareSheet` | `share/story-share.tsx` | Compartir como historia (9:16). |
 | `GradientCard` · `FlagSurface` · `FlagGlow` | `anniversary/gradient-card.tsx`, `flag-surface.tsx` (y `.web.tsx`) | Los colores de las alianzas ondeando como bandera, solo en tarjetas de puntos y resultados. Se detienen fuera de pantalla y con "Reducir movimiento". |
-| `FlexText` | `anniversary/flex-text.tsx` | Texto en Google Sans Flex que anima peso y ancho. |
+| `FlexText` | `anniversary/flex-text.tsx` (+ `.web.tsx`, `flex-axes.ts`) | Texto en Google Sans Flex que desliza peso y ancho con la fuente variable (`fontVariationSettings`). Con `fit` queda en una línea: achica el tamaño para que quepa su forma más ancha (el padre le da el ancho). |
 | `AllianceBadge` · `AlliancePill` · `AllianceCard` · `Scoreboard` · `LeaderCard` · `ActivityList` · `SectionTitle` | `anniversary/anniversary-ui.tsx` | El Aniversario. |
 | `CelebrationTile` | `anniversary/celebration-tile.tsx` | El tile del Inicio mientras no se ve la bienvenida del aniversario. |
 

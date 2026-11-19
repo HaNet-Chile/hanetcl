@@ -1,31 +1,49 @@
 import { ThemedText } from '@/components/themed-text';
 import { AppFlexFonts } from '@/constants/design-tokens';
-import React, { useEffect, useState } from 'react';
-import type { StyleProp, TextProps, TextStyle } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import React, { forwardRef } from 'react';
+import type { ComponentRef } from 'react';
+import { Text, View } from 'react-native';
+import type { TextProps } from 'react-native';
+import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import { flexFitStyles, flexRange, scaledText, useFlexFit, useFlexProgress, variationsAt } from './flex-axes';
+import type { FlexTextProps } from './flex-axes';
 
-const STEP_MS = 55;
+type AxisProps = TextProps & { fontVariationSettings?: string };
+
+// Reanimated 4.7 filters fontVariationSettings out of animated styles, so it
+// travels as a prop that this Text turns into its style. The first render
+// already carries the starting axes.
+const AxisText = forwardRef<ComponentRef<typeof Text>, AxisProps>(function AxisText({ fontVariationSettings, style, ...props }, ref) {
+  return <Text ref={ref} {...props} style={[style, fontVariationSettings ? { fontVariationSettings } : undefined]} />;
+});
+const AnimatedAxisText = Animated.createAnimatedComponent(AxisText);
 
 /**
- * Big text that grows into its weight and width when it appears, stepping
- * through Google Sans Flex's cuts (narrow and light → wide and black), as
- * Spotify Wrapped's type does. Give it a new `key` to play it again.
+ * Big text that grows into its weight and width when it appears: Google Sans
+ * Flex's variable axes glide from the first cut of `steps` (narrow and light)
+ * to the last (wide and black), as Spotify Wrapped's type does. Give it a new
+ * `key` to play it again. The web version is flex-text.web.tsx.
  */
-export function FlexText({
-  style,
-  steps = AppFlexFonts.ramp,
-  delay = 0,
-  ...props
-}: Omit<TextProps, 'style'> & { style?: StyleProp<TextStyle>; steps?: readonly string[]; delay?: number }) {
-  const reduceMotion = useReducedMotion();
-  const last = steps.length - 1;
-  const [step, setStep] = useState(reduceMotion ? last : 0);
+export function FlexText({ style, steps = AppFlexFonts.ramp, delay = 0, fit = false, children, ...props }: FlexTextProps) {
+  const { from, to } = flexRange(steps, style);
+  const { progress, start } = useFlexProgress(delay);
+  const { scale, onRoom, onNatural } = useFlexFit();
+  const animatedProps = useAnimatedProps<AxisProps>(() => ({ fontVariationSettings: variationsAt(progress.get(), from, to) }));
 
-  useEffect(() => {
-    if (reduceMotion) return;
-    const timers = Array.from({ length: last }, (_, index) => setTimeout(() => setStep(index + 1), delay + STEP_MS * (index + 1)));
-    return () => timers.forEach(clearTimeout);
-  }, [delay, last, reduceMotion]);
-
-  return <ThemedText {...props} style={[style, { fontFamily: steps[Math.min(step, last)] }]} />;
+  // The font and the layout stay on the outer Text; the axes go on the inner
+  // run, so Android measures the letters again as they widen.
+  const text = (
+    <ThemedText {...props} numberOfLines={fit ? 1 : props.numberOfLines} style={[scaledText(style, fit ? scale : 1), { fontFamily: AppFlexFonts.variable }]}>
+      <AnimatedAxisText fontVariationSettings={variationsAt(start, from, to)} animatedProps={animatedProps}>{children}</AnimatedAxisText>
+    </ThemedText>
+  );
+  if (!fit) return text;
+  return (
+    <View style={flexFitStyles.room} onLayout={onRoom}>
+      {text}
+      <View style={flexFitStyles.probeBox} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <Text numberOfLines={1} onLayout={onNatural} style={[style, { fontFamily: AppFlexFonts.variable, fontVariationSettings: variationsAt(1, from, to) }]}>{children}</Text>
+      </View>
+    </View>
+  );
 }

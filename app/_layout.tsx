@@ -130,6 +130,8 @@ export default function RootLayout() {
     GoogleSansFlex_800ExtraBold_Expanded: require('@/assets/fonts/google-sans-flex/GoogleSansFlex_800ExtraBold_Expanded.ttf'),
     GoogleSansFlex_900Black_Condensed: require('@/assets/fonts/google-sans-flex/GoogleSansFlex_900Black_Condensed.ttf'),
     GoogleSansFlex_900Black_ExtraExpanded: require('@/assets/fonts/google-sans-flex/GoogleSansFlex_900Black_ExtraExpanded.ttf'),
+    // The variable font (weight, width and optical size), for FlexText's animation.
+    GoogleSansFlexVariable: require('@/assets/fonts/google-sans-flex/GoogleSansFlex-Variable.ttf'),
   });
 
   // The native splash only covers the font load; HaNet's own splash takes
@@ -233,6 +235,7 @@ export default function RootLayout() {
             <Stack.Screen name="licenses" options={{ headerShown: false }} />
             <Stack.Screen name="whats-new" options={{ headerShown: false }} />
             <Stack.Screen name="security" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" options={{ headerShown: false }} />
             {/* A fade: its header starts drawn like the Home's, so the field seems to stay in place. */}
             <Stack.Screen name="search" options={{ headerShown: false, animation: 'fade', animationDuration: 220 }} />
             <Stack.Screen name="event-info" options={{ headerShown: false }} />
@@ -264,6 +267,9 @@ export default function RootLayout() {
             <Stack.Screen name="tools/electividad/result" options={{ headerShown: false }} />
             <Stack.Screen name="tools/scale" options={{ headerShown: false }} />
             <Stack.Screen name="tools/grades" options={{ headerShown: false }} />
+            <Stack.Screen name="tools/verbs/index" options={{ headerShown: false }} />
+            <Stack.Screen name="tools/verbs/pick" options={{ headerShown: false }} />
+            <Stack.Screen name="tools/verbs/play" options={{ headerShown: false, gestureEnabled: false }} />
             <Stack.Screen name="grades/index" options={{ headerShown: false }} />
             <Stack.Screen name="grades/subject" options={{ headerShown: false }} />
             <Stack.Screen name="grades/reveal" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />

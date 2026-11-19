@@ -10,8 +10,10 @@ import { OrganizeMenu, OrganizePill, organizeBar, useOrganizeBar } from '@/compo
 import { CreateMenu, CreatePill, ScanPill, organizeCenter, useOrganizeCenter } from '@/components/organize/organize-bar';
 import { FeedMenu, FeedMenuPill } from '@/components/feed/feed-menu';
 import { useAnniversaryState } from '@/services/anniversary-service';
+import { useVerbsQuiz } from '@/services/verbs-quiz';
 import { EVENT_EDITOR_ROLES, useRole, useSession } from '@/services/auth-service';
 import { useSideNav } from '@/hooks/use-desktop-layout';
+import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';
@@ -540,8 +542,8 @@ const ORGANIZE_ROUTES = ['/organize', '/organize/events', '/organize/event', '/o
 const TAB_ROOTS = ['/', '/explore'];
 const BAR_ROUTES = [
   ...TAB_ROOTS, '/calendar', '/events', '/feed', '/event-info', '/event-detail', '/classhall', '/classhall/hall', '/classhall/evaluation',
-  '/anniversary', '/anniversary/activities', '/anniversary/notices', '/hnt-admin', '/settings', '/licenses',
-  '/tools', '/tools/electividad', '/tools/electividad/result', '/tools/scale', '/tools/grades',
+  '/anniversary', '/anniversary/activities', '/anniversary/notices', '/hnt-admin', '/settings', '/licenses', '/security', '/whats-new', '/grades', '/grades/subject',
+  '/tools', '/tools/electividad', '/tools/electividad/result', '/tools/scale', '/tools/grades', '/tools/verbs', '/tools/verbs/pick',
   ...ORGANIZE_ROUTES,
 ];
 
@@ -550,6 +552,30 @@ const SIDE_NAV_ROOTS = [...TAB_ROOTS, '/calendar', '/events', '/feed', '/classha
 
 /** The feed's screens: for those who publish, their search lives in a menu with "Crear". */
 const FEED_ROUTES = ['/feed', '/anniversary/notices'];
+
+/** Verbos en inglés, choosing verbs: "Listo" with how many, back to the game's setup. */
+function VerbsDonePill({ onPress }: { onPress: () => void }) {
+  const { setup } = useVerbsQuiz();
+  const count = setup.source.kind === 'custom' ? setup.source.verbs.length : 0;
+  const none = count === 0;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={none ? t('common.listo') : t('components.appTabBar.listoCountvalueVerbosElegidos', { countValue: count })}
+      accessibilityHint={none ? t('components.appTabBar.eligeAlMenosUnVerbo') : undefined}
+      accessibilityState={{ disabled: none }}
+      disabled={none}
+      style={({ pressed }) => [styles.centerPill, styles.donePill, none && styles.pillDisabled, pressed && styles.motionPressPressed]}
+      onPress={() => {
+        if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress();
+      }}
+    >
+      <Ionicons name="checkmark" size={18} color={AppColors.textOnLight} />
+      <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.createText}>{none ? t('common.listo') : t('components.appTabBar.listoCountvalue', { countValue: count })}</ThemedText>
+    </Pressable>
+  );
+}
 
 /** Screens whose center pill is a search, which they read from the bar store. */
 const SEARCH_PLACEHOLDERS: Record<string, string> = { '/events': t('components.appTabBar.buscarEventos'), '/feed': t('components.appTabBar.buscarEnElFeed'), '/anniversary/notices': t('components.appTabBar.buscarEnLosAvisos') };
@@ -622,6 +648,9 @@ export function GlobalTabBar() {
         <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.createText}>{t('components.appTabBar.opciones')}</ThemedText>
       </Pressable>
     );
+  } else if (pathname === '/tools/verbs/pick') {
+    // The choice is saved as it goes; this closes it, saying how many there are.
+    center = <VerbsDonePill onPress={goBack} />;
   } else if (pathname === '/calendar') {
     // Names the view on screen; the menu to change it grows out of the bar.
     center = <CalendarViewPill view={calendar.view} open={calendar.menuOpen} onPress={calendarBar.toggleMenu} />;
@@ -765,6 +794,10 @@ const styles = StyleSheet.create({
   },
   optionsPill: {
     width: 124,
+  },
+  donePill: {
+    minWidth: 124,
+    paddingHorizontal: 18,
   },
   pillDisabled: {
     opacity: 0.45,
