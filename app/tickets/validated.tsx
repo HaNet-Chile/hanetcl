@@ -121,10 +121,15 @@ export default function TicketValidatedScreen() {
     opacity: interpolate(check.value, [0, 0.4, 1], [0, 1, 1]),
     transform: [{ scale: interpolate(check.value, [0, 1], [0.5, 1]) }],
   }));
-  const rippleStyle = (value: typeof ripple1) => ({
-    opacity: interpolate(value.value, [0, 0.1, 1], [0, 0.5, 0]),
-    transform: [{ scale: interpolate(value.value, [0, 1], [1, 2.6]) }],
-  });
+  // Runs on the UI thread from the two styles below, so it has to be a worklet
+  // (without it Reanimated stops the app: muxp, 2026-11-19).
+  const rippleStyle = (value: typeof ripple1) => {
+    'worklet';
+    return {
+      opacity: interpolate(value.value, [0, 0.1, 1], [0, 0.5, 0]),
+      transform: [{ scale: interpolate(value.value, [0, 1], [1, 2.6]) }],
+    };
+  };
   const ripple1Style = useAnimatedStyle(() => rippleStyle(ripple1));
   const ripple2Style = useAnimatedStyle(() => rippleStyle(ripple2));
   const washStyle = useAnimatedStyle(() => ({
