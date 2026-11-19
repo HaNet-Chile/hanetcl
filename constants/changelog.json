@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "0.13.2-beta",
+      "date": "2026-11-19",
+      "title": "Probar Entradas",
+      "items": [
+        "Sistema HaNet UI ahora puede abrir cada animación de Entradas con una entrada de prueba: la entrada abierta, la entrada válida en la puerta, la llegada (una o cinco), recibir una regalada y el aviso de captura.",
+        "La entrada de prueba no se guarda ni llega al servidor."
+      ],
+      "highlights": [
+        "Las animaciones de Entradas se pueden probar desde Sistema HaNet UI."
+      ]
+    },
+    {
       "version": "0.13.1-beta",
       "date": "2026-11-19",
       "title": "Organizar",

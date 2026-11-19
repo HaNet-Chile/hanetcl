@@ -1,6 +1,7 @@
 import { ThemedText } from '@/components/themed-text';
 import { TicketView } from '@/components/tickets/ticket';
 import { Tilt } from '@/components/tickets/tilt';
+import { demoCount, demoGiftPreview, demoQr } from '@/components/showcase/ticket-demo';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError, useSession } from '@/services/auth-service';
@@ -33,23 +34,30 @@ export default function ReceiveTicketScreen() {
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const { user, initializing } = useSession();
-  const params = useLocalSearchParams<{ t?: string }>();
+  const params = useLocalSearchParams<{ t?: string; demo?: string }>();
+  // Sistema HaNet UI opens it with ?demo=1: a made-up gift, accepted on the phone only.
+  const demo = demoCount(params.demo) > 0;
   const token = giftToken(params.t);
-  const [preview, setPreview] = useState<GiftPreview | null>(null);
+  const [preview, setPreview] = useState<GiftPreview | null>(() => (demo ? demoGiftPreview() : null));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [accepted, setAccepted] = useState<{ id: string; qr: string | null } | null>(null);
 
   useEffect(() => {
-    if (!user || !token) return;
+    if (demo || !user || !token) return;
     let active = true;
     previewGift(token)
       .then(result => { if (active) setPreview(result); })
       .catch(failure => { if (active) setError(describeAuthError(failure, t('tickets.receive.noPudimosAbrirEsteLink'))); });
     return () => { active = false; };
-  }, [token, user]);
+  }, [demo, token, user]);
 
   const accept = async () => {
+    if (demo) {
+      setAccepted({ id: 'demo', qr: demoQr() });
+      if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+      return;
+    }
     if (!token || busy) return;
     setBusy(true);
     setError(null);
@@ -68,9 +76,9 @@ export default function ReceiveTicketScreen() {
   const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const sheetBody = (() => {
-    if (initializing) return <ActivityIndicator color={AppColors.textSecondary} />;
-    if (!token) return <ThemedText style={styles.lead}>{t('tickets.receive.esteLinkNoEsDe')}</ThemedText>;
-    if (!user) {
+    if (initializing && !demo) return <ActivityIndicator color={AppColors.textSecondary} />;
+    if (!token && !demo) return <ThemedText style={styles.lead}>{t('tickets.receive.esteLinkNoEsDe')}</ThemedText>;
+    if (!user && !demo) {
       return (
         <>
           <ThemedText style={styles.title}>{t('tickets.receive.teRegalaronUnaEntrada')}</ThemedText>
@@ -118,7 +126,7 @@ export default function ReceiveTicketScreen() {
         )}
         {!!error && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{error}</ThemedText>}
         {accepted ? (
-          <HanetButton label={t('tickets.receive.verMiEntrada')} variant="accent" onPress={() => router.replace({ pathname: '/tickets/detail', params: { id: accepted.id } })} />
+          <HanetButton label={t('tickets.receive.verMiEntrada')} variant="accent" onPress={() => router.replace({ pathname: '/tickets/detail', params: demo ? { demo: '1' } : { id: accepted.id } })} />
         ) : preview.mine ? (
           <HanetButton label={t('common.volver')} variant="surface" onPress={leave} />
         ) : (

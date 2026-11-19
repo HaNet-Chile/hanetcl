@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/themed-text';
 import { TicketView } from '@/components/tickets/ticket';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppSpacing, AppType } from '@/constants/design-tokens';
+import { demoCount, demoTickets } from '@/components/showcase/ticket-demo';
 import { useMyTickets } from '@/hooks/use-my-tickets';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -37,9 +38,10 @@ const BASE_WIDTH = 358;
 
 export default function TicketValidatedScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, demo } = useLocalSearchParams<{ id?: string; demo?: string }>();
   const { tickets } = useMyTickets();
-  const ticket = tickets?.find(item => item.id === id) ?? null;
+  // Sistema HaNet UI opens it with ?demo=1, with a made-up ticket.
+  const ticket = demoCount(demo) ? demoTickets(1)[0] : tickets?.find(item => item.id === id) ?? null;
   const reducedMotion = useReducedMotion();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = Math.min(BASE_WIDTH, screenWidth - 32);

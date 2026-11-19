@@ -1,3 +1,4 @@
+import { DEMO_SHARE, demoCount, demoQr, demoTickets } from '@/components/showcase/ticket-demo';
 import { ScreenshotGuard } from '@/components/system/screenshot-guard';
 import { ThemedText } from '@/components/themed-text';
 import { TicketView, ticketWhen } from '@/components/tickets/ticket';
@@ -31,9 +32,14 @@ function clock(ms: number) {
 function TicketDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string; demo?: string }>();
+  // Sistema HaNet UI opens it with ?demo=1: a made-up ticket whose QR also
+  // changes every 30 s, and "Simular lectura en la puerta" instead of Regalar.
+  const demo = demoCount(params.demo) > 0;
+  const [demoTicket] = useState(() => demoTickets(1)[0]);
+  const id = demo ? demoTicket.id : params.id;
   const { tickets, failed } = useMyTickets();
-  const ticket = tickets?.find(item => item.id === id) ?? null;
+  const ticket = demo ? demoTicket : tickets?.find(item => item.id === id) ?? null;
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +53,7 @@ function TicketDetailScreen() {
     let active = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = async () => {
-      const value = await ticketQrValue(id);
+      const value = demo ? demoQr() : await ticketQrValue(id);
       if (!active) return;
       setQrValue(value);
       timer = setTimeout(() => void tick(), (value ? msToNextTicketCode() : 5000) + 50);
@@ -57,16 +63,16 @@ function TicketDetailScreen() {
       active = false;
       if (timer) clearTimeout(timer);
     };
-  }, [id, live]);
+  }, [demo, id, live]);
 
   // The door: the instant the ticket is used, "Entrada válida".
   useEffect(() => {
-    if (!live || !id) return;
+    if (!live || !id || demo) return;
     return watchTicketUsed(id, usedAt => {
       patchKeptTicket(id, { status: 'used', usedAt });
       router.push({ pathname: '/tickets/validated', params: { id } });
     });
-  }, [id, live, router]);
+  }, [demo, id, live, router]);
 
   const run = async (action: () => Promise<void>, fallback: string) => {
     if (busy) return;
@@ -96,7 +102,7 @@ function TicketDetailScreen() {
   const share = (kind: ShareKind) => run(async () => {
     if (!ticket) return;
     setConfirm(null);
-    const result = await shareTicket(ticket.id, kind);
+    const result = demo ? DEMO_SHARE : await shareTicket(ticket.id, kind);
     setShared({ kind, ...result });
   }, t('tickets.detail.noPudimosPrepararLaEntrada'));
 
@@ -158,7 +164,10 @@ function TicketDetailScreen() {
         {!!error && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{error}</ThemedText>}
 
         <View style={styles.actions}>
-          {live && ticket.event.giftable && (
+          {demo && (
+            <HanetButton label={t('tickets.detail.simularLecturaEnLaPuerta')} variant="accent" icon={<Ionicons name="scan-outline" size={18} color={AppColors.textPrimary} />} onPress={() => router.push({ pathname: '/tickets/validated', params: { demo: '1' } })} />
+          )}
+          {live && ticket.event.giftable && !demo && (
             <HanetButton label={t('tickets.detail.regalar')} variant="accent" disabled={busy} icon={<Ionicons name="gift-outline" size={18} color={AppColors.textPrimary} />} onPress={() => void gift()} />
           )}
           {ticket.status === 'link' && (

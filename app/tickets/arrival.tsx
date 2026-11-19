@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/themed-text';
 import { TicketView } from '@/components/tickets/ticket';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppSpacing, AppType } from '@/constants/design-tokens';
+import { demoCount, demoTickets } from '@/components/showcase/ticket-demo';
 import { useMyTickets } from '@/hooks/use-my-tickets';
 import { markTicketsSeen } from '@/services/tickets-service';
 import * as Haptics from 'expo-haptics';
@@ -44,16 +45,18 @@ function FanTicket({ index, count, children }: { index: number; count: number; c
 export default function TicketArrivalScreen() {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
-  const { ids } = useLocalSearchParams<{ ids?: string }>();
+  const { ids, demo } = useLocalSearchParams<{ ids?: string; demo?: string }>();
   const { tickets } = useMyTickets();
+  // Sistema HaNet UI opens it with ?demo=N, with N made-up tickets.
+  const demoArrived = demoCount(demo);
   const wanted = new Set((ids ?? '').split(',').filter(Boolean));
-  const arrived = (tickets ?? []).filter(ticket => wanted.has(ticket.id));
+  const arrived = demoArrived ? demoTickets(demoArrived) : (tickets ?? []).filter(ticket => wanted.has(ticket.id));
   const shown = arrived.slice(0, MAX_FAN);
   const first = arrived[0];
   const copy = useSharedValue(reducedMotion ? 1 : 0);
 
   useEffect(() => {
-    void markTicketsSeen([...wanted]);
+    if (!demoArrived) void markTicketsSeen([...wanted]);
     if (Platform.OS !== 'web') {
       const timer = setTimeout(() => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined), 420);
       copy.value = withDelay(700, withTiming(1, { duration: 320, easing: Easing.out(Easing.cubic) }));
@@ -65,7 +68,7 @@ export default function TicketArrivalScreen() {
   }, []);
 
   const copyStyle = useAnimatedStyle(() => ({ opacity: copy.value, transform: [{ translateY: (1 - copy.value) * 10 }] }));
-  const close = () => router.replace('/tickets');
+  const close = () => (demoArrived ? router.back() : router.replace('/tickets'));
   const title = t('tickets.arrival.recibisteCountEntradas', { count: arrived.length });
 
   return (
