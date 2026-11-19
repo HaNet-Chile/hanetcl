@@ -2659,7 +2659,7 @@
     "usadas": "Usadas",
     "validated": {
       "entradaValidaTeDamosLa": "Entrada válida. Te damos la bienvenida a {{title}}.",
-      "teDamosLaBienvenidaA": "Te damos la bienvenida a"
+      "teDamosLaBienvenidaATitle": "Te damos la bienvenida a {{title}}"
     }
   },
   "tools": {

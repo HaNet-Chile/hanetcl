@@ -6,7 +6,9 @@
       "title": "Probar Entradas",
       "items": [
         "Sistema HaNet UI ahora puede abrir cada animación de Entradas con una entrada de prueba: la entrada abierta, la entrada válida en la puerta, la llegada (una o cinco), recibir una regalada y el aviso de captura.",
-        "La entrada de prueba no se guarda ni llega al servidor."
+        "La entrada de prueba no se guarda ni llega al servidor.",
+        "Entrada válida, la llegada de entradas y recibir una regalada ahora se mueven igual que en el diseño: el talón se rasga y cae, el abanico llega lanzado y la regalada cae desde arriba.",
+        "Entrada válida ya no cierra la app."
       ],
       "highlights": [
         "Las animaciones de Entradas se pueden probar desde Sistema HaNet UI."

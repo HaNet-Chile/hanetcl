@@ -13,7 +13,10 @@ import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, SlideInDown, useReducedMotion } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
+import { LINEAR, track } from '@/components/tickets/timeline';
+import type { Ease } from '@/components/tickets/timeline';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 
@@ -23,6 +26,13 @@ import { t } from '@/i18n';
 // (the real code never reaches this phone before). The sheet holds only the
 // information and "Aceptar entrada". Opened from the link
 // https://hanet-app.web.app/tickets/receive?t=<token> (or hanetcl://).
+
+// The canvas keyframes (board Recibir): the sheet rises as a material in
+// 440 ms, the ticket drops in from above 120 ms later and settles with a small
+// bounce (820 ms), and accepting makes it hop once (520 ms).
+const SHEET: Ease = [0.2, 0.9, 0.3, 1];
+const DROP: Ease = [0.2, 0.8, 0.35, 1];
+const HOP: Ease = [0.3, 1.4, 0.5, 1];
 
 function clock(ms: number) {
   const date = new Date(ms);
@@ -42,6 +52,43 @@ export default function ReceiveTicketScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [accepted, setAccepted] = useState<{ id: string; qr: string | null } | null>(null);
+  const enter = useSharedValue(reducedMotion ? 1000 : 0);
+  const hop = useSharedValue(reducedMotion ? 520 : 0);
+  const ready = !!preview;
+
+  useEffect(() => {
+    if (!ready || reducedMotion) return;
+    enter.set(withTiming(1000, { duration: 1000, easing: Easing.linear }));
+  }, [enter, ready, reducedMotion]);
+
+  useEffect(() => {
+    if (!accepted || reducedMotion) return;
+    hop.set(0);
+    hop.set(withTiming(520, { duration: 520, easing: Easing.linear }));
+  }, [accepted, hop, reducedMotion]);
+
+  const sheetStyle = useAnimatedStyle(() => {
+    const time = enter.get();
+    return {
+      opacity: track(time, [0, 440], [0, 1], [SHEET]),
+      transform: [{ translateY: track(time, [0, 440], [90, 0], [SHEET]) }, { scale: track(time, [0, 440], [0.97, 1], [SHEET]) }],
+    };
+  });
+  const lightStyle = useAnimatedStyle(() => ({ opacity: track(enter.get(), [0, 360], [0, 1]) }));
+  const dropStyle = useAnimatedStyle(() => {
+    const time = enter.get() - 120;
+    const times = [0, 451, 640, 820];
+    const eases: Ease[] = [DROP, LINEAR, LINEAR];
+    const lift = hop.get();
+    return {
+      opacity: track(time, [0, 164], [0, 1], [DROP]),
+      transform: [
+        { translateY: track(time, times, [-260, 10, -3, 0], eases) + track(lift, [0, 182, 520], [0, -14, 0], [HOP, HOP]) },
+        { rotate: `${track(time, times, [-4, 1, -0.3, 0], eases)}deg` },
+        { scale: track(time, times, [0.92, 1, 1, 1], eases) * track(lift, [0, 182, 520], [1, 1.03, 1], [HOP, HOP]) },
+      ],
+    };
+  });
 
   useEffect(() => {
     if (demo || !user || !token) return;
@@ -139,9 +186,21 @@ export default function ReceiveTicketScreen() {
   const glass = Platform.OS === 'ios';
   return (
     <View style={styles.screen}>
-      <View style={[styles.top, { paddingTop: insets.top + 64 }]}>
+      {/* The cover's light at the top, behind the ticket. */}
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, lightStyle]}>
+        <Svg width="100%" height={460}>
+          <Defs>
+            <RadialGradient id="receiveLight" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+              <Stop offset="0" stopColor={preview?.event.palette[0] ?? AppColors.accent} stopOpacity={0.4} />
+              <Stop offset="1" stopColor={preview?.event.palette[0] ?? AppColors.accent} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Ellipse cx="50%" cy={insets.top + 150} rx="70%" ry={230} fill="url(#receiveLight)" />
+        </Svg>
+      </Animated.View>
+      <View style={[styles.top, { paddingTop: insets.top + 70 }]}>
         {preview && (
-          <Animated.View entering={reducedMotion ? undefined : FadeIn.duration(260)}>
+          <Animated.View style={dropStyle}>
             <Tilt>
               <TicketView
                 event={preview.event}
@@ -149,12 +208,13 @@ export default function ReceiveTicketScreen() {
                 qrValue={accepted?.qr ?? null}
                 number={preview.ticket.number}
                 cap={preview.event.cap}
+                size="large"
               />
             </Tilt>
           </Animated.View>
         )}
       </View>
-      <Animated.View entering={reducedMotion ? undefined : SlideInDown.springify().stiffness(260).damping(26)} style={[styles.sheet, !glass && styles.sheetSolid, { paddingBottom: insets.bottom + AppSpacing.lg }]}>
+      <Animated.View style={[styles.sheet, !glass && styles.sheetSolid, { paddingBottom: insets.bottom + AppSpacing.lg }, sheetStyle]}>
         {glass && <BlurView intensity={60} tint="systemChromeMaterialDark" style={StyleSheet.absoluteFill} />}
         <View style={styles.grabber} />
         <View style={styles.sheetContent}>{sheetBody}</View>
