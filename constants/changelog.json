@@ -1,6 +1,25 @@
 {
   "releases": [
     {
+      "version": "0.13.0-beta",
+      "date": "2026-11-19",
+      "title": "Entradas",
+      "highlights": [
+        "Nuevo: Entradas. Las entradas que te dé tu liceo para un evento aparecen en tu perfil, con un QR que vale una vez.",
+        "Puedes regalar una entrada con un link, compartirla como imagen o descargarla para imprimir.",
+        "En la puerta escanean tu entrada y tu teléfono te recibe con una animación."
+      ],
+      "items": [
+        "Nuevo: Entradas, en tu perfil. Ahí aparecen las entradas que te dé tu liceo para un evento, como la Velada de Aniversario.",
+        "El QR de cada entrada cambia solo cada 30 segundos y vale una vez, así que una captura no sirve. Si sacas una, te avisamos.",
+        "Regala una entrada con un link que dura 24 horas: al aceptarla pasa a la otra cuenta.",
+        "Compártela como imagen o descárgala para imprimir, con un código para escribir a mano si hace falta.",
+        "Cuando la escanean en la puerta, tu teléfono lo muestra al instante.",
+        "Quienes organizan escanean en la puerta, y pueden autorizar a docentes para hacerlo.",
+        "Tu HN-QR también te avisa si le sacas una captura."
+      ]
+    },
+    {
       "version": "0.12.0-beta",
       "date": "2026-11-16",
       "title": "Seguridad de tu cuenta",

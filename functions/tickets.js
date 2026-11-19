@@ -108,10 +108,11 @@ function imageUrl(data) {
   return data.imageUrl || null;
 }
 
-function eventOut(id, data) {
+function eventOut(id, data, institutionName = "") {
   const image = imageUrl(data);
   return {
     id,
+    institutionName,
     title: data.title || "",
     startsAt: millis(data.startsAt),
     endsAt: millis(data.endsAt),
@@ -132,6 +133,14 @@ function eventOut(id, data) {
 function ticketCap(event) {
   const cap = event.tickets?.cap ?? event.capacity;
   return typeof cap === "number" && cap > 0 ? Math.floor(cap) : null;
+}
+
+/** The full names of these institutions, for the printed ticket. */
+async function institutionNames(getAdminApp, ids) {
+  const unique = [...new Set(ids.filter(Boolean))];
+  const db = identityDb(getAdminApp);
+  const docs = unique.length ? await db.getAll(...unique.map(id => db.collection("institutions").doc(id))) : [];
+  return new Map(docs.map(doc => [doc.id, text(doc.data()?.fullName || doc.data()?.name, 120)]));
 }
 
 /** What the holder sees of a ticket. */
@@ -283,7 +292,9 @@ function build(getAdminApp) {
     const docs = snapshot.docs.filter(doc => doc.data().status !== "voided");
     const eventIds = [...new Set(docs.map(doc => doc.data().eventId))];
     const events = eventIds.length ? await db.getAll(...eventIds.map(id => db.collection(EVENTS).doc(id))) : [];
-    const byId = new Map(events.filter(doc => doc.exists && doc.data().status !== "deleted").map(doc => [doc.id, eventOut(doc.id, doc.data())]));
+    const live = events.filter(doc => doc.exists && doc.data().status !== "deleted");
+    const names = await institutionNames(getAdminApp, live.map(doc => doc.data().institutionId));
+    const byId = new Map(live.map(doc => [doc.id, eventOut(doc.id, doc.data(), names.get(doc.data().institutionId))]));
     const tickets = docs
       .filter(doc => byId.has(doc.data().eventId))
       .map(doc => ({ ...ticketOut(doc), event: byId.get(doc.data().eventId) }))
@@ -385,7 +396,7 @@ function build(getAdminApp) {
     if (!event) throw new HttpsError("not-found", "Ese evento ya no está disponible.");
     return {
       ticket: { ...ticketOut(doc), holderName: ticket.guestName || "", courseId: "" },
-      event: eventOut(ticket.eventId, event),
+      event: eventOut(ticket.eventId, event, (await institutionNames(getAdminApp, [event.institutionId])).get(event.institutionId)),
       fromName: ticket.holderUid ? ticket.holderName || "" : "",
       organizer: event.authorName || "",
       mine: ticket.holderUid === uid,
