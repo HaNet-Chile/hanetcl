@@ -209,7 +209,8 @@ function TicketDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  // The HaNet surface everywhere: on iOS the sheet's own glass came out white.
+  // The HaNet surface everywhere, painted here: on iOS the sheet itself stays
+  // transparent (app/_layout.tsx), or its glass comes out white.
   sheet: { flex: 1, backgroundColor: AppColors.surface },
   center: { alignItems: 'center', justifyContent: 'center', gap: AppSpacing.lg, padding: AppSpacing.xl },
   content: { paddingTop: AppSpacing.xxl, paddingHorizontal: AppSpacing.lg, gap: AppSpacing.lg },
