@@ -219,6 +219,45 @@ function eventSummary(doc, institutionId) {
   };
 }
 
+// Pasar lista, fast (muxp 2026-11-19): who scans and the event are kept a
+// minute per instance, the person and their check-in are read together, and
+// the count is refreshed in the background. It also runs in Santiago, next
+// to the database (see DOOR_REGIONS in tickets.js).
+const DOOR_REGIONS = ["us-central1", "southamerica-west1"];
+const LIST_SESSION_MS = 60 * 1000;
+const LIST_COUNT_FRESH_MS = 8 * 1000;
+const listSessions = new Map();
+
+async function listSession(getAdminApp, request, value) {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
+  const id = eventId(value);
+  if (!id) throw new HttpsError("invalid-argument", "Falta el evento.");
+  const key = `${request.auth.uid}:${id}`;
+  const kept = listSessions.get(key);
+  if (kept && Date.now() - kept.at < LIST_SESSION_MS) return kept;
+  const ref = calendarDb(getAdminApp).collection(COLLECTION).doc(id);
+  const [profile, snapshot] = await Promise.all([requireProfile(getAdminApp, request), ref.get()]);
+  const event = snapshot.data();
+  if (!event || event.kind !== "institution" || !canEdit(profile, event)) {
+    throw new HttpsError("permission-denied", "Solo quienes organizan el evento pasan lista.");
+  }
+  const count = (await ref.collection("checkins").count().get()).data().count;
+  const session = { at: Date.now(), profile, ref, event, count, countedAt: Date.now() };
+  if (listSessions.size > 200) {
+    for (const [name, item] of listSessions) if (Date.now() - item.at >= LIST_SESSION_MS) listSessions.delete(name);
+  }
+  listSessions.set(key, session);
+  return session;
+}
+
+function listCount(session) {
+  if (Date.now() - session.countedAt > LIST_COUNT_FRESH_MS) {
+    session.countedAt = Date.now();
+    session.ref.collection("checkins").count().get().then(result => { session.count = result.data().count; }).catch(() => undefined);
+  }
+  return session.count;
+}
+
 function checkinOpen(data, now = Date.now()) {
   const start = millis(data.startsAt) || 0;
   const end = millis(data.endsAt) || start;
@@ -704,35 +743,35 @@ function build(getAdminApp) {
 
   // An organizer scans an attendee's HN-QR at the door. Only people of the
   // event's institution count; scanning someone twice is harmless.
-  const checkInEventAttendee = onCall({ invoker: "public" }, async (request) => {
-    const profile = await requireProfile(getAdminApp, request);
-    const id = eventId(request.data?.id);
-    if (!id) throw new HttpsError("invalid-argument", "Falta el evento.");
-    const ref = calendarDb(getAdminApp).collection(COLLECTION).doc(id);
-    const event = (await ref.get()).data();
-    if (!event || event.kind !== "institution" || !canEdit(profile, event)) {
-      throw new HttpsError("permission-denied", "Solo quienes organizan el evento pasan lista.");
-    }
+  const checkInEventAttendee = onCall({ invoker: "public", region: DOOR_REGIONS }, async (request) => {
+    const session = await listSession(getAdminApp, request, request.data?.id);
+    const { profile, ref, event } = session;
     if (!checkinOpen(event)) throw new HttpsError("failed-precondition", "La lista se abre 3 horas antes del evento y se cierra un día después.");
+    // Opening Pasar lista: wakes this instance and keeps the session ready.
+    if (request.data?.warm === true) return { warm: true, count: listCount(session) };
 
     const uid = await readIdQr(getAdminApp, request.data?.qr);
-    const person = (await identityDb(getAdminApp).collection("users").doc(uid).get()).data();
+    const checkinRef = ref.collection("checkins").doc(uid);
+    const [personDoc, previous, signup] = await Promise.all([
+      identityDb(getAdminApp).collection("users").doc(uid).get(),
+      checkinRef.get(),
+      event.signupMode === "none" ? null : ref.collection("signups").doc(uid).get(),
+    ]);
+    const person = personDoc.data();
     if (!person || person.institutionId !== event.institutionId) {
       throw new HttpsError("failed-precondition", "Esa persona no es de tu institución.");
     }
     const name = await displayName(getAdminApp, { ...person, uid });
-    const checkinRef = ref.collection("checkins").doc(uid);
-    const [previous, signup] = await Promise.all([checkinRef.get(), ref.collection("signups").doc(uid).get()]);
     if (!previous.exists) {
       await checkinRef.set({ uid, name, courseId: person.courseId || "", at: FieldValue.serverTimestamp(), byUid: profile.uid });
+      session.count += 1;
     }
-    const count = (await ref.collection("checkins").count().get()).data().count;
     return {
       name,
       courseId: person.courseId || "",
       already: previous.exists,
-      signedUp: event.signupMode === "none" ? null : signup.exists,
-      count,
+      signedUp: signup ? signup.exists : null,
+      count: listCount(session),
     };
   });
 

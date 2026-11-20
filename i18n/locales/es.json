@@ -1839,7 +1839,8 @@
     "permitirLaCamara": "Permitir la cámara",
     "pideleACadaPersonaQue": "Pídele a cada persona que abra Perfil → Mi HN-QR.",
     "soloSeUsaMientrasPasas": "Solo se usa mientras pasas lista. No guardamos fotos.",
-    "terminar": "Terminar"
+    "terminar": "Terminar",
+    "esoNoEsUnHnqr": "Eso no es un HN-QR. Pide que abran su HN-QR en el perfil."
   },
   "eventDetail": {
     "abreLaUbicacionEnMapas": "Abre la ubicación en mapas",
@@ -2723,7 +2724,8 @@
       "ticketscountEntradasEnEstaCuenta": "{{ticketsCount}} entradas en esta cuenta",
       "usada": "Usada",
       "validar": "Validar",
-      "validarEntrada": "Validar entrada"
+      "validarEntrada": "Validar entrada",
+      "esoNoEsUnaEntrada": "Eso no es una entrada de HaNet."
     },
     "todaviaNoTienesEntradasCuando": "Todavía no tienes entradas. Cuando tu institución te dé una, aparecerá aquí y te avisaremos.",
     "tusEntradasAEventosDe": "Tus entradas a eventos de tu institución. El QR cambia solo cada 30 segundos y vale una vez.",
