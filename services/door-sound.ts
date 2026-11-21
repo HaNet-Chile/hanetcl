@@ -10,6 +10,9 @@ import { Platform } from 'react-native';
 //   invalid    not a ticket, already used or the server said no
 //   idDetected a HN-QR: the account was found (its tickets, or already on the list)
 // The answer cuts the "scanned" sound, so a fast door never stacks them.
+// Each sound rewinds itself when it ends (or is cut): calling play() on a
+// player that sits at its end does nothing, and a seekTo(0) fired at the same
+// time lands after it, which made every other scan silent.
 // The phone's silent switch is respected (the vibration still says it).
 
 const SOUNDS = {
@@ -34,10 +37,19 @@ function ensureMode() {
 function player(key: DoorSound) {
   let found = players.get(key);
   if (!found) {
-    found = createAudioPlayer(SOUNDS[key]);
-    players.set(key, found);
+    const created = createAudioPlayer(SOUNDS[key]);
+    created.addListener('playbackStatusUpdate', status => {
+      if (status.didJustFinish) rewind(created);
+    });
+    players.set(key, created);
+    found = created;
   }
   return found;
+}
+
+function rewind(sound: AudioPlayer) {
+  sound.pause();
+  void sound.seekTo(0).catch(() => undefined);
 }
 
 /** Loads the sounds when the scanner opens, so the first read sounds on time. */
@@ -53,10 +65,16 @@ export function prepareDoorSounds() {
 export function playDoorSound(key: DoorSound) {
   ensureMode();
   try {
-    if (key !== 'scanned') players.get('scanned')?.pause();
+    const loading = players.get('scanned');
+    if (key !== 'scanned' && loading?.playing) rewind(loading);
     const sound = player(key);
-    void sound.seekTo(0).catch(() => undefined);
-    sound.play();
+    if (sound.currentTime < 0.01 && !sound.playing) {
+      sound.play();
+      return;
+    }
+    // Still playing or not rewound yet: start over once the seek is done.
+    sound.pause();
+    sound.seekTo(0).then(() => sound.play(), () => sound.play());
   } catch {
     // A sound that can't play never stops the door.
   }
