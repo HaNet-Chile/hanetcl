@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "0.14.2-beta",
+      "date": "2026-11-21",
+      "title": "Sonidos en la puerta",
+      "items": [
+        "El escáner de entradas ahora suena: un sonido al leer el QR, otro cuando la entrada es válida y otro cuando no sirve o ya se usó.",
+        "Al escanear un HN-QR suena distinto cuando aparece la cuenta, para que elijas su entrada.",
+        "Pasar lista con HN-QR usa los mismos sonidos. Respetan el modo silencio del teléfono y la vibración sigue igual."
+      ],
+      "highlights": [
+        "El escáner de entradas y Pasar lista ahora suenan al leer, al validar y cuando algo no sirve."
+      ]
+    },
+    {
       "version": "0.14.1-beta",
       "date": "2026-11-19",
       "title": "Escaneo más rápido",

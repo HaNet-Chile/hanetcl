@@ -4,6 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppPressed, AppRadii, AppSpacing } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
+import { playDoorSound, prepareDoorSounds } from '@/services/door-sound';
 import { checkInEventAttendee, getLoadedEvent, warmCheckIn } from '@/services/events-service';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
@@ -37,6 +38,7 @@ export default function EventCheckinScreen() {
   // shows their HN-QR.
   useEffect(() => {
     if (!id) return;
+    prepareDoorSounds();
     let live = true;
     const warm = () => warmCheckIn(id).then(answer => { if (live && answer) setCount(current => current ?? answer.count); });
     void warm();
@@ -53,18 +55,22 @@ export default function EventCheckinScreen() {
     if (!value.trim().startsWith('hanet://id/')) {
       setResult({ kind: 'error', message: t('eventCheckin.esoNoEsUnHnqr') });
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      playDoorSound('invalid');
       return;
     }
     busy.current = true;
     if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+    playDoorSound('scanned');
     try {
       const checkIn = await checkInEventAttendee(id, value);
       setResult({ kind: 'ok', checkIn });
       setCount(checkIn.count);
       if (Platform.OS !== 'web') void Haptics.notificationAsync(checkIn.already ? Haptics.NotificationFeedbackType.Warning : Haptics.NotificationFeedbackType.Success);
+      playDoorSound(checkIn.already ? 'idDetected' : 'valid');
     } catch (error) {
       setResult({ kind: 'error', message: describeAuthError(error, t('eventCheckin.noPudimosRegistrarAEsa')) });
       if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      playDoorSound('invalid');
     } finally {
       busy.current = false;
     }
