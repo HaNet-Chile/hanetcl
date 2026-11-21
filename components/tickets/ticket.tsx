@@ -193,12 +193,18 @@ function Meta({ label, value, shrink = false }: { label: string; value: string; 
 }
 
 const styles = StyleSheet.create({
-  ticket: {
-    shadowColor: '#000',
-    shadowOpacity: 0.38,
-    shadowRadius: 11,
-    shadowOffset: { width: 0, height: 14 },
-  },
+  // The shadow follows the paper (notches, torn edge). On iOS the layer's
+  // shadow already does; on the web a box shadow is a plain rectangle that
+  // stays behind a torn or fanned ticket, so it is a drop shadow there.
+  ticket: Platform.select<ViewStyle>({
+    web: { filter: 'drop-shadow(0px 12px 8px rgba(0, 0, 0, 0.38))' },
+    default: {
+      shadowColor: '#000',
+      shadowOpacity: 0.38,
+      shadowRadius: 11,
+      shadowOffset: { width: 0, height: 14 },
+    },
+  }),
   left: {
     position: 'absolute',
     left: 0,
