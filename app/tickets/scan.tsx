@@ -4,6 +4,7 @@ import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetDialog, HanetDialogActions, dialogStyles } from '@/components/ui/hanet-dialog';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
+import { playDoorSound, prepareDoorSounds } from '@/services/door-sound';
 import { getEvent, getLoadedEvent } from '@/services/events-service';
 import { looksLikeTicket, validateTicket, warmTicketDoor } from '@/services/tickets-service';
 import type { DoorResult } from '@/services/tickets-service';
@@ -60,6 +61,7 @@ export default function TicketScanScreen() {
   // shows a ticket, and "Llegaron" shows from the start.
   useEffect(() => {
     if (!eventId) return;
+    prepareDoorSounds();
     let live = true;
     const warm = () => warmTicketDoor(eventId).then(answer => {
       if (live && answer) setCount(current => current ?? { count: answer.count, total: answer.total ?? 0 });
@@ -89,10 +91,12 @@ export default function TicketScanScreen() {
     if (input.qr !== undefined && !looksLikeTicket(input.qr)) {
       setMode({ kind: 'error', message: t('tickets.scan.esoNoEsUnaEntrada') });
       haptic(Haptics.NotificationFeedbackType.Error);
+      playDoorSound('invalid');
       return;
     }
     busy.current = true;
     if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+    playDoorSound('scanned');
     setMode({ kind: 'busy' });
     try {
       const result = await validateTicket({ eventId, ...input });
@@ -100,9 +104,11 @@ export default function TicketScanScreen() {
       setMode({ kind: 'door', result });
       lock.set(reducedMotion ? 1 : withSequence(withTiming(1, { duration: 120 }), withSpring(1)));
       haptic(result.result === 'valid' ? Haptics.NotificationFeedbackType.Success : result.result === 'used' ? Haptics.NotificationFeedbackType.Error : Haptics.NotificationFeedbackType.Warning);
+      playDoorSound(result.result === 'valid' ? 'valid' : result.result === 'used' ? 'invalid' : 'idDetected');
     } catch (error) {
       setMode({ kind: 'error', message: describeAuthError(error, t('tickets.scan.noPudimosLeerEsaEntrada')) });
       haptic(Haptics.NotificationFeedbackType.Error);
+      playDoorSound('invalid');
     } finally {
       busy.current = false;
     }

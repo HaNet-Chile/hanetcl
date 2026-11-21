@@ -1,4 +1,4 @@
-import { BlotView, glowPalette } from '@/components/events/event-glow';
+import { BlotView, GLOW_MAX_SCALE, glowPalette } from '@/components/events/event-glow';
 import type { Blot } from '@/components/events/event-glow';
 import React, { useMemo } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
@@ -10,7 +10,8 @@ import type { ViewStyle } from 'react-native';
 // same drifting blots as an event's page (EventGlow), gathered around the
 // ticket instead of the top of a page, so it breathes instead of sitting
 // there like a picture. Each blot fades to nothing inside its own box, so no
-// edge ever shows.
+// edge ever shows; on a wide window it keeps its phone size around the
+// (centered) ticket instead of filling the window.
 
 const FRAME_WIDTH = 412;
 
@@ -28,18 +29,19 @@ function blotsAround(colors: string[], cx: number, cy: number): Blot[] {
 }
 
 /**
- * Fills its parent, behind everything. `x` is a fraction of the width and `y`
- * a distance from the top, in points; `style` can fade it in.
+ * Fills its parent, behind everything. `x` is a fraction of the (phone-sized,
+ * centered) frame and `y` a distance from the top, in points; `style` can fade it in.
  */
 export function TicketGlow({ colors, x = 0.5, y, style, id = 'ticket' }: { colors: string[]; x?: number; y: number; style?: AnimatedStyle<ViewStyle>; id?: string }) {
   const { width } = useWindowDimensions();
-  const scale = width / FRAME_WIDTH;
+  const scale = Math.min(width / FRAME_WIDTH, GLOW_MAX_SCALE);
+  const left = (width - FRAME_WIDTH * scale) / 2;
   const key = colors.join();
   const blots = useMemo(() => blotsAround(key ? key.split(',') : [], FRAME_WIDTH * x, y / scale), [key, x, y, scale]);
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.glow, style]}>
       {blots.map((blot, index) => (
-        <BlotView key={index} blot={blot} id={`${id}-glow-${index}`} scale={scale} flip={false} offset={0} />
+        <BlotView key={index} blot={blot} id={`${id}-glow-${index}`} scale={scale} flip={false} offset={0} left={left} />
       ))}
     </Animated.View>
   );
