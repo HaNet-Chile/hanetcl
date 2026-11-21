@@ -182,8 +182,8 @@ exports.syncMyClaims = onCall(async (request) => {
 // without a VTIMEZONE block, so ical-generator wrote the UTC clock time
 // with no zone and every app read it as local time: each event showed up
 // 3 hours late (4 in winter) in Chile.
-// Published in both regions for good: calendars that subscribed before the
-// move to Santiago keep the Iowa address (see regions.js).
+// Also in Iowa, for good: calendars that subscribed before the move to
+// Santiago keep the Iowa address (see regions.js).
 exports.icalFeed = onRequest({ region: [SANTIAGO, IOWA] }, async (req, res) => {
   const courseId = typeof req.query.courseId === "string" ? req.query.courseId.trim() : "";
 

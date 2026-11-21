@@ -45,7 +45,6 @@ const calendarDb = getFirestore(app, "hn-calendar");
 const eventsDb = getFirestore(app, "hn-events");
 
 // The functions run in Santiago, next to the databases (functions/regions.js).
-// The Iowa copies only stay for app versions from before the move.
 const functions = getFunctions(app, 'southamerica-west1');
 const storage = getStorage(app);
 
