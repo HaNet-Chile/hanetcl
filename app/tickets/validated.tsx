@@ -10,7 +10,7 @@ import { useMyTickets } from '@/hooks/use-my-tickets';
 import { t } from '@/i18n';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { Easing, useAnimatedProps, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,8 +19,9 @@ import Svg, { Defs, LinearGradient, Path, RadialGradient, Rect, Stop } from 'rea
 // "Entrada válida" (canvas Entradas HaNet, board Validada; muxp 2026-11-19):
 // 3 s on the holder's phone the moment the ticket is read at the door, copied
 // from the canvas keyframes (times in ms = % of 3000).
-//   0      vibration; the ticket presses in, a sheen crosses it and a light
-//          runs around its edge.
+//   0      vibration; the ticket presses in and a sheen crosses it. (The
+//          light that ran around its edge was taken out: on the web it
+//          stuttered and left marks, muxp 2026-11-20.)
 //   500    the stub shakes on its perforation, tears off in a zigzag (700,
 //          second vibration) and falls with gravity and a spin.
 //   700    the information half recoils, then flies up to the middle and
@@ -36,14 +37,8 @@ const DURATION = 3000;
 const CANVAS_HEIGHT = 844;
 const RING = 104;
 const STUB_FALL: Ease = [0.55, 0, 0.9, 0.45];
-const TRACE: Ease = [0.4, 0, 0.3, 1];
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-
-/** The ticket's outline, for the light that runs around it (ticketPath without the notch sizes). */
-function outline(w: number, h: number, cut: number) {
-  return `M22 0H${cut - 11}A11 11 0 0 0 ${cut + 11} 0H${w - 22}A22 22 0 0 1 ${w} 22V${h - 22}A22 22 0 0 1 ${w - 22} ${h}H${cut + 11}A11 11 0 0 0 ${cut - 11} ${h}H22A22 22 0 0 1 0 ${h - 22}V22A22 22 0 0 1 22 0Z`;
-}
 
 export default function TicketValidatedScreen() {
   const router = useRouter();
@@ -59,16 +54,8 @@ export default function TicketValidatedScreen() {
   const cut = Math.round(196 * scale);
   const k = screenHeight / CANVAS_HEIGHT;
   const top = screenHeight / 2 - height / 2;
-  const perimeter = 2 * (width - 44 - 22) + 2 * (height - 44) + Math.PI * 44 + Math.PI * 22;
-  const unit = perimeter / 125;
   const clock = useSharedValue(reducedMotion ? DURATION : 0);
   const when = ticketWhen(ticket?.event.startsAt ?? null);
-
-  const [traced, setTraced] = useState(reducedMotion);
-  useEffect(() => {
-    const timer = setTimeout(() => setTraced(true), 650);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const haptic = (run: () => Promise<void>) => { if (Platform.OS !== 'web') void run().catch(() => undefined); };
@@ -96,22 +83,7 @@ export default function TicketValidatedScreen() {
       transform: [{ translateX: track(time, [0, 450], [-108, 234], [], EASE_IN_OUT) }, { skewX: '-18deg' }],
     };
   });
-  const traceProps = (dash: number) => {
-    'worklet';
-    const time = clock.get();
-    return {
-      strokeDashoffset: track(time, [0, 570], [dash * unit, -(125 - dash) * unit], [], TRACE),
-    };
-  };
-  // The light fades as a layer, and leaves once it has gone around: an
-  // animated stroke opacity could stay on its first frame and leave a line on
-  // the edge.
-  const traceStyle = useAnimatedStyle(() => ({ opacity: track(clock.get(), [0, 45, 450, 570], [0, 1, 1, 0], [], TRACE) }));
   const glowStyle = useAnimatedStyle(() => ({ opacity: track(clock.get(), [0, 600], [0, 1]) }));
-  const trace1 = useAnimatedProps(() => traceProps(5));
-  const trace1Glow = useAnimatedProps(() => traceProps(5));
-  const trace2 = useAnimatedProps(() => traceProps(12));
-  const trace3 = useAnimatedProps(() => traceProps(24));
 
   // The stub: a shake on its hinge, the tear, the fall.
   const stubStyle = useAnimatedStyle(() => {
@@ -175,7 +147,6 @@ export default function TicketValidatedScreen() {
   });
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/tickets'));
-  const shape = outline(width, height, cut);
 
   return (
     <View style={styles.screen}>
@@ -215,16 +186,6 @@ export default function TicketValidatedScreen() {
               </Svg>
             </Animated.View>
           </View>
-          {!traced && (
-            <Animated.View style={[styles.trace, { width: width + 8, height: height + 8 }, traceStyle]}>
-              <Svg width={width + 8} height={height + 8} viewBox={`-4 -4 ${width + 8} ${height + 8}`}>
-                <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeWidth={7} strokeLinecap="round" strokeDasharray={[5 * unit, 120 * unit]} opacity={0.25} animatedProps={trace1Glow} />
-                <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" strokeDasharray={[5 * unit, 120 * unit]} animatedProps={trace1} />
-                <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeWidth={2} strokeLinecap="round" strokeDasharray={[12 * unit, 113 * unit]} opacity={0.55} animatedProps={trace2} />
-                <AnimatedPath d={shape} fill="none" stroke="#FFFFFF" strokeWidth={1.5} strokeLinecap="round" strokeDasharray={[24 * unit, 101 * unit]} opacity={0.22} animatedProps={trace3} />
-              </Svg>
-            </Animated.View>
-          )}
         </Animated.View>
       )}
 
@@ -263,7 +224,6 @@ const styles = StyleSheet.create({
   tear: { position: 'absolute' },
   sheenClip: { borderRadius: 22, borderCurve: 'continuous', overflow: 'hidden' },
   sheen: { position: 'absolute', top: -20, left: 0, width: 90 },
-  trace: { position: 'absolute', left: -4, top: -4 },
   ringArea: { position: 'absolute', width: RING, height: RING },
   ripple: { position: 'absolute', left: 0, top: 0, width: RING, height: RING, borderRadius: 999, borderColor: VALID },
   ripple1: { borderWidth: 2 },

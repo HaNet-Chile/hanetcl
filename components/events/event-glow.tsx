@@ -13,6 +13,10 @@ export type Blot = { color: string; cx: number; cy: number; rx: number; ry: numb
 
 const FRAME_WIDTH = 412;
 const FRAME_HEIGHT = 520;
+// The light grows with the screen up to here. Past it (a wide web window, a
+// tablet) it stays this size, centered, instead of becoming a wall of color
+// whose blots get cut by the page's edges like a photo.
+export const GLOW_MAX_SCALE = 1.5;
 // Room past the page's edges, so pulling it beyond them (iOS bounce) keeps the light.
 const OVERSCROLL = 600;
 
@@ -86,7 +90,7 @@ function blotsFor(colors: string[]): Blot[] {
 }
 
 /** One blurred blot that drifts back and forth, placed on a frame `scale` times the design's. */
-export function BlotView({ blot, id, scale, flip, offset }: { blot: Blot; id: string; scale: number; flip: boolean; offset: number }) {
+export function BlotView({ blot, id, scale, flip, offset, left = 0 }: { blot: Blot; id: string; scale: number; flip: boolean; offset: number; left?: number }) {
   const reduceMotion = useReducedMotion();
   const drift = useSharedValue(0);
 
@@ -108,7 +112,7 @@ export function BlotView({ blot, id, scale, flip, offset }: { blot: Blot; id: st
   const top = offset + (flip ? FRAME_HEIGHT - blot.cy : blot.cy) * scale - height / 2;
 
   return (
-    <Animated.View style={[styles.blot, { left: blot.cx * scale - width / 2, top, width, height }, style]}>
+    <Animated.View style={[styles.blot, { left: left + blot.cx * scale - width / 2, top, width, height }, style]}>
       <Svg width={width} height={height}>
         <Defs>
           <RadialGradient id={id} cx="50%" cy="50%" rx="50%" ry="50%">
@@ -126,7 +130,9 @@ export function BlotView({ blot, id, scale, flip, offset }: { blot: Blot; id: st
 /** Sits behind the content of a scroll view, at its top or its end. */
 export function EventGlow({ position, colors = [] }: { position: 'top' | 'bottom'; colors?: string[] }) {
   const { width } = useWindowDimensions();
-  const scale = width / FRAME_WIDTH;
+  const scale = Math.min(width / FRAME_WIDTH, GLOW_MAX_SCALE);
+  // The design frame, centered: its blots reach past it and fade inside the page.
+  const left = (width - FRAME_WIDTH * scale) / 2;
   const flip = position === 'bottom';
   // Past the end only iOS bounces; on web the extra room would add scrolling.
   const extra = flip ? (Platform.OS === 'ios' ? OVERSCROLL : 0) : OVERSCROLL;
@@ -140,7 +146,7 @@ export function EventGlow({ position, colors = [] }: { position: 'top' | 'bottom
       style={[styles.glow, flip ? { bottom: -extra } : { top: -extra }, { height: FRAME_HEIGHT * scale + extra, width }]}
     >
       {blots.map((blot, index) => (
-        <BlotView key={index} blot={blot} id={`${position}-blot-${index}`} scale={scale} flip={flip} offset={flip ? 0 : extra} />
+        <BlotView key={index} blot={blot} id={`${position}-blot-${index}`} scale={scale} flip={flip} offset={flip ? 0 : extra} left={left} />
       ))}
     </Animated.View>
   );
