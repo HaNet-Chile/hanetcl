@@ -8,8 +8,9 @@ import { CalendarDaysIcon } from '@/assets/animated-icons/calendar';
 import { useFocusEffect, useRouter } from 'expo-router';
 import PagerView from '@/components/PagerView';
 import { CalendarDaySkeleton } from '@/components/skeletons';
-import Animated, { Easing, FadeIn, FadeInLeft, FadeInRight, FadeOut, Keyframe, SlideInLeft, SlideInRight, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
-import { GlassContainer, GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
+import Animated, { Easing, FadeIn, FadeInLeft, FadeInRight, FadeOut, Keyframe, SlideInLeft, SlideInRight, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { GlassContainer, GlassView } from 'expo-glass-effect';
+import { AnimatedGlassView, GlassFill, GlassPressed, LIQUID_GLASS, glassClear, liftGlass } from '@/components/ui/liquid-glass';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 import { SPRING_MOMENTUM, SPRING_SMOOTH, project, EASE_OUT_CUBIC } from '@/constants/motion';
@@ -49,8 +50,6 @@ type Frame = { x: number; width: number };
 // glass drop that slides between them. They share one glass container, so as
 // the drop passes a chip the two melt into each other and pull apart again.
 // Everywhere else (Android, web, older iPhones) the chips stay as they were.
-const LIQUID_GLASS = Platform.OS === 'ios' && isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
-const AnimatedGlassView = Animated.createAnimatedComponent(GlassView);
 // Glass shapes merge only once they touch: at rest each chip (6 pt apart)
 // is its own drop and none of the selection's light spills onto a neighbour.
 const GLASS_SPACING = 0;
@@ -179,7 +178,7 @@ export default function CalendarScreen() {
     if (animated && !reduceMotion) {
       indicatorX.set(withSpring(frame.x, SPRING_SMOOTH));
       indicatorWidth.set(withSpring(frame.width, SPRING_SMOOTH));
-      if (LIQUID_GLASS) indicatorLift.set(withSequence(withTiming(1.12, { duration: 120, easing: EASE_OUT_CUBIC }), withSpring(1, SPRING_SMOOTH)));
+      if (LIQUID_GLASS) liftGlass(indicatorLift);
     } else {
       indicatorLift.set(1);
       indicatorX.set(frame.x);
@@ -536,7 +535,8 @@ export default function CalendarScreen() {
         </View>
       ) : view === 'week' ? (
         <View style={[styles.header, wide && styles.headerWide]}>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaAnterior')} style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]} onPress={goToPrevWeek}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaAnterior')} style={({ pressed }) => [styles.arrowButton, LIQUID_GLASS && glassClear, pressed && (LIQUID_GLASS ? GlassPressed : styles.pressed)]} onPress={goToPrevWeek}>
+            <GlassFill radius={22} />
             <CustomIcon name="chevron-left" size={20} color={AppColors.textSecondary} />
           </Pressable>
           <View style={styles.headerCenter}>
@@ -560,13 +560,15 @@ export default function CalendarScreen() {
               </View>
             )}
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaSiguiente')} style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]} onPress={goToNextWeek}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaSiguiente')} style={({ pressed }) => [styles.arrowButton, LIQUID_GLASS && glassClear, pressed && (LIQUID_GLASS ? GlassPressed : styles.pressed)]} onPress={goToNextWeek}>
+            <GlassFill radius={22} />
             <CustomIcon name="chevron-right" size={20} color={AppColors.textSecondary} />
           </Pressable>
         </View>
       ) : view === 'day' ? (
         <View style={styles.header}>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaAnterior')} style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]} onPress={goToPrevWeek}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaAnterior')} style={({ pressed }) => [styles.arrowButton, LIQUID_GLASS && glassClear, pressed && (LIQUID_GLASS ? GlassPressed : styles.pressed)]} onPress={goToPrevWeek}>
+            <GlassFill radius={22} />
             <CustomIcon name="chevron-left" size={20} color={AppColors.textSecondary} />
           </Pressable>
           <View style={styles.headerCenter}>
@@ -588,7 +590,8 @@ export default function CalendarScreen() {
               )}
             </View>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaSiguiente')} style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]} onPress={goToNextWeek}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('calendar.semanaSiguiente')} style={({ pressed }) => [styles.arrowButton, LIQUID_GLASS && glassClear, pressed && (LIQUID_GLASS ? GlassPressed : styles.pressed)]} onPress={goToNextWeek}>
+            <GlassFill radius={22} />
             <CustomIcon name="chevron-right" size={20} color={AppColors.textSecondary} />
           </Pressable>
         </View>
@@ -597,9 +600,10 @@ export default function CalendarScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={view === 'year' ? t('calendar.anoAnterior') : t('calendar.mesAnterior')}
-            style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.arrowButton, LIQUID_GLASS && glassClear, pressed && (LIQUID_GLASS ? GlassPressed : styles.pressed)]}
             onPress={() => shiftMonth(-1)}
           >
+            <GlassFill radius={22} />
             <CustomIcon name="chevron-left" size={20} color={AppColors.textSecondary} />
           </Pressable>
           <View style={styles.headerCenter}>
@@ -630,9 +634,10 @@ export default function CalendarScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={view === 'year' ? t('calendar.anoSiguiente') : t('calendar.mesSiguiente')}
-            style={({ pressed }) => [styles.arrowButton, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.arrowButton, LIQUID_GLASS && glassClear, pressed && (LIQUID_GLASS ? GlassPressed : styles.pressed)]}
             onPress={() => shiftMonth(1)}
           >
+            <GlassFill radius={22} />
             <CustomIcon name="chevron-right" size={20} color={AppColors.textSecondary} />
           </Pressable>
         </View>

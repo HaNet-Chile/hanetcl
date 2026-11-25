@@ -59,6 +59,7 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `HanetAvatar` | `hanet-avatar.tsx` | La foto de una persona o su blobatar (semilla en `accounts/{uid}.avatarSeed`). |
 | `CustomIcon` · `AnimatedIcon` · `IconSymbol` | `custom-icon.tsx`, `AnimatedIcon.tsx`, `icon-symbol.tsx` | Íconos propios de HaNet, sus versiones con movimiento (pulso, flotar, aviso) y SF Symbols en iOS. |
 | `Collapsible` | `collapsible.tsx` | Una sección que se abre y se cierra. |
+| `GlassFill` · `AnimatedGlassView` · `liftGlass` · `LIQUID_GLASS` · `GlassPressed` · `glassClear` | `liquid-glass.tsx` | Liquid Glass en iPhone con iOS 26, solo para controles que flotan sobre el contenido (flechas del Calendar, buscador del Inicio y su campo, cerrar al destapar una nota) y para la selección que se desliza (días del Calendar, `HanetSegmented`), que se infla un poco al moverse. Nunca vidrio sobre vidrio ni en el contenido. El control pone `glassClear` y un `GlassFill` adentro con el radio de su forma (una píldora pasa la mitad de su alto); al presionar usa `GlassPressed` (solo se hunde: el vidrio con opacidad animada queda en blanco). En Android, la web y iPhones anteriores no cambia nada. |
 
 ## Estructura y navegación
 

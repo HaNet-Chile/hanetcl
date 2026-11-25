@@ -9,6 +9,11 @@ import { HanetButton } from '@/components/ui/hanet-button';
 import { MessageCard } from '@/components/ui/message-card';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchPill } from '@/components/ui/search-pill';
+import { HanetSegmented } from '@/components/ui/hanet-auth-fields';
+import { GlassFill, GlassPressed, LIQUID_GLASS, glassClear } from '@/components/ui/liquid-glass';
+import { AppColors, AppPressed } from '@/constants/design-tokens';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet } from 'react-native';
 import { SearchRow } from '@/components/search/search-row';
 import { t } from '@/i18n';
 import React, { useState } from 'react';
@@ -20,6 +25,7 @@ export function StructureGroup() {
   const [morning, setMorning] = useState(true);
   const [lock, setLock] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [segment, setSegment] = useState('a');
   const [now] = useState(() => Date.now());
   const [whatsNew, setWhatsNew] = useState<ReleaseSummary | null>(null);
 
@@ -110,6 +116,30 @@ export function StructureGroup() {
       </Section>
 
       <Section
+        title="Liquid Glass"
+        description="En iPhone con iOS 26, los controles que flotan sobre el contenido son de vidrio: las flechas del Calendar, el buscador del Inicio y su campo, el botón para cerrar al destapar una nota, la selección de los días del Calendar y la de las barras de opciones, que se infla un poco al moverse. Al presionarlos solo se hunden (el vidrio no cambia de opacidad). En Android, la web y iPhones anteriores conservan su fondo sólido."
+        source="components/ui/liquid-glass.tsx · LIQUID_GLASS, GlassFill, AnimatedGlassView, liftGlass, GlassPressed, glassClear"
+      >
+        <Stage canvas>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Ejemplo de botón de vidrio"
+            onPress={() => setNote(LIQUID_GLASS ? 'Este teléfono dibuja Liquid Glass.' : 'Aquí no hay Liquid Glass: el botón queda sólido.')}
+            style={({ pressed }) => [showcaseStyles.glassButton, LIQUID_GLASS && glassClear, pressed && (LIQUID_GLASS ? GlassPressed : AppPressed)]}
+          >
+            <GlassFill radius={22} />
+            <Ionicons name="chevron-forward" size={20} color={AppColors.textSecondary} />
+          </Pressable>
+          <HanetSegmented
+            accessibilityLabel="Ejemplo de opciones"
+            options={[{ value: 'a', label: '1er semestre', accessibilityLabel: 'Primer semestre' }, { value: 'b', label: '2° semestre', accessibilityLabel: 'Segundo semestre' }, { value: 'c', label: 'Anual', accessibilityLabel: 'Anual' }]}
+            value={segment}
+            onChange={setSegment}
+          />
+        </Stage>
+      </Section>
+
+      <Section
         title="Resultado de búsqueda"
         description="Una fila de la búsqueda, dentro de un grupo de ajustes: ícono, título con lo que coincide en negrita y una línea de contexto. El ícono rosado marca la mejor respuesta, la que abre la tecla “Buscar” del teclado, o lo que viene entre las sugerencias. Lo del Calendar que ya pasó va tachado, después de lo que viene."
         source="components/search/search-row.tsx · SearchRow · services/search.ts"
@@ -132,3 +162,14 @@ export function StructureGroup() {
     </>
   );
 }
+
+const showcaseStyles = StyleSheet.create({
+  glassButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: AppColors.surface,
+  },
+});

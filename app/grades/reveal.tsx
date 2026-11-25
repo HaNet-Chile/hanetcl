@@ -3,6 +3,7 @@ import { ScratchCard } from '@/components/classhall/scratch-card';
 import { GradesLocked } from '@/components/grades/grades-lock';
 import { ThemedText } from '@/components/themed-text';
 import { HanetButton } from '@/components/ui/hanet-button';
+import { GlassFill, GlassPressed, LIQUID_GLASS, glassClear } from '@/components/ui/liquid-glass';
 import { AppColors, AppDisplay, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError } from '@/services/auth-service';
 import { dropCached } from '@/services/cache';
@@ -86,7 +87,8 @@ export default function RevealGradeScreen() {
     <View style={[styles.screen, { paddingTop: insets.top + AppSpacing.sm, paddingBottom: insets.bottom + AppSpacing.lg }]}>
       <View style={styles.top}>
         <ThemedText style={styles.counter}>{queue && queue.length > 1 ? `${index + 1} de ${queue.length}` : ''}</ThemedText>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common.cerrar')} onPress={close} hitSlop={8} style={({ pressed }) => [styles.close, pressed && styles.pressed]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common.cerrar')} onPress={close} hitSlop={8} style={({ pressed }) => [styles.close, LIQUID_GLASS && glassClear, pressed && (LIQUID_GLASS ? GlassPressed : styles.pressed)]}>
+          <GlassFill radius={22} />
           <Ionicons name="close" size={22} color={AppColors.textPrimary} />
         </Pressable>
       </View>

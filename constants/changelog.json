@@ -3,13 +3,15 @@
     {
       "version": "0.14.4-beta",
       "date": "2026-11-25",
-      "title": "Días de cristal",
+      "title": "Cristal en el iPhone",
       "items": [
         "En el iPhone con iOS 26, los días de la semana del Calendar son de cristal (Liquid Glass) y la selección se desliza de un día a otro como una gota que se funde con los demás.",
-        "En Android, la web y iPhones con versiones anteriores, los días se ven igual que antes."
+        "También son de cristal las flechas del Calendar, el buscador del Inicio, el botón para cerrar al destapar una nota y la selección de las barras de opciones, como el semestre en Notas.",
+        "El título de un día largo, como \"Mañana, 25 de Noviembre, 2026\", ahora cabe en una línea.",
+        "En Android, la web y iPhones con versiones anteriores, todo se ve igual que antes."
       ],
       "highlights": [
-        "En el iPhone con iOS 26, los días del Calendar ahora son de cristal y la selección se desliza como una gota."
+        "En el iPhone con iOS 26, los días del Calendar, sus flechas y el buscador del Inicio ahora son de cristal."
       ]
     },
     {

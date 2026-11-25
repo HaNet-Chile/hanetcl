@@ -3,6 +3,7 @@ import { ThemedText } from '@/components/themed-text';
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SPRING_SMOOTH } from '@/constants/motion';
+import { AnimatedGlassView, LIQUID_GLASS, liftGlass } from '@/components/ui/liquid-glass';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import type { TextInputInstance, TextInputProps } from 'react-native';
 
@@ -71,6 +72,7 @@ export function HanetSegmented<T extends string>({ options, value, onChange, acc
   const x = useSharedValue(0);
   const width = useSharedValue(0);
   const placed = useRef(false);
+  const lift = useSharedValue(1);
 
   // The pill glides to the chosen segment (critically damped, no bounce);
   // the first placement is instant.
@@ -80,17 +82,24 @@ export function HanetSegmented<T extends string>({ options, value, onChange, acc
     if (placed.current && !reduceMotion) {
       x.set(withSpring(frame.x, SPRING_SMOOTH));
       width.set(withSpring(frame.width, SPRING_SMOOTH));
+      if (LIQUID_GLASS) liftGlass(lift, 1.08);
     } else {
       x.set(frame.x);
       width.set(frame.width);
     }
     placed.current = true;
-  }, [frames, reduceMotion, value, width, x]);
+  }, [frames, lift, reduceMotion, value, width, x]);
 
   const pillStyle = useAnimatedStyle(() => ({
     width: width.get(),
     opacity: width.get() > 0 ? 1 : 0,
     transform: [{ translateX: x.get() }],
+  }));
+  // On iOS 26 the pill is a glass drop that swells as it moves. Glass never
+  // fades (an animated opacity leaves it blank): before it is placed it has no width.
+  const glassPillStyle = useAnimatedStyle(() => ({
+    width: width.get(),
+    transform: [{ translateX: x.get() }, { scale: lift.get() }],
   }));
 
   const record = (key: string, frame: Frame) => {
@@ -103,7 +112,17 @@ export function HanetSegmented<T extends string>({ options, value, onChange, acc
 
   return (
     <View accessibilityRole="tablist" accessibilityLabel={accessibilityLabel} style={[styles.segmented, !!background && { backgroundColor: background }]}>
-      <Animated.View pointerEvents="none" style={[styles.pill, tall && styles.pillTall, pillStyle]} />
+      {LIQUID_GLASS ? (
+        <AnimatedGlassView
+          pointerEvents="none"
+          glassEffectStyle="regular"
+          colorScheme="dark"
+          tintColor={AppColors.controlActive}
+          style={[styles.pill, styles.pillGlass, tall && styles.pillTall, tall && styles.pillGlassTall, glassPillStyle]}
+        />
+      ) : (
+        <Animated.View pointerEvents="none" style={[styles.pill, tall && styles.pillTall, pillStyle]} />
+      )}
       {options.map(option => {
         const active = option.value === value;
         return (
@@ -198,6 +217,14 @@ const styles = StyleSheet.create({
   },
   pillTall: {
     height: 50,
+  },
+  // Glass takes its corners from half the height (UIKit does not clamp a pill's 999).
+  pillGlass: {
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+  },
+  pillGlassTall: {
+    borderRadius: 25,
   },
   segmentPressed: {
     opacity: 0.6,
