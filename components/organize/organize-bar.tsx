@@ -122,6 +122,7 @@ export function CreateMenu() {
   const role = useRole();
   const items: Item[] = [
     { key: 'notice', label: t('organize.publicarUnAviso'), icon: 'megaphone-outline', href: '/feed-post' },
+    { key: 'notify', label: t('common.enviarUnaNotificacion'), icon: 'notifications-outline', href: '/organize/notify' },
     { key: 'event', label: t('organize.crearUnEvento'), icon: 'calendar-outline', href: '/organize/new' },
     { key: 'poll', label: t('organize.crearUnaVotacion'), icon: 'stats-chart-outline', href: { pathname: '/feed-post', params: { poll: '1' } } },
   ];

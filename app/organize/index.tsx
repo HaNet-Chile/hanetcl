@@ -10,6 +10,7 @@ import { WideColumns, useWide, widePageStyle } from '@/components/ui/wide-page';
 import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { useAnniversaryState } from '@/services/anniversary-service';
 import { describeAuthError, useRole } from '@/services/auth-service';
+import { canPickStudents } from '@/services/notices-service';
 import { DAY_CHANGE_ROLES, WEB_PANEL_URL, eventsToday, listOrganizedEvents, openWebPanel, peekOrganizedEvents } from '@/services/organize-service';
 import type { OrganizedEvents } from '@/services/organize-service';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -113,6 +114,19 @@ export default function OrganizeScreen() {
     </View>
   );
 
+  const notifySection = (
+    <SettingsGroup title={t('components.notifications.notificationsPanel.notificaciones')}>
+      <SettingsLinkRow
+        icon="notifications-outline"
+        label={t('common.enviarUnaNotificacion')}
+        detail={canPickStudents(role) ? t('organize.alLiceoUnaJornadaCursos') : t('organize.alLiceoUnaJornadaO')}
+        onPress={() => router.push('/organize/notify')}
+      />
+      <SettingsLinkRow icon="time-outline" label={t('organize.enviadas')} onPress={() => router.push('/organize/notices')} />
+      {canPickStudents(role) && <SettingsLinkRow icon="people-outline" label={t('organize.groups.gruposDeEstudiantes')} onPress={() => router.push('/organize/groups')} />}
+    </SettingsGroup>
+  );
+
   const publishSection = (
     <SettingsGroup title={t('organize.publicar')}>
       <SettingsLinkRow icon="megaphone-outline" label={t('organize.publicarUnAviso')} detail={space} onPress={() => router.push('/feed-post')} />
@@ -147,11 +161,12 @@ export default function OrganizeScreen() {
         {wide ? (
           <WideColumns
             main={<View style={styles.stack}>{todaySection}{eventsSection}</View>}
-            aside={<View style={styles.stack}>{publishSection}{extras}</View>}
+            aside={<View style={styles.stack}>{notifySection}{publishSection}{extras}</View>}
           />
         ) : (
           <>
             {todaySection}
+            {notifySection}
             {publishSection}
             {eventsSection}
             {extras}
