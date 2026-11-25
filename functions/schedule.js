@@ -175,9 +175,11 @@ function morningMessage(blocks, events, now, change = null) {
   const today = blocks.filter(block => block.day === weekday && block.kind !== "break" && minutes(block.start) < cutoff)
     .sort((a, b) => minutes(a.start) - minutes(b.start));
   const beforeCutoff = event => cutoff === Infinity || minutes(clock(event.startDate.toMillis())) < cutoff;
-  const live = events.filter(event => event.cancelled !== true && !String(event.title || "").toUpperCase().includes("CANCELADA") && beforeCutoff(event));
+  const standing = events.filter(event => event.cancelled !== true && !String(event.title || "").toUpperCase().includes("CANCELADA"));
+  const live = standing.filter(beforeCutoff);
   const evaluations = live.filter(event => String(event.type || "").toLocaleLowerCase("es").startsWith("evaluación"));
-  const tasks = live.filter(event => String(event.type || "").toLocaleLowerCase("es") === "tarea");
+  // Tareas and entregas are handed in until a time, which an early dismissal does not move.
+  const tasks = standing.filter(event => ["tarea", "entrega"].includes(String(event.type || "").toLocaleLowerCase("es")));
   const lines = [
     ...evaluations.map(event => `Prueba: ${event.subject || event.title} a las ${clock(event.startDate.toMillis())}`),
     ...tasks.map(event => `Se entrega: ${event.title}`),

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { AGENDA_CHANNEL, ensureChannel, notifications } from './push-service';
+import { isDeadline } from './ical-service';
 import type { CalendarEvent } from './ical-service';
 import { examActivities, syncWidgetExam } from './widget-service';
 import { t } from '@/i18n';
@@ -24,6 +25,17 @@ const LIVE_WINDOW_MS = 24 * 3_600_000;
 // The countdown stays up a while after the test starts, then goes away.
 const LIVE_LINGER_MS = 30 * 60_000;
 
+// Deadlines of the course (Tarea, Entrega) get two local notifications too:
+// the day before at 19:00, and 3 hours before when that is after 9:00 (an
+// earlier one is covered by the 7:00 summary). A Hall's tasks are left out:
+// the server reminds whoever has not handed them in (remindTasksDueTomorrow).
+// Turned off apart from the tests, also only on this phone.
+const DUE_ENABLED_KEY = 'hanet.dueReminders';
+const DUE_PREFIX = 'due-';
+const DUE_HORIZON_MS = 14 * 86_400_000;
+// So deadlines never crowd out the tests within iOS's 64.
+const MAX_DUE = 20;
+
 export function isEvaluation(event: CalendarEvent) {
   return event.eventType?.toLocaleLowerCase('es').startsWith(t('common.evaluacion')) ?? false;
 }
@@ -38,7 +50,21 @@ export async function examRemindersEnabled() {
 
 export async function setExamRemindersEnabled(on: boolean, events?: CalendarEvent[]) {
   await AsyncStorage.setItem(ENABLED_KEY, on ? '1' : '0').catch(() => undefined);
-  await syncExamReminders(on ? events ?? lastEvents : []);
+  // The sync reads the switch: the tests' reminders go away, the deadlines' stay.
+  await syncExamReminders(events ?? lastEvents);
+}
+
+export async function dueRemindersEnabled() {
+  try {
+    return (await AsyncStorage.getItem(DUE_ENABLED_KEY)) !== '0';
+  } catch {
+    return true;
+  }
+}
+
+export async function setDueRemindersEnabled(on: boolean, events?: CalendarEvent[]) {
+  await AsyncStorage.setItem(DUE_ENABLED_KEY, on ? '1' : '0').catch(() => undefined);
+  await syncExamReminders(events ?? lastEvents);
 }
 
 function clock(date: Date) {
@@ -71,7 +97,12 @@ export function syncExamReminders(events: CalendarEvent[]) {
 
 async function sync(events: CalendarEvent[]) {
   const now = new Date();
-  const enabled = await examRemindersEnabled();
+  const [enabled, dueEnabled] = await Promise.all([examRemindersEnabled(), dueRemindersEnabled()]);
+  const deadlines = dueEnabled
+    ? events
+      .filter(event => isDeadline(event) && !event.taskId && !event.cancelled && event.startDate.getTime() > now.getTime() && event.startDate.getTime() < now.getTime() + DUE_HORIZON_MS)
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+    : [];
   const upcoming = enabled
     ? events
       .filter(event => isEvaluation(event) && !event.cancelled && event.startDate.getTime() > now.getTime() && event.startDate.getTime() < now.getTime() + HORIZON_MS)
@@ -83,7 +114,7 @@ async function sync(events: CalendarEvent[]) {
 
   // The notifications first and apart: a Live Activity that iOS refuses or
   // that never answers (a re-signed build) must not leave the test without them.
-  const results = await Promise.allSettled([scheduleNotifications(upcoming, now), syncLiveActivity(upcoming, now)]);
+  const results = await Promise.allSettled([scheduleNotifications(upcoming, now), scheduleDeadlines(deadlines, now), syncLiveActivity(upcoming, now)]);
   for (const result of results) {
     if (result.status === 'rejected') console.warn('syncExamReminders', result.reason instanceof Error ? result.reason.message : result.reason);
   }
@@ -109,6 +140,50 @@ async function scheduleNotifications(upcoming: CalendarEvent[], now: Date) {
         content: {
           title: hours === 24 ? t('services.examReminders.mananaPruebaDeSubjectof', { subjectOf: subjectOf(event) }) : t('services.examReminders.en4HorasPruebaDe', { subjectOf: subjectOf(event) }),
           body: `${event.title} · ${clock(event.startDate)}${event.location ? ` · ${event.location}` : ''}`,
+          data: { url: `/event-info?id=${encodeURIComponent(event.id)}&canEdit=0` },
+          sound: 'default',
+          ...(Platform.OS === 'android' ? { channelId: AGENDA_CHANNEL } : {}),
+        },
+        trigger: { type: module.SchedulableTriggerInputTypes.DATE, date: at, ...(Platform.OS === 'android' ? { channelId: AGENDA_CHANNEL } : {}) },
+      });
+    }
+  }
+}
+
+/** When a deadline's two reminders go: the day before at 19:00, and 3 hours before from 9:00 on. */
+export function deadlineReminderTimes(due: Date) {
+  const dayBefore = new Date(due);
+  dayBefore.setDate(dayBefore.getDate() - 1);
+  dayBefore.setHours(19, 0, 0, 0);
+  const soon = new Date(due.getTime() - 3 * 3_600_000);
+  const sameDay = soon.getHours() >= 9 && soon.toDateString() === due.toDateString() ? soon : null;
+  return [
+    { at: dayBefore, tag: 'day' as const },
+    ...(sameDay ? [{ at: sameDay, tag: '3h' as const }] : []),
+  ];
+}
+
+async function scheduleDeadlines(deadlines: CalendarEvent[], now: Date) {
+  const module = notifications();
+  if (!module) return;
+  if ((await module.getPermissionsAsync()).status !== 'granted') return;
+  await ensureChannel(module);
+
+  const scheduled = await module.getAllScheduledNotificationsAsync();
+  await Promise.all(scheduled
+    .filter(request => request.identifier.startsWith(DUE_PREFIX))
+    .map(request => module.cancelScheduledNotificationAsync(request.identifier)));
+
+  let count = 0;
+  for (const event of deadlines) {
+    for (const { at, tag } of deadlineReminderTimes(event.startDate)) {
+      if (at.getTime() <= now.getTime() + 60_000 || count >= MAX_DUE) continue;
+      count += 1;
+      await module.scheduleNotificationAsync({
+        identifier: `${DUE_PREFIX}${event.id}-${tag}`,
+        content: {
+          title: tag === 'day' ? t('services.examReminders.mananaSeEntregaTitle', { title: event.title }) : t('services.examReminders.en3HorasSeEntrega', { title: event.title }),
+          body: [event.subject, t('services.icalService.hastaLasTime', { time: clock(event.startDate) })].filter(Boolean).join(' · '),
           data: { url: `/event-info?id=${encodeURIComponent(event.id)}&canEdit=0` },
           sound: 'default',
           ...(Platform.OS === 'android' ? { channelId: AGENDA_CHANNEL } : {}),

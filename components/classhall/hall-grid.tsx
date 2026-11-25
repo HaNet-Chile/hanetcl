@@ -13,7 +13,7 @@ import { monthsShort, t } from '@/i18n';
 import { claimedCourse, useSession } from '@/services/auth-service';
 import { hallThemeImage } from '@/services/classhall-service';
 import type { Hall } from '@/services/classhall-service';
-import { fetchCalendarEvents, restoreCalendarEvents } from '@/services/ical-service';
+import { fetchCalendarEvents, isDeadline, restoreCalendarEvents } from '@/services/ical-service';
 import type { CalendarEvent } from '@/services/ical-service';
 import { blocksOn, minutesOf, scheduleDay } from '@/services/schedule-service';
 import type { ScheduleBlock } from '@/services/schedule-service';
@@ -143,7 +143,7 @@ export function WeekPanel({ halls }: { halls: Hall[] }) {
   }, [user]));
 
   const fromCalendar: WeekItem[] = (events ?? [])
-    .filter(event => !event.cancelled && (event.hallId || event.eventType === 'Tarea' || event.eventType?.toLocaleLowerCase('es').startsWith('evaluaci'))) // i18n-ignore
+    .filter(event => !event.cancelled && (event.hallId || isDeadline(event) || event.eventType?.toLocaleLowerCase('es').startsWith('evaluaci'))) // i18n-ignore
     .filter(event => { const days = daysUntil(event.startDate.getTime()); return days >= 0 && days <= WEEK_DAYS; })
     .map(event => ({
       key: event.id,
