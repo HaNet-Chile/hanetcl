@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "0.14.4-beta",
+      "date": "2026-11-25",
+      "title": "Días de cristal",
+      "items": [
+        "En el iPhone con iOS 26, los días de la semana del Calendar son de cristal (Liquid Glass) y la selección se desliza de un día a otro como una gota que se funde con los demás.",
+        "En Android, la web y iPhones con versiones anteriores, los días se ven igual que antes."
+      ],
+      "highlights": [
+        "En el iPhone con iOS 26, los días del Calendar ahora son de cristal y la selección se desliza como una gota."
+      ]
+    },
+    {
       "version": "0.14.3-beta",
       "date": "2026-11-21",
       "title": "Más cerca de Santiago",
