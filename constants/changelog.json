@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "0.14.5-beta",
+      "date": "2026-11-25",
+      "title": "Hojas completas",
+      "items": [
+        "En Android y en la web, lo que va al final de una hoja (como \"Compartir como imagen\" en tu entrada) ya no queda escondido bajo el borde de la pantalla."
+      ],
+      "highlights": [
+        "Los botones del final de una hoja, como \"Compartir como imagen\" en tu entrada, ya no quedan escondidos."
+      ]
+    },
+    {
       "version": "0.14.4-beta",
       "date": "2026-11-25",
       "title": "Cristal en el iPhone",
