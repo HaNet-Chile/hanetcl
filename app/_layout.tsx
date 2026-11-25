@@ -232,6 +232,9 @@ export default function RootLayout() {
             <Stack.Screen name="organize/send" options={sheetOptions('organize/send')} />
             <Stack.Screen name="organize/scanners" options={sheetOptions('organize/scanners')} />
             <Stack.Screen name="organize/leads" options={sheetOptions('organize/leads')} />
+            <Stack.Screen name="organize/notify" options={sheetOptions('organize/notify')} />
+            <Stack.Screen name="organize/groups" options={sheetOptions('organize/groups')} />
+            <Stack.Screen name="organize/notices" options={{ headerShown: false }} />
             <Stack.Screen name="edit-profile" options={sheetOptions('edit-profile')} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
             <Stack.Screen name="licenses" options={{ headerShown: false }} />

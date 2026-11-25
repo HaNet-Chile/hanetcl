@@ -15,6 +15,8 @@ export const SHEET_DETENTS: Record<string, number[]> = {
   'organize/send': [0.75, 1.0],
   'organize/scanners': [0.75, 1.0],
   'organize/leads': [1.0],
+  'organize/notify': [1.0],
+  'organize/groups': [1.0],
   'edit-profile': [0.75, 1.0],
   'classhall/join': [0.75, 1.0],
   'classhall/create': [0.75, 1.0],

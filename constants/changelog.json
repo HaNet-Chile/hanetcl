@@ -1,7 +1,7 @@
 {
   "releases": [
     {
-      "version": "0.14.7-beta",
+      "version": "0.15.1-beta",
       "date": "2026-11-25",
       "title": "Plazos de entrega",
       "items": [
@@ -13,6 +13,22 @@
       "highlights": [
         "Nuevo en el Calendar: plazos de entrega para trabajos, informes y proyectos.",
         "Te avisamos el día antes y 3 horas antes de cada entrega."
+      ]
+    },
+    {
+      "version": "0.15.0-beta",
+      "date": "2026-11-25",
+      "title": "Notificaciones desde Organizar",
+      "items": [
+        "La administración y el CEE pueden enviar notificaciones desde Organizar: a todo el liceo, a una jornada, a cursos, a los presidentes de curso o a las directivas.",
+        "La administración también puede enviarlas a estudiantes elegidos uno por uno o a grupos guardados, como una selección o un taller.",
+        "Antes de enviarla se ve cómo quedará y a cuántas personas les llega. Las enviadas quedan en una lista.",
+        "Cada notificación llega al teléfono y queda en Notificaciones, al final del Inicio.",
+        "Nuevo interruptor en Configuraciones: \"Avisos de tu liceo\"."
+      ],
+      "highlights": [
+        "Tu liceo y el CEE ahora te pueden avisar con una notificación.",
+        "Si no quieres que te suenen, se apagan en Configuraciones → Avisos de tu liceo."
       ]
     },
     {

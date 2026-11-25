@@ -1,10 +1,12 @@
 import { CreateMenu, CreatePill, ScanPill } from '@/components/organize/organize-bar';
 import { OrganizeHeaderButton } from '@/components/organize/organize-entry';
+import { NoticePreview, SentNoticeRow, StudentPicker } from '@/components/organize/notice-ui';
 import { ArrivalCounter, OrganizedEventRow, TodayEventCard } from '@/components/organize/organize-ui';
 import { GroupTitle, Section, Stage, showcaseStyles } from '@/components/showcase/showcase-ui';
 import { HanetChip } from '@/components/ui/hanet-chip';
 import { AppColors, AppRadii } from '@/constants/design-tokens';
 import type { HnEvent } from '@/services/events-service';
+import type { GroupMember } from '@/services/notices-service';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -55,6 +57,7 @@ function example(now: number, patch: Partial<HnEvent>): HnEvent {
 export function OrganizeGroup() {
   const [now] = useState(() => Date.now());
   const [live, setLive] = useState(true);
+  const [picked, setPicked] = useState<Record<string, GroupMember>>({});
   const today = example(now, {});
   const rows = [
     example(now, { id: 'r1', title: 'Gala de cuartos (ejemplo)', private: true, signupMode: 'tickets', canCheckIn: false, startsAt: now + 5 * 24 * HOUR }),
@@ -98,7 +101,7 @@ export function OrganizeGroup() {
 
       <Section
         title="Centro de la barra en Organizar"
-        description="“Escanear” mientras uno de sus eventos tiene la puerta abierta; si no, “Crear”, cuyo menú crece desde la barra: aviso, evento, votación y, para Admin y HNT, suspender clases o salida anticipada."
+        description="“Escanear” mientras uno de sus eventos tiene la puerta abierta; si no, “Crear”, cuyo menú crece desde la barra: aviso, notificación, evento, votación y, para Admin y HNT, suspender clases o salida anticipada."
         source="components/organize/organize-bar.tsx · ScanPill, CreatePill, CreateMenu"
       >
         <Stage canvas>
@@ -108,6 +111,40 @@ export function OrganizeGroup() {
           </View>
         </Stage>
         <View style={styles.menu}><CreateMenu /></View>
+      </Section>
+
+      <Section
+        title="Notificación, antes de enviarla"
+        description="Cómo se verá en la pantalla bloqueada: el Espacio que la envía (Comunidad, CEE o HaNet, nunca una persona) y el mensaje. Al pie de “Enviar una notificación”."
+        source="components/organize/notice-ui.tsx · NoticePreview"
+      >
+        <NoticePreview from="CEE LCH Temuco" body="Mañana la entrada es por el portón de calle Montt. (ejemplo)" />
+        <NoticePreview from="Comunidad LCH Temuco" body="" />
+      </Section>
+
+      <Section
+        title="Notificación enviada"
+        description="Una fila de Enviadas: el mensaje, a quién, a cuántas personas y cuándo. Admin y HNT ven también quién la envió."
+        source="components/organize/notice-ui.tsx · SentNoticeRow"
+      >
+        <View style={styles.group}>
+          <SentNoticeRow
+            now={now}
+            notice={{ id: 'n1', from: 'Comunidad LCH Temuco', label: 'Todo el liceo', body: 'Mañana no hay clases por la jornada de reflexión. (ejemplo)', reached: 1024, at: now - 2 * HOUR, url: null, senderName: 'Dirección (ejemplo)', senderRole: 'Admin' }}
+          />
+          <SentNoticeRow
+            now={now}
+            notice={{ id: 'n2', from: 'CEE LCH Temuco', label: 'Presidentes de curso', body: 'Reunión hoy a las 13:00 en la biblioteca. (ejemplo)', reached: 32, at: now - 26 * HOUR, url: null, senderName: null, senderRole: 'CEE' }}
+          />
+        </View>
+      </Section>
+
+      <Section
+        title="Elegir estudiantes"
+        description="Los cursos de la institución, cada uno se abre con sus estudiantes para marcarlos. En “Algunos estudiantes” y en los grupos guardados, solo para Admin y HNT. Carga la nómina real de tu institución."
+        source="components/organize/notice-ui.tsx · StudentPicker"
+      >
+        <StudentPicker selected={picked} onChange={setPicked} onSurface={false} />
       </Section>
 
       <Section

@@ -167,9 +167,9 @@ export function notificationRoute(url: unknown): string | null {
 }
 
 // Only HaNet's own screens: ClassHall, the timetable, the account's security, the Calendar
-// and its events, the Feed, the anniversary and its notices.
+// and its events, the Feed, the anniversary and its notices, an event's page.
 function isNotificationRoute(url: unknown): url is string {
-  return typeof url === 'string' && /^\/(classhall\/(hall|task)\?[A-Za-z0-9_=&-]+|schedule|security|calendar|feed|anniversary(\/notices)?|event-info\?[A-Za-z0-9_=&%-]+)$/.test(url);
+  return typeof url === 'string' && /^\/(classhall\/(hall|task)\?[A-Za-z0-9_=&-]+|schedule|security|calendar|feed|anniversary(\/notices)?|event-(info|detail)\?[A-Za-z0-9_=&%-]+)$/.test(url);
 }
 
 /** Whether the system's settings can be opened to unblock notifications: the browser's can't. */
@@ -209,6 +209,11 @@ export async function saveAnniversaryNotifications(on: boolean) {
 /** The Feed's switch (posts sent as a notification), saved with the account. */
 export async function saveFeedNotifications(on: boolean) {
   await httpsCallable(functions, 'updateMyProfile')({ feedNotifications: on });
+}
+
+/** The switch for the notices the liceo sends from Organizar, saved with the account. */
+export async function saveNoticeNotifications(on: boolean) {
+  await httpsCallable(functions, 'updateMyProfile')({ noticeNotifications: on });
 }
 
 /** The ClassHall notifications switch, saved with the account. */

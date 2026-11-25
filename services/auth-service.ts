@@ -136,6 +136,7 @@ export type MyProfile = {
   anniversaryNotifications?: boolean;
   /** Feed posts sent as a notification (on unless turned off). */
   feedNotifications?: boolean;
+  noticeNotifications?: boolean;
 };
 
 export function getMyProfile() {

@@ -68,7 +68,8 @@
     "tusAreasDeMayorInteres": "Tus áreas de mayor interés",
     "verbosEnIngles": "Verbos en inglés",
     "verificadoPorUnDocente": "Verificado por un docente:",
-    "volver": "Volver"
+    "volver": "Volver",
+    "enviarUnaNotificacion": "Enviar una notificación"
   },
   "anniversary": {
     "activities": {
@@ -1680,6 +1681,22 @@
       "tocaParaContinuar": "Toca para continuar",
       "valueGreetingTocaParaContinuar": "{{value}}{{greeting}}. Toca para continuar.",
       "yaEresParteDeInstitutionname": "Ya eres parte de {{institutionName}}."
+    },
+    "organize": {
+      "noticeUi": {
+        "ahora": "ahora",
+        "countEstudiantesElegidos_one": "1 estudiante elegido",
+        "countEstudiantesElegidos_other": "{{count}} estudiantes elegidos",
+        "countPersonas_one": "1 persona",
+        "countPersonas_other": "{{count}} personas",
+        "elegirATodoElCurso": "Elegir a todo el curso",
+        "esteCursoNoTieneEstudiantes": "Este curso no tiene estudiantes en HaNet.",
+        "fromEnviadaPorSendername": "{{from}} · enviada por {{senderName}}",
+        "idPickedElegidos": "{{id}}, {{picked}} elegidos",
+        "nadieElegidoTodavia": "Nadie elegido todavía",
+        "quitarATodoElCurso": "Quitar a todo el curso",
+        "quitarTodos": "Quitar todos"
+      }
     }
   },
   "createEvent": {
@@ -2453,7 +2470,7 @@
     "estaEntradaYaSeUso": "Esta entrada ya se usó.",
     "evento": "Evento",
     "eventos": "Eventos",
-    "eventosEntradasAvisosYVotaciones": "Eventos, entradas, avisos y votaciones de tu institución.",
+    "eventosEntradasAvisosYVotaciones": "Eventos, entradas, notificaciones, avisos y votaciones de tu institución.",
     "eventosYEntradas": "Eventos y entradas",
     "exportarListasYLasCargas": "Exportar listas y las cargas masivas quedan para el panel web.",
     "hanetEventos": "HaNet Eventos",
@@ -2540,7 +2557,65 @@
     "verComoLoVen": "Ver cómo lo ven",
     "verLaLista": "Ver la lista",
     "verTodos": "Ver todos",
-    "yaEstaEnSusEntradas": "Ya está en sus Entradas, con un aviso."
+    "yaEstaEnSusEntradas": "Ya está en sus Entradas, con un aviso.",
+    "alLiceoUnaJornadaCursos": "Al liceo, una jornada, cursos, grupos o estudiantes",
+    "alLiceoUnaJornadaO": "Al liceo, una jornada o cursos",
+    "enviadas": "Enviadas",
+    "groups": {
+      "borrarElGrupo": "Borrar el grupo",
+      "borrarName": "¿Borrar {{name}}?",
+      "editarElGrupo": "Editar el grupo",
+      "editarNameMemberscountEstudiantes": "Editar {{name}}, {{membersCount}} estudiantes",
+      "enviarUnaNotificacionAName": "Enviar una notificación a {{name}}",
+      "estudiantes": "Estudiantes",
+      "gruposDeEstudiantes": "Grupos de estudiantes",
+      "guardarElGrupo": "Guardar el grupo",
+      "lasNotificacionesQueYaSe": "Las notificaciones que ya se enviaron no cambian.",
+      "noPudimosBorrarElGrupo": "No pudimos borrar el grupo.",
+      "noPudimosCargarLosGrupos": "No pudimos cargar los grupos.",
+      "noPudimosGuardarElGrupo": "No pudimos guardar el grupo.",
+      "nuevoGrupo": "Nuevo grupo",
+      "paraEnviarleUnaNotificacionA": "Para enviarle una notificación a los mismos estudiantes cada vez. Solo los ve la administración.",
+      "porEjemploSeleccionDeFutbol": "Por ejemplo: Selección de fútbol",
+      "todaviaNoHayGrupos": "Todavía no hay grupos.",
+      "volverALosGrupos": "Volver a los grupos"
+    },
+    "notices": {
+      "lasNotificacionesDeFromY": "Las notificaciones de {{from}} y de tu institución.",
+      "noPudimosCargarLasNotificaciones": "No pudimos cargar las notificaciones enviadas.",
+      "todaviaNoSeEnviaNinguna": "Todavía no se envía ninguna notificación."
+    },
+    "notify": {
+      "administrarGrupos": "Administrar grupos",
+      "algunosEstudiantes": "Algunos estudiantes",
+      "alTocarlaAbre": "Al tocarla abre",
+      "armarUnGrupo": "Armar un grupo",
+      "asiSeVera": "Así se verá",
+      "directivasDeCurso": "Directivas de curso",
+      "elCeeEnviaAGrupos": "El CEE envía a grupos completos, nunca a un estudiante por su nombre.",
+      "enviarACountPersonas_one": "¿Enviar a 1 persona?",
+      "enviarACountPersonas_other": "¿Enviar a {{count}} personas?",
+      "grupo": "Grupo",
+      "leLlegaAQuienEligio": "Le llega a quien eligió esa jornada y a quien todavía no elige ninguna.",
+      "leLlegaAQuienesTienen": "Le llega a quienes tienen el rol Directiva en su curso.",
+      "leLlegaAQuienTiene": "Le llega a quien tiene el cargo en cada curso. Se eligen en Presidentes de curso.",
+      "leLlegoACountPersonas_one": "Le llegó a 1 persona",
+      "leLlegoACountPersonas_other": "Le llegó a {{count}} personas",
+      "lesSuenaEnElTelefono": "Les suena en el teléfono y queda en Notificaciones, al final del Inicio.",
+      "lesVaASonarEn": "Les va a sonar en el teléfono ahora mismo. Una notificación enviada no se puede borrar.",
+      "nada": "Nada",
+      "noHayNadieAQuien": "No hay nadie a quien le llegue. Revisa a quién se la envías.",
+      "noPudimosEnviarLaNotificacion": "No pudimos enviar la notificación.",
+      "noPudimosRevisarAQuien": "No pudimos revisar a quién le llega.",
+      "porEjemploMananaLaEntrada": "Por ejemplo: Mañana la entrada es por el portón de calle Montt.",
+      "quedaEnEnviadasEnOrganizar": "Queda en Enviadas, en Organizar. A quien apagó estos avisos no le suena, pero la ve en Notificaciones.",
+      "sinEstoLeLlegaSolo": "Sin esto, le llega solo a los estudiantes.",
+      "tambienADocentesYAdministracion": "También a docentes y administración",
+      "todaviaNoHayGruposGuardados": "Todavía no hay grupos guardados.",
+      "unaJornada": "Una jornada",
+      "unEvento": "Un evento",
+      "unGrupo": "Un grupo"
+    }
   },
   "search": {
     "borrarLasBusquedasRecientes": "Borrar las búsquedas recientes",
@@ -2804,7 +2879,9 @@
     "tuDiaYTusPruebas": "Tu día y tus pruebas",
     "tuPrimeraClaseYLo": "Tu primera clase y lo del día",
     "valeSoloEnEsteTelefono": "Vale solo en este teléfono.",
-    "version": "Versión"
+    "version": "Versión",
+    "avisosDeTuLiceo": "Avisos de tu liceo",
+    "loQueEnvianLaAdministracion": "Lo que envían la administración y el CEE"
   },
   "share": {
     "agregarUnaTablaDeEspecificaciones": "Agregar una tabla de especificaciones",
