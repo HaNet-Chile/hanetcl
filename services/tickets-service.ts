@@ -210,6 +210,11 @@ export async function shareTicket(ticketId: string, kind: 'image' | 'print') {
 
 export const previewGift = (token: string) => call<{ token: string }, GiftPreview>('previewGift')({ token });
 
+/** A guest's ticket, opened from its link without an account; `account` when the link needs one (a gift). */
+export type GuestTicket = { account: true } | { account?: false; ticket: Omit<Ticket, 'event'>; event: TicketEvent; code: string; qr: string };
+
+export const openGuestTicket = (token: string) => call<{ token: string }, GuestTicket>('openGuestTicket')({ token });
+
 export async function acceptGift(token: string) {
   const result = await call<{ token: string }, { ticketId: string }>('acceptGift')({ token });
   dropCached(CACHE_KEY);

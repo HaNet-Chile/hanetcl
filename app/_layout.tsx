@@ -29,7 +29,8 @@ import { refreshDayWidgets } from '@/services/day-sync';
 
 // The only screens reachable without an account. Everyone starts at the
 // onboarding, and signing out goes back to it.
-const PUBLIC_ROUTES = ['/onboarding', '/auth'];
+// A ticket's link opens too: a guest without HaNet gets the ticket there.
+const PUBLIC_ROUTES = ['/onboarding', '/auth', '/tickets/receive'];
 
 // The splash waits for Home's content, but never longer than this from
 // launch: a slow or missing network still gets into the app.
@@ -97,6 +98,7 @@ function sheetOptions(route: string) {
 export default function RootLayout() {
   const { user, initializing } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const navigationReady = !!useRootNavigationState()?.key;
   // Whether the screen under the launch splash is the right one yet: signed
   // out on a device that never saw the welcome pages goes to them first.
@@ -146,7 +148,8 @@ export default function RootLayout() {
     (async () => {
       const seen = await hasSeenOnboarding();
       if (!active) return;
-      if (!user) router.replace('/onboarding');
+      // A ticket's link stays where it is: a guest gets the ticket there.
+      if (!user && !PUBLIC_ROUTES.includes(pathname)) router.replace('/onboarding');
       // Signed in already means past the welcome pages.
       if (user && !seen) void markOnboardingSeen();
       // A fresh install starts at this version: its first Home has nothing "new" to tell.
@@ -156,7 +159,7 @@ export default function RootLayout() {
       setRouted(true);
     })();
     return () => { active = false; };
-  }, [initializing, navigationReady, routed, router, user]);
+  }, [initializing, navigationReady, pathname, routed, router, user]);
 
   // Push notifications: the device registers with the account (when the person
   // already allowed them), and a tapped notification opens its screen. The
@@ -182,7 +185,6 @@ export default function RootLayout() {
   // Without an account nothing but the onboarding and sign-in is open: losing
   // the session anywhere (signing out, an expired account) lands on the
   // onboarding.
-  const pathname = usePathname();
   useEffect(() => {
     if (initializing || !routed || !navigationReady || user) return;
     if (!PUBLIC_ROUTES.includes(pathname)) router.replace('/onboarding');

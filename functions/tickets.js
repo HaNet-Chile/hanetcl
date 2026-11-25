@@ -441,6 +441,49 @@ function build(getAdminApp) {
     };
   });
 
+  // A guest's link (sent by who organizes, for someone without HaNet) is the
+  // ticket itself: opened without an account, it shows the ticket with a
+  // fixed QR, like "Compartir como imagen". Opening it again shows the same
+  // code; it works once at the door. A gift between students still needs an
+  // account (`account: true`), and so does this link for whoever is signed
+  // in and wants it in the app (acceptGift, while nobody opened it here).
+  const openGuestTicket = onCall({ invoker: "public" }, async (request) => {
+    const token = request.data?.token;
+    const clean = typeof token === "string" && /^[A-Za-z0-9_-]{16,40}$/.test(token) ? token : null;
+    if (!clean) throw new HttpsError("invalid-argument", "Ese link no es de una entrada.");
+    const db = calendarDb(getAdminApp);
+    const snapshot = await db.collection(TICKETS).where("linkHash", "==", sha(clean)).limit(1).get();
+    const doc = snapshot.docs[0];
+    if (!doc || doc.data().status === "voided") throw new HttpsError("not-found", "Ese link ya no sirve. Pide que te lo envíen otra vez.");
+    if (doc.data().holderUid) return { account: true };
+    const ref = doc.ref;
+    const secretRef = ref.collection("secret").doc("key");
+    const opened = await db.runTransaction(async (tx) => {
+      const [ticketDoc, secretDoc] = await Promise.all([tx.get(ref), tx.get(secretRef)]);
+      const ticket = ticketDoc.data();
+      if (!ticket || ticket.linkHash !== sha(clean) || ticket.holderUid) throw new HttpsError("not-found", "Ese link ya no sirve. Pide que te lo envíen otra vez.");
+      const saved = secretDoc.data()?.staticCode;
+      if (["shared", "used"].includes(ticket.status) && saved) return { ticket, code: saved };
+      if (ticket.status !== "link") throw new HttpsError("not-found", "Ese link ya no sirve. Pide que te lo envíen otra vez.");
+      if ((millis(ticket.linkExpiresAt) || 0) < Date.now()) throw new HttpsError("deadline-exceeded", "Ese link venció. Pide que te lo envíen otra vez.");
+      const fresh = newStaticCode();
+      // The link stays (opening it again shows the same code); its expiry no
+      // longer matters once the code exists.
+      tx.update(ref, { status: "shared", staticHash: sha(`${ticket.eventId}:${fresh}`), linkExpiresAt: FieldValue.delete(), history: history("guestOpened", null) });
+      tx.set(secretRef, { key: newKey(), staticCode: fresh }, { merge: true });
+      return { ticket: { ...ticket, status: "shared" }, code: fresh };
+    });
+    const event = (await db.collection(EVENTS).doc(opened.ticket.eventId).get()).data();
+    if (!event) throw new HttpsError("not-found", "Ese evento ya no está disponible.");
+    const fresh = await ref.get();
+    return {
+      ticket: { ...ticketOut(fresh), holderName: opened.ticket.guestName || "", courseId: "" },
+      event: eventOut(opened.ticket.eventId, event, (await institutionNames(getAdminApp, [event.institutionId])).get(event.institutionId)),
+      code: opened.code,
+      qr: `hanet://t/${opened.code}`,
+    };
+  });
+
   // Accepts a ticket from a link: it moves to this account with a new key.
   const acceptGift = onCall({ invoker: "public" }, async (request) => {
     const uid = await requireAuth(getAdminApp, request);
@@ -906,6 +949,7 @@ function build(getAdminApp) {
     giftTicket,
     cancelGift,
     previewGift,
+    openGuestTicket,
     acceptGift,
     shareTicket,
     validateTicket,

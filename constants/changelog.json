@@ -3,12 +3,15 @@
     {
       "version": "0.14.5-beta",
       "date": "2026-11-25",
-      "title": "Entrada abierta",
+      "title": "Entradas para invitados",
       "items": [
-        "En iPhone, abrir una entrada ya no muestra una hoja vacía: vuelve a verse la entrada con su QR."
+        "En iPhone, abrir una entrada ya no muestra una hoja vacía: vuelve a verse la entrada con su QR.",
+        "Un invitado sin HaNet abre el link que le envían y ahí mismo ve su entrada con el QR, sin crear una cuenta. Vale una vez en la puerta.",
+        "Un link de entrada ya no lleva a la bienvenida de HaNet cuando no hay sesión iniciada."
       ],
       "highlights": [
-        "Abrir una entrada en iPhone vuelve a mostrar la entrada y su QR."
+        "Abrir una entrada en iPhone vuelve a mostrar la entrada y su QR.",
+        "Los invitados sin HaNet reciben su entrada directo en el link."
       ]
     },
     {
