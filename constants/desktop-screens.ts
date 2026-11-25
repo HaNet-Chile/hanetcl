@@ -107,6 +107,9 @@ export const DESKTOP_SCREENS: Record<string, DesktopScreen> = {
   'organize/send': { layout: 'sheet' },
   'organize/scanners': { layout: 'sheet' },
   'organize/leads': { layout: 'sheet' },
+  'organize/notify': { layout: 'sheet' },
+  'organize/groups': { layout: 'sheet' },
+  'organize/notices': { layout: 'reading' },
 
   'tools/index': { layout: 'wide' },
   'tools/scale': { layout: 'wide' },

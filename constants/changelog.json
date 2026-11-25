@@ -1,7 +1,7 @@
 {
   "releases": [
     {
-      "version": "0.14.7-beta",
+      "version": "0.15.2-beta",
       "date": "2026-11-25",
       "title": "Panel web para liceos",
       "items": [
@@ -12,6 +12,37 @@
       "highlights": [
         "El panel web pide un código además de la contraseña.",
         "Cada liceo administra su gente desde el panel."
+      ]
+    },
+    {
+      "version": "0.15.1-beta",
+      "date": "2026-11-25",
+      "title": "Plazos de entrega",
+      "items": [
+        "En el Calendar hay un tipo nuevo, \"Entrega\", para trabajos, informes y proyectos. Al elegirlo (o \"Tarea\") se pide el plazo: en una clase del horario o hasta una hora, que parte en las 23:59.",
+        "Las tareas y entregas se muestran con su plazo (\"Hasta las 23:59\" o \"Se entrega en esta clase\") en vez de una hora de inicio y fin.",
+        "El teléfono avisa de cada tarea y entrega del Calendar el día antes a las 19:00 y 3 horas antes. Se apaga en Configuraciones → Notificaciones → Avisos de entregas.",
+        "El resumen de las 7:00 también nombra las entregas del día, y el aviso del Calendar en el Inicio las muestra."
+      ],
+      "highlights": [
+        "Nuevo en el Calendar: plazos de entrega para trabajos, informes y proyectos.",
+        "Te avisamos el día antes y 3 horas antes de cada entrega."
+      ]
+    },
+    {
+      "version": "0.15.0-beta",
+      "date": "2026-11-25",
+      "title": "Notificaciones desde Organizar",
+      "items": [
+        "La administración y el CEE pueden enviar notificaciones desde Organizar: a todo el liceo, a una jornada, a cursos, a los presidentes de curso o a las directivas.",
+        "La administración también puede enviarlas a estudiantes elegidos uno por uno o a grupos guardados, como una selección o un taller.",
+        "Antes de enviarla se ve cómo quedará y a cuántas personas les llega. Las enviadas quedan en una lista.",
+        "Cada notificación llega al teléfono y queda en Notificaciones, al final del Inicio.",
+        "Nuevo interruptor en Configuraciones: \"Avisos de tu liceo\"."
+      ],
+      "highlights": [
+        "Tu liceo y el CEE ahora te pueden avisar con una notificación.",
+        "Si no quieres que te suenen, se apagan en Configuraciones → Avisos de tu liceo."
       ]
     },
     {

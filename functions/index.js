@@ -69,6 +69,9 @@ Object.assign(exports, require("./schedule").build(getAdminApp));
 // Class suspensions and early dismissals, on top of the timetable.
 Object.assign(exports, require("./day-changes").build(getAdminApp));
 
+// Organizar's notifications: to the liceo, a jornada, courses, groups or students.
+Object.assign(exports, require("./notices").build(getAdminApp));
+
 // Data for the profile screen.
 Object.assign(exports, require("./profile").build(getAdminApp));
 

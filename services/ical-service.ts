@@ -181,6 +181,25 @@ export function getEventsForDate(events: CalendarEvent[], date: Date): CalendarE
   });
 }
 
+// The Calendar's deadline types, as they are saved (data, not labels): a task
+// or a work handed in ("Entrega": informes, trabajos, proyectos). They have no
+// duration: they are handed in until their start time.
+// i18n-ignore-next-line
+export const DEADLINE_TYPES = ['Tarea', 'Entrega'];
+
+/** A deadline: a task of a Hall or an event of a deadline type. */
+export function isDeadline(event: Pick<CalendarEvent, 'eventType' | 'taskId'>) {
+  return !!event.taskId || DEADLINE_TYPES.includes(event.eventType?.trim() ?? '');
+}
+
+/** "10:00 - 11:30", or "Hasta las 23:59" for a deadline. Kept events come back with their dates as text. */
+export function eventTimeText(event: Pick<CalendarEvent, 'eventType' | 'taskId' | 'startDate' | 'endDate'>) {
+  const start = new Date(event.startDate);
+  const time = formatTime(start);
+  if (isDeadline(event)) return t('services.icalService.hastaLasTime', { time });
+  return `${formatTime(start)} - ${formatTime(new Date(event.endDate))}`;
+}
+
 export function formatTime(date: Date): string {
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');

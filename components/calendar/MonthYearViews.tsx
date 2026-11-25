@@ -1,7 +1,7 @@
 import { subjectName } from '@/constants/subjects';
 import { ThemedText } from '@/components/themed-text';
 import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
-import { formatTime, getEventsForDate } from '@/services/ical-service';
+import { eventTimeText, formatTime, getEventsForDate } from '@/services/ical-service';
 import type { CalendarEvent } from '@/services/ical-service';
 import { isBreak } from '@/services/schedule-service';
 import type { ScheduleBlock } from '@/services/schedule-service';
@@ -127,7 +127,7 @@ export function MonthView({ month, events, selectedDate, bottomInset, onPickDay,
               <View style={styles.agendaCopy}>
                 <ThemedText numberOfLines={2} style={[styles.agendaEvent, event.cancelled && styles.cancelledText]}>{event.title}</ThemedText>
                 <ThemedText style={styles.agendaMeta}>
-                  {formatTime(event.startDate)} - {formatTime(event.endDate)}{event.subject ? ` · ${subjectName(event.subject)}` : ''}{event.cancelled ? t('components.calendar.monthYearViews.cancelado') : ''}
+                  {eventTimeText(event)}{event.subject ? ` · ${subjectName(event.subject)}` : ''}{event.cancelled ? t('components.calendar.monthYearViews.cancelado') : ''}
                 </ThemedText>
               </View>
             </Pressable>
@@ -192,7 +192,6 @@ export function WeekView({ days, events, blocksOn, selectedDate, bottomInset, on
               ) : (
                 row.events.map(event => {
                   const start = new Date(event.startDate);
-                  const end = new Date(event.endDate);
                   return (
                     <Pressable
                       key={event.id}
@@ -204,7 +203,7 @@ export function WeekView({ days, events, blocksOn, selectedDate, bottomInset, on
                     >
                       <ThemedText numberOfLines={2} style={[styles.agendaEvent, event.cancelled && styles.cancelledText]}>{event.title}</ThemedText>
                       <ThemedText style={styles.agendaMeta}>
-                        {formatTime(start)} - {formatTime(end)}{event.subject ? ` · ${subjectName(event.subject)}` : ''}{event.cancelled ? t('components.calendar.monthYearViews.cancelado') : ''}
+                        {eventTimeText(event)}{event.subject ? ` · ${subjectName(event.subject)}` : ''}{event.cancelled ? t('components.calendar.monthYearViews.cancelado') : ''}
                       </ThemedText>
                     </Pressable>
                   );

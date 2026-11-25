@@ -23,6 +23,7 @@ import {
   formatLongDate,
   formatTime,
   getLoadedCalendarEvent,
+  isDeadline,
   rescheduleCalendarEvent,
   setCalendarEventCancelled,
 } from '@/services/ical-service';
@@ -336,8 +337,8 @@ export default function EventInfoScreen() {
 
         <View style={styles.card}>
           <InfoRow icon={ICONS.date} label={t('eventInfo.fecha')} value={formatLongDate(event.startDate)} />
-          {/* A task has no duration: it is handed in until that time. */}
-          {event.taskId ? (
+          {/* A task or an entrega has no duration: it is handed in until that time. */}
+          {isDeadline(event) ? (
             <InfoRow icon={ICONS.duration} label={t('classhall.taskForm.seEntregaHasta')} value={formatTime(event.startDate)} />
           ) : (
             <InfoRow

@@ -18,7 +18,7 @@ const { onCall, HttpsError } = require("./regions");
 const KEEP = 40;
 // The list is trimmed once it passes this, so most reads write nothing.
 const TRIM_AT = 60;
-const KINDS = ["announcement", "material", "task", "taskTomorrow", "reviewed", "grade", "gradeCorrected", "anniversary", "feed", "test", "dayChange", "signIn", "account", "role", "ticket"];
+const KINDS = ["announcement", "material", "task", "taskTomorrow", "reviewed", "grade", "gradeCorrected", "anniversary", "feed", "test", "dayChange", "signIn", "account", "role", "ticket", "notice"];
 
 function identityDb(getAdminApp) {
   return getFirestore(getAdminApp(), "hn-enrollmentdata");

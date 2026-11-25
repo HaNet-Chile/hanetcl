@@ -22,6 +22,7 @@ import { HanetChip } from '@/components/ui/hanet-chip';
 import { useCached } from '@/services/cache';
 import { atTime, classesOn, getCourseSchedule, isBreak, myWeek } from '@/services/schedule-service';
 import type { CourseSchedule, ScheduleBlock } from '@/services/schedule-service';
+import { DEADLINE_TYPES } from '@/services/ical-service';
 import { t } from '@/i18n';
 
 // New events start on the next 5-minute mark, matching the picker's step.
@@ -38,6 +39,13 @@ function startOn(day?: string) {
   const [year, month, date] = day.split('-').map(Number);
   if (soon.getFullYear() === year && soon.getMonth() === month - 1 && soon.getDate() === date) return soon;
   return new Date(year, month - 1, date, 8, 0, 0, 0);
+}
+
+/** A deadline's usual time: the end of that day. */
+function endOfDay(date: Date) {
+  const next = new Date(date);
+  next.setHours(23, 59, 0, 0);
+  return next;
 }
 
 // Errors whose message is already written for the person using the form.
@@ -73,6 +81,9 @@ function CreateEventScreen() {
   const [requestVerification, setRequestVerification] = useState(false);
   // The time can be a class of the timetable (it takes its start and end) or an exact hour.
   const [timeMode, setTimeMode] = useState<'block' | 'time'>(isEditing ? 'time' : 'block');
+  // Until the time is picked by hand, a deadline goes until 23:59 and anything else starts as it opened.
+  const [timeTouched, setTimeTouched] = useState(isEditing);
+  const deadline = DEADLINE_TYPES.includes(eventType);
   const [blockEnd, setBlockEnd] = useState<Date | null>(null);
   const [isDayPickerVisible, setDayPickerVisibility] = useState(false);
   const keptSchedule = useCached<CourseSchedule>(user ? 'schedule:mine' : null);
@@ -137,7 +148,20 @@ function CreateEventScreen() {
     .map(item => item.name);
   // The event types are saved as written (and read by the widgets and alerts): they're data, not labels.
   // i18n-ignore-next-line
-  const eventTypesList = ['Evaluación sumativa', 'Evaluación formativa', 'Taller', 'Tarea', 'Remedial', 'Actividad', 'Otro'];
+  const eventTypesList = ['Evaluación sumativa', 'Evaluación formativa', 'Taller', 'Tarea', 'Entrega', 'Remedial', 'Actividad', 'Otro'];
+
+  // A task or an entrega is handed in until a time, so it asks for that instead of a start.
+  const chooseType = (type: string) => {
+    setEventType(type);
+    const due = DEADLINE_TYPES.includes(type);
+    if (timeTouched || mode !== 'time' || due === deadline) return;
+    setStartDate(current => (due ? endOfDay(current) : (() => {
+      const opened = startOn(params.day as string | undefined);
+      const back = new Date(current);
+      back.setHours(opened.getHours(), opened.getMinutes(), 0, 0);
+      return back;
+    })()));
+  };
 
   const handleSubmit = async () => {
     setSaveError(null);
@@ -162,7 +186,10 @@ function CreateEventScreen() {
       await ensureClaims(user);
 
       // A class ends when its block does; an exact hour lasts 1.5 hours by default.
-      const endDate = mode === 'block' && chosenBlock && blockEnd ? blockEnd : new Date(startDate.getTime() + 90 * 60 * 1000);
+      // A deadline has no duration: it ends a minute later (the Calendar's rules want an end after the start).
+      const endDate = deadline
+        ? new Date(startDate.getTime() + 60 * 1000)
+        : mode === 'block' && chosenBlock && blockEnd ? blockEnd : new Date(startDate.getTime() + 90 * 60 * 1000);
 
       if (isEditing) {
         const docRef = doc(calendarDb, `HNC-LCH.${courseId}`, eventId);
@@ -249,11 +276,33 @@ function CreateEventScreen() {
         {showErrors && missingTitle && <ThemedText accessibilityLiveRegion="polite" style={[styles.fieldError, styles.titleError]}>{t('createEvent.escribeUnTituloParaEl')}</ThemedText>}
 
         <View style={styles.modalSection}>
-          <ThemedText style={styles.modalLabel}>{t('createEvent.fechaYHora')}</ThemedText>
+          <ThemedText style={styles.modalLabel}>{t('common.tipoDeEvento')}</ThemedText>
+          {showErrors && missingType && <ThemedText accessibilityLiveRegion="polite" style={styles.fieldError}>{t('createEvent.eligeUnTipoDeEvento')}</ThemedText>}
+          <HanetChoice
+            label={t('common.tipoDeEvento')}
+            options={eventTypesList.map(name => ({ value: name, label: name }))}
+            value={eventType || null}
+            onChange={chooseType}
+            scroll
+          />
+        </View>
+
+        <View style={styles.modalSection}>
+          <ThemedText style={styles.modalLabel}>{deadline ? t('createEvent.plazoDeEntrega') : t('createEvent.fechaYHora')}</ThemedText>
           {hasTimetable && (
             <View style={styles.modeRow}>
-              <HanetChip label={t('createEvent.bloqueDelHorario')} compact selected={mode === 'block'} onPress={() => setTimeMode('block')} accessibilityRole="radio" />
-              <HanetChip label={t('createEvent.horaExacta')} compact selected={mode === 'time'} onPress={() => { setTimeMode('time'); setBlockEnd(null); }} accessibilityRole="radio" />
+              <HanetChip label={deadline ? t('createEvent.enUnaClase') : t('createEvent.bloqueDelHorario')} compact selected={mode === 'block'} onPress={() => setTimeMode('block')} accessibilityRole="radio" />
+              <HanetChip
+                label={deadline ? t('createEvent.hastaUnaHora') : t('createEvent.horaExacta')}
+                compact
+                selected={mode === 'time'}
+                onPress={() => {
+                  setTimeMode('time');
+                  setBlockEnd(null);
+                  if (deadline && !timeTouched) setStartDate(current => endOfDay(current));
+                }}
+                accessibilityRole="radio"
+              />
             </View>
           )}
           {mode === 'block' ? (
@@ -286,6 +335,7 @@ function CreateEventScreen() {
               ) : (
                 <ThemedText style={styles.blockHint}>{t('createEvent.eseDiaNoTienesClases')}</ThemedText>
               )}
+              {deadline && dayClasses.length > 0 && <ThemedText style={styles.blockHint}>{t('createEvent.seEntregaAlEmpezarEsa')}</ThemedText>}
               {showErrors && missingBlock && dayClasses.length > 0 && <ThemedText accessibilityLiveRegion="polite" style={styles.fieldError}>{t('createEvent.eligeElBloqueDeLa')}</ThemedText>}
               <HanetDateTimePickerModal
                 dateOnly
@@ -317,11 +367,12 @@ function CreateEventScreen() {
               <CustomIcon name="clock" size={20} color={AppColors.textSecondary} />
             </View>
           </TouchableRipple>
+          {deadline && <ThemedText style={styles.blockHint}>{t('createEvent.sePuedeEntregarHastaEsa')}</ThemedText>}
 
           <HanetDateTimePickerModal
             visible={isDatePickerVisible}
             value={startDate}
-            onConfirm={(date) => { setStartDate(date); setDatePickerVisibility(false); }}
+            onConfirm={(date) => { setStartDate(date); setTimeTouched(true); setDatePickerVisibility(false); }}
             onCancel={() => setDatePickerVisibility(false)}
           />
           </>
@@ -351,18 +402,6 @@ function CreateEventScreen() {
             options={subjectsList.map(name => ({ value: name, label: name }))}
             value={subject || null}
             onChange={setSubject}
-            scroll
-          />
-        </View>
-
-        <View style={styles.modalSection}>
-          <ThemedText style={styles.modalLabel}>{t('common.tipoDeEvento')}</ThemedText>
-          {showErrors && missingType && <ThemedText accessibilityLiveRegion="polite" style={styles.fieldError}>{t('createEvent.eligeUnTipoDeEvento')}</ThemedText>}
-          <HanetChoice
-            label={t('common.tipoDeEvento')}
-            options={eventTypesList.map(name => ({ value: name, label: name }))}
-            value={eventType || null}
-            onChange={setEventType}
             scroll
           />
         </View>

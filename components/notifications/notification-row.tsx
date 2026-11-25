@@ -25,6 +25,7 @@ const ICONS: Record<NotificationKind, React.ComponentProps<typeof Ionicons>['nam
   feed: 'newspaper-outline',
   test: 'notifications-outline',
   dayChange: 'calendar-clear-outline',
+  notice: 'notifications-outline',
   signIn: 'log-in-outline',
   account: 'key-outline',
   role: 'id-card-outline',

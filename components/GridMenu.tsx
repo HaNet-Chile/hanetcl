@@ -176,6 +176,7 @@ function badgeKind(type: HomeCalendarType) {
     case 'Evaluación formativa': return t('components.gridMenu.formativa');
     case 'Taller': return t('components.gridMenu.proxTaller');
     case 'Tarea': return t('components.gridMenu.proxTarea');
+    case 'Entrega': return t('components.gridMenu.proxEntrega');
     case 'Remedial': return t('components.gridMenu.remedial');
     case 'Actividad': return t('anniversary.detail.actividad');
     default: return t('components.gridMenu.prox');
