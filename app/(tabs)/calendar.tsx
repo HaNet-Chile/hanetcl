@@ -1202,11 +1202,15 @@ const styles = StyleSheet.create({
   dayChipSelected: {
     backgroundColor: 'transparent',
   },
-  // Glass draws its own material: no fill under it.
+  // Glass draws its own material: no fill under it. The glass chips are a
+  // little taller, so each one reads as a drop and not a dot.
   dayChipGlass: {
+    minHeight: 78,
     backgroundColor: 'transparent',
   },
   dayChipClear: {
+    minHeight: 78,
+    gap: 3,
     backgroundColor: 'transparent',
   },
   // The labels lie over the glass track, chip for chip.
