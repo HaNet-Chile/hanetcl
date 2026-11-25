@@ -2,11 +2,24 @@ const { onCall, HttpsError } = require("./regions");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { alertAccount, noteSessionsCut } = require("./security");
+const { requireStaff } = require("./staff");
 
-// People of an institution, for the HNT panel: who is on the roster, who
-// already linked their HaNet ID, with which role, and the actions on them.
+// People of an institution, for the HNT panel and the web panel's
+// Administración area: who is on the roster, who already linked their HaNet
+// ID, with which role, and the actions on them.
+//
+// HNT: every institution, every role. Admin: only their own institution, and
+// they name Profesor, Directiva, CEE or Estudiante (never Admin or HNT, and
+// never change someone who already is one). CEE: only their institution's
+// directivas de curso (Estudiante ⇄ Directiva), and they never see RUT or
+// email. Admin and CEE only from the web panel (staff.js).
 
 const ROLES = ["Estudiante", "Directiva", "CEE", "Profesor", "Admin", "HNT"];
+// What each role besides HNT may give, and may take away.
+const GRANTS = {
+  Admin: ["Estudiante", "Directiva", "CEE", "Profesor"],
+  CEE: ["Estudiante", "Directiva"],
+};
 const MAX_MEMBERS = 1000;
 
 function identityDb(getAdminApp) {
@@ -41,8 +54,9 @@ async function writeClaims(adminApp, uid, changes) {
 
 function build(getAdminApp) {
   const adminListMembers = onCall(async (request) => {
-    requireHnt(request);
-    const institutionId = id(request.data?.institutionId);
+    const requested = id(request.data?.institutionId);
+    const staff = await requireStaff(getAdminApp, request, ["Admin", "CEE"], requested || null);
+    const institutionId = requested || staff.institutionId || "";
     const db = identityDb(getAdminApp);
     const institutionRef = db.collection("institutions").doc(institutionId);
 
@@ -72,11 +86,22 @@ function build(getAdminApp) {
       };
     }).sort((a, b) => a.fullName.localeCompare(b.fullName, "es"));
 
-    return { members, truncated: roster.size >= MAX_MEMBERS };
+    // CEE are students: they see who linked, their course and role, no more.
+    if (staff.role === "CEE") {
+      return {
+        members: members
+          .filter(member => member.uid)
+          .map(({ fullName, curso, uid, role }) => ({ rut: uid, fullName, curso, email: null, uid, role, blocked: false })),
+        truncated: roster.size >= MAX_MEMBERS,
+        grants: GRANTS.CEE,
+      };
+    }
+    return { members, truncated: roster.size >= MAX_MEMBERS, grants: staff.hnt ? ROLES : GRANTS[staff.role] };
   });
 
   const adminSetRole = onCall(async (request) => {
-    const caller = requireHnt(request);
+    const staff = await requireStaff(getAdminApp, request, ["Admin", "CEE"]);
+    const caller = staff.auth;
     const uid = id(request.data?.uid);
     const role = request.data?.role;
 
@@ -93,6 +118,16 @@ function build(getAdminApp) {
     const user = await userRef.get();
     if (!user.exists) {
       throw new HttpsError("not-found", "Esa persona todavía no ha vinculado su HaNet ID.");
+    }
+    if (!staff.hnt) {
+      const grants = GRANTS[staff.role];
+      const current = user.data().role || "Estudiante";
+      if (user.data().institutionId !== staff.institutionId) {
+        throw new HttpsError("permission-denied", "Esa persona no es de tu institución.");
+      }
+      if (!grants.includes(role) || !grants.includes(current)) {
+        throw new HttpsError("permission-denied", "Ese cambio de rol lo hace el equipo HaNet.");
+      }
     }
 
     await userRef.update({ role, roleUpdatedAt: FieldValue.serverTimestamp(), roleUpdatedBy: caller.uid });
@@ -145,7 +180,8 @@ function build(getAdminApp) {
   // Undoes the link: the person keeps their HaNet ID but loses the profile,
   // the role and the course, and their roster row becomes available again.
   const adminUnlinkMember = onCall(async (request) => {
-    const caller = requireHnt(request);
+    const staff = await requireStaff(getAdminApp, request, ["Admin"]);
+    const caller = staff.auth;
     const uid = id(request.data?.uid);
     if (!uid) {
       throw new HttpsError("invalid-argument", "Falta indicar a quién desvincular.");
@@ -163,6 +199,14 @@ function build(getAdminApp) {
       const [user, link] = await Promise.all([tx.get(userRef), tx.get(linkRef)]);
       if (!user.exists) {
         throw new HttpsError("not-found", "Esa persona no está vinculada.");
+      }
+      if (!staff.hnt) {
+        if (user.data().institutionId !== staff.institutionId) {
+          throw new HttpsError("permission-denied", "Esa persona no es de tu institución.");
+        }
+        if (["Admin", "HNT"].includes(user.data().role)) {
+          throw new HttpsError("permission-denied", "A esa persona la desvincula el equipo HaNet.");
+        }
       }
 
       const institutionId = user.data().institutionId || link.data()?.institutionId;

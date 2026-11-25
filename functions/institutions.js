@@ -2,6 +2,7 @@ const crypto = require("node:crypto");
 const { onCall, HttpsError } = require("./regions");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const WORDS = require("./wordlist");
+const { requireStaff } = require("./staff");
 
 // institutions/{institutionId}
 //   name, fullName, methods, inviteHash, inviteUpdatedAt, createdAt,
@@ -167,12 +168,15 @@ function build(getAdminApp) {
 
   // ── HaNet team (role HNT) ─────────────────────────────────────────────────
 
+  // HNT: every institution. Admin: only their own (the Administración area).
   const adminListInstitutions = onCall(async (request) => {
-    requireHnt(request);
+    const staff = await requireStaff(getAdminApp, request, ["Admin"]);
     const db = identityDb(getAdminApp);
-    const snapshot = await db.collection("institutions").get();
+    const docs = staff.hnt
+      ? (await db.collection("institutions").get()).docs
+      : [await db.collection("institutions").doc(staff.institutionId).get()].filter(doc => doc.exists);
 
-    const institutions = await Promise.all(snapshot.docs.map(async (doc) => {
+    const institutions = await Promise.all(docs.map(async (doc) => {
       const data = doc.data();
       const roster = await doc.ref.collection("roster").count().get();
       return {
@@ -218,8 +222,8 @@ function build(getAdminApp) {
   // Replaces the institution's invitation phrase. Only the hash is stored, so
   // the phrase returned here cannot be shown again.
   const adminRotateInviteCode = onCall(async (request) => {
-    requireHnt(request);
     const institutionId = text(request.data?.institutionId, 60);
+    await requireStaff(getAdminApp, request, ["Admin"], institutionId);
     const db = identityDb(getAdminApp);
     const ref = db.collection("institutions").doc(institutionId);
 
@@ -244,8 +248,8 @@ function build(getAdminApp) {
   // same sheet twice updates instead of duplicating, and never touches a
   // link that already exists.
   const adminImportRoster = onCall(async (request) => {
-    requireHnt(request);
     const institutionId = text(request.data?.institutionId, 60);
+    await requireStaff(getAdminApp, request, ["Admin"], institutionId);
     const rows = Array.isArray(request.data?.rows) ? request.data.rows : [];
     const db = identityDb(getAdminApp);
     const ref = db.collection("institutions").doc(institutionId);

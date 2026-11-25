@@ -200,4 +200,33 @@ function alreadyLinkedEmail({ institutionName, institutionLogoUrl, institutionBa
   return { subject: `Tu correo ya está vinculado a un HaNet ID de ${institutionName}`, html, text };
 }
 
-module.exports = { RESEND_API_KEY, sendEmail, verificationCodeEmail, magicLinkEmail, alreadyLinkedEmail, escapeHtml };
+// The second step to enter the web panel (panel-auth.js). Six digits, so it
+// never looks like the 4-digit sign-up code.
+function panelCodeEmail({ fullName, code, minutes }) {
+  const firstName = String(fullName || "").trim().split(/\s+/)[0] || "";
+  const greeting = firstName ? `Hola, ${escapeHtml(firstName)}.` : "Hola.";
+
+  const html = layout(`
+<tr><td style="padding:44px 32px;font-family:Inter,Arial,sans-serif;font-size:16px;line-height:24px;color:#241c15;">
+<p style="margin:0;font-family:'DM Sans',Arial,sans-serif;font-size:40px;line-height:48px;font-weight:700;color:#000000;">Tu código para entrar al panel</p>
+<p style="margin:22px 0 0;">${greeting} Alguien inició sesión con tu HaNet ID en el panel web de HaNet. Para terminar de entrar, escribe este código:</p>
+</td></tr>
+<tr><td align="center" style="padding:0 32px;">${codeBoxes(code)}</td></tr>
+<tr><td style="padding:44px 32px;font-family:Inter,Arial,sans-serif;font-size:16px;line-height:24px;color:#241c15;">
+<p style="margin:0;">Vence en ${minutes} minutos.</p>
+<p style="margin:16px 0 0;">Si no fuiste tú, alguien conoce tu contraseña: cámbiala desde la app (Configuraciones, Seguridad) y no compartas este código.</p>
+</td></tr>`);
+
+  const text = [
+    "Tu código para entrar al panel de HaNet",
+    "",
+    `Código: ${code}`,
+    `Vence en ${minutes} minutos.`,
+    "",
+    "Si no fuiste tú, alguien conoce tu contraseña: cámbiala desde la app y no compartas este código.",
+  ].join("\n");
+
+  return { subject: `${code} es tu código para entrar al panel de HaNet`, html, text };
+}
+
+module.exports = { RESEND_API_KEY, sendEmail, verificationCodeEmail, magicLinkEmail, alreadyLinkedEmail, panelCodeEmail, escapeHtml };
