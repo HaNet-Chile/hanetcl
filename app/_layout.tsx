@@ -94,14 +94,6 @@ function sheetOptions(route: string) {
   return { presentation: 'transparentModal', headerShown: false, animation: Platform.OS === 'web' ? 'none' : 'fade' } as const;
 }
 
-/**
- * A sheet HaNet draws itself on every platform (`withSheetFrame(..., { ios: true })`):
- * the route is only a transparent modal and the screen brings its panel.
- */
-function appSheetOptions() {
-  return { presentation: 'transparentModal', headerShown: false, animation: Platform.OS === 'web' ? 'none' : 'fade' } as const;
-}
-
 export default function RootLayout() {
   const { user, initializing } = useSession();
   const router = useRouter();
@@ -261,8 +253,7 @@ export default function RootLayout() {
             <Stack.Screen name="anniversary/leads" options={sheetOptions('anniversary/leads')} />
             <Stack.Screen name="anniversary/score" options={sheetOptions('anniversary/score')} />
             <Stack.Screen name="tickets/index" options={{ headerShown: false }} />
-            {/* HaNet's own sheet on iOS too: the native form sheet showed this one empty (grey, or white glass). */}
-            <Stack.Screen name="tickets/detail" options={Platform.OS === 'ios' ? appSheetOptions() : sheetOptions('tickets/detail')} />
+            <Stack.Screen name="tickets/detail" options={sheetOptions('tickets/detail')} />
             <Stack.Screen name="tickets/validated" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
             <Stack.Screen name="tickets/arrival" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }} />
             <Stack.Screen name="tickets/receive" options={{ headerShown: false, animation: 'fade' }} />

@@ -18,9 +18,10 @@ import { ActivityIndicator, Platform, ScrollView, Share, StyleSheet, View } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 
-// The ticket opened: the HaNet sheet on every platform, on the surface color.
-// iOS's native form sheet showed it empty (react-native-screens 4.26 on iOS 26),
-// so it opens as a transparent modal there too. Its QR changes by itself every 30 seconds, with no
+// The ticket opened: a native sheet on iOS, the HaNet sheet on Android and
+// the web, both on the surface color. Like ClassHall's sheets, the ScrollView
+// is the screen's root: inside iOS's form sheet a View wrapping it showed
+// nothing (an empty grey sheet). Its QR changes by itself every 30 seconds, with no
 // countdown (muxp: "se ve feo y estorba"). While it is open the screen
 // listens to the ticket, so the moment it is read at the door the phone plays
 // "Entrada válida" (app/tickets/validated.tsx).
@@ -109,7 +110,7 @@ function TicketDetailScreen() {
 
   if (!ticket) {
     return (
-      <View style={[styles.sheet, styles.center, { paddingBottom: insets.bottom + AppSpacing.lg }]}>
+      <ScrollView style={styles.sheet} contentContainerStyle={[styles.center, { paddingBottom: insets.bottom + AppSpacing.lg }]}>
         {tickets === undefined && !failed ? (
           <ActivityIndicator color={AppColors.textSecondary} />
         ) : (
@@ -118,7 +119,7 @@ function TicketDetailScreen() {
             <HanetButton label={t('common.volver')} variant="surface" onPress={() => router.back()} />
           </>
         )}
-      </View>
+      </ScrollView>
     );
   }
 
@@ -143,56 +144,54 @@ function TicketDetailScreen() {
           : t('tickets.detail.muestraEsteQrEnLa');
 
   return (
-    <View style={styles.sheet}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + AppSpacing.xl }]} showsVerticalScrollIndicator={false}>
-        <View style={styles.ticketWrap}>
-          <TicketView event={ticket.event} status={ticket.status} qrValue={qrValue} number={ticket.number} cap={ticket.event.cap} size="large" />
-        </View>
-        <ThemedText accessibilityLiveRegion="polite" style={styles.lead}>{statusLine}</ThemedText>
+    <ScrollView style={styles.sheet} contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + AppSpacing.xl }]} showsVerticalScrollIndicator={false}>
+      <View style={styles.ticketWrap}>
+        <TicketView event={ticket.event} status={ticket.status} qrValue={qrValue} number={ticket.number} cap={ticket.event.cap} size="large" />
+      </View>
+      <ThemedText accessibilityLiveRegion="polite" style={styles.lead}>{statusLine}</ThemedText>
 
-        <View style={styles.card}>
-          {rows.map((row, index) => (
-            <View key={row.label} style={[styles.row, index > 0 && styles.rowLine]}>
-              <Ionicons name={row.icon} size={20} color={AppColors.textSecondary} />
-              <View style={styles.rowCopy}>
-                <ThemedText style={styles.rowLabel}>{row.label}</ThemedText>
-                <ThemedText style={styles.rowValue}>{row.value}</ThemedText>
-              </View>
+      <View style={styles.card}>
+        {rows.map((row, index) => (
+          <View key={row.label} style={[styles.row, index > 0 && styles.rowLine]}>
+            <Ionicons name={row.icon} size={20} color={AppColors.textSecondary} />
+            <View style={styles.rowCopy}>
+              <ThemedText style={styles.rowLabel}>{row.label}</ThemedText>
+              <ThemedText style={styles.rowValue}>{row.value}</ThemedText>
             </View>
-          ))}
-        </View>
+          </View>
+        ))}
+      </View>
 
-        {!!error && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{error}</ThemedText>}
+      {!!error && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{error}</ThemedText>}
 
-        <View style={styles.actions}>
-          {demo && (
-            <HanetButton label={t('tickets.detail.simularLecturaEnLaPuerta')} variant="accent" icon={<Ionicons name="scan-outline" size={18} color={AppColors.textPrimary} />} onPress={() => router.push({ pathname: '/tickets/validated', params: { demo: '1' } })} />
-          )}
-          {live && ticket.event.giftable && !demo && (
-            <HanetButton label={t('tickets.detail.regalar')} variant="accent" disabled={busy} icon={<Ionicons name="gift-outline" size={18} color={AppColors.textPrimary} />} onPress={() => void gift()} />
-          )}
-          {ticket.status === 'link' && (
-            <>
-              <HanetButton label={t('tickets.detail.enviarUnLinkNuevo')} variant="accent" disabled={busy} onPress={() => void gift()} />
-              <HanetButton label={t('tickets.detail.anularElLink')} variant="surface" disabled={busy} onPress={() => void takeBack()} />
-            </>
-          )}
-          {live && (
-            <HanetButton label={t('tickets.detail.compartirComoImagen')} variant="surface" disabled={busy} icon={<Ionicons name="image-outline" size={18} color={AppColors.textPrimary} />} onPress={() => setConfirm('image')} />
-          )}
-          {live && ticket.event.printable && (
-            <HanetButton label={t('tickets.detail.descargarParaImprimir')} variant="surface" disabled={busy} icon={<Ionicons name="print-outline" size={18} color={AppColors.textPrimary} />} onPress={() => setConfirm('print')} />
-          )}
-          {(ticket.status === 'shared' || ticket.status === 'printed') && (
-            <HanetButton
-              label={ticket.status === 'printed' ? t('tickets.detail.descargarOtraVez') : t('tickets.detail.compartirOtraVez')}
-              variant="surface"
-              disabled={busy}
-              onPress={() => void share(ticket.status === 'printed' ? 'print' : 'image')}
-            />
-          )}
-        </View>
-      </ScrollView>
+      <View style={styles.actions}>
+        {demo && (
+          <HanetButton label={t('tickets.detail.simularLecturaEnLaPuerta')} variant="accent" icon={<Ionicons name="scan-outline" size={18} color={AppColors.textPrimary} />} onPress={() => router.push({ pathname: '/tickets/validated', params: { demo: '1' } })} />
+        )}
+        {live && ticket.event.giftable && !demo && (
+          <HanetButton label={t('tickets.detail.regalar')} variant="accent" disabled={busy} icon={<Ionicons name="gift-outline" size={18} color={AppColors.textPrimary} />} onPress={() => void gift()} />
+        )}
+        {ticket.status === 'link' && (
+          <>
+            <HanetButton label={t('tickets.detail.enviarUnLinkNuevo')} variant="accent" disabled={busy} onPress={() => void gift()} />
+            <HanetButton label={t('tickets.detail.anularElLink')} variant="surface" disabled={busy} onPress={() => void takeBack()} />
+          </>
+        )}
+        {live && (
+          <HanetButton label={t('tickets.detail.compartirComoImagen')} variant="surface" disabled={busy} icon={<Ionicons name="image-outline" size={18} color={AppColors.textPrimary} />} onPress={() => setConfirm('image')} />
+        )}
+        {live && ticket.event.printable && (
+          <HanetButton label={t('tickets.detail.descargarParaImprimir')} variant="surface" disabled={busy} icon={<Ionicons name="print-outline" size={18} color={AppColors.textPrimary} />} onPress={() => setConfirm('print')} />
+        )}
+        {(ticket.status === 'shared' || ticket.status === 'printed') && (
+          <HanetButton
+            label={ticket.status === 'printed' ? t('tickets.detail.descargarOtraVez') : t('tickets.detail.compartirOtraVez')}
+            variant="surface"
+            disabled={busy}
+            onPress={() => void share(ticket.status === 'printed' ? 'print' : 'image')}
+          />
+        )}
+      </View>
 
       <HanetDialog visible={!!confirm} onRequestClose={() => setConfirm(null)} dismissOnBackdrop title={confirm === 'print' ? t('tickets.detail.descargarParaImprimir2') : t('tickets.detail.compartirComoImagen2')} body={confirm === 'print'
         ? t('tickets.detail.laEntradaSaleDeTu')
@@ -205,13 +204,13 @@ function TicketDetailScreen() {
 
       <TicketShareModal ticket={shared ? ticket : null} kind={shared?.kind ?? 'image'} code={shared?.code ?? null} qr={shared?.qr ?? null} onClose={() => setShared(null)} />
       <ScreenshotGuard active={live} ticket />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   sheet: { flex: 1, backgroundColor: AppColors.surface },
-  center: { alignItems: 'center', justifyContent: 'center', gap: AppSpacing.lg, padding: AppSpacing.xl },
+  center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', gap: AppSpacing.lg, padding: AppSpacing.xl },
   content: { paddingTop: AppSpacing.xxl, paddingHorizontal: AppSpacing.lg, gap: AppSpacing.lg },
   ticketWrap: { alignItems: 'center' },
   lead: { ...AppType.callout, fontFamily: 'DMSans_400Regular', color: AppColors.textSecondary, textAlign: 'center' },
@@ -225,4 +224,4 @@ const styles = StyleSheet.create({
   actions: { gap: AppSpacing.sm },
 });
 
-export default withSheetFrame(TicketDetailScreen, AppColors.surface, { ios: true });
+export default withSheetFrame(TicketDetailScreen, AppColors.surface);
