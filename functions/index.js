@@ -75,6 +75,9 @@ Object.assign(exports, require("./notices").build(getAdminApp));
 // Data for the profile screen.
 Object.assign(exports, require("./profile").build(getAdminApp));
 
+// The web panel's second step: an email code or an authenticator app.
+Object.assign(exports, require("./panel-auth").build(getAdminApp));
+
 // Identity link through the institutional email.
 Object.assign(exports, require("./link").build(getAdminApp));
 

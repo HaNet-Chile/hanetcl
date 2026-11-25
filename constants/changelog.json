@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "0.15.2-beta",
+      "date": "2026-11-25",
+      "title": "Panel web para liceos",
+      "items": [
+        "El panel web de HaNet pide un segundo paso para entrar: un código que llega a tu correo o el de una app de autenticación.",
+        "La Administración de cada liceo maneja su propia gente desde el panel: roles, nómina y código de invitación.",
+        "El centro de estudiantes nombra a las directivas de curso desde el panel."
+      ],
+      "highlights": [
+        "El panel web pide un código además de la contraseña.",
+        "Cada liceo administra su gente desde el panel."
+      ]
+    },
+    {
       "version": "0.15.1-beta",
       "date": "2026-11-25",
       "title": "Plazos de entrega",

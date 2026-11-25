@@ -8,6 +8,11 @@ name: Deploy Firebase
 #                                           to the hanet-app site (live)
 #   firebase-deploy-hosting-1             → only the hanet-edu site (logos, terms, /vincular)
 #   firebase-deploy-all-1                 → everything in firebase.json (web app included)
+#   firebase-deploy-panel-1               → builds martinuxp/hanet-panel (main, or the
+#                                           `panel_ref` input) and publishes it to the
+#                                           hanet-panel site, creating the site if missing
+# By hand, "functions:nombreA,functions:nombreB" publishes only those functions
+# (nothing else is touched or deleted).
 on:
   push:
     tags:
@@ -15,9 +20,13 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Qué publicar (functions, storage, firestore, hosting, web; separados por coma). Vacío = todo."
+        description: "Qué publicar (functions, functions:nombre, storage, firestore, hosting, web, panel; separados por coma). Vacío = todo."
         required: false
         default: "functions,storage"
+      panel_ref:
+        description: "Rama de hanet-panel para 'panel' (vacío = main)."
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -64,19 +73,27 @@ jobs:
           fi
           only=""
           web=false
+          panel=false
           for part in $parts; do
             case "$part" in
               functions|storage|firestore) only="${only:+$only,}$part" ;;
+              functions:*) only="${only:+$only,}$part" ;;
+              panel) panel=true ;;
               hosting) only="${only:+$only,}hosting:hanet-edu" ;;
               web) only="${only:+$only,}hosting:hanet-app" ; web=true ;;
               all) only="" ; web=true ; break ;;
             esac
           done
-          # Nothing named (or "all") deploys everything, the web app included.
-          [ -z "$only" ] && web=true
+          # Nothing named (or "all") deploys everything, the web app included,
+          # unless the only thing named is the panel.
+          main=true
+          if [ -z "$only" ] && [ "$panel" = "true" ] && [ "$web" = "false" ]; then main=false; fi
+          [ -z "$only" ] && [ "$main" = "true" ] && web=true
           echo "only=${only}" >> "$GITHUB_OUTPUT"
           echo "web=${web}" >> "$GITHUB_OUTPUT"
-          echo "Publicando: ${only:-todo}"
+          echo "main=${main}" >> "$GITHUB_OUTPUT"
+          echo "panel=${panel}" >> "$GITHUB_OUTPUT"
+          echo "Publicando: $([ "$main" = "true" ] && echo "${only:-todo}") $([ "$panel" = "true" ] && echo "panel")"
 
       - name: Install app dependencies
         if: steps.target.outputs.web == 'true'
@@ -92,9 +109,33 @@ jobs:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Deploy
+        if: steps.target.outputs.main == 'true'
         env:
           ONLY: ${{ steps.target.outputs.only }}
         run: |
           args="--project hanet-edu --non-interactive --force"
           if [ -n "$ONLY" ]; then args="$args --only $ONLY"; fi
           npx --yes firebase-tools@15 deploy $args
+
+      - name: Check out the panel
+        if: steps.target.outputs.panel == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: martinuxp/hanet-panel
+          ref: ${{ github.event.inputs.panel_ref || 'main' }}
+          path: hanet-panel
+
+      - name: Build the panel
+        if: steps.target.outputs.panel == 'true'
+        working-directory: hanet-panel
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy the panel
+        if: steps.target.outputs.panel == 'true'
+        working-directory: hanet-panel
+        run: |
+          # The site exists once; creating it again only fails, so that is fine.
+          npx --yes firebase-tools@15 hosting:sites:create hanet-panel --project hanet-edu --non-interactive || true
+          npx --yes firebase-tools@15 deploy --only hosting:hanet-panel --project hanet-edu --non-interactive
