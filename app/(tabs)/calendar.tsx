@@ -1205,11 +1205,11 @@ const styles = StyleSheet.create({
   // Glass draws its own material: no fill under it. The glass chips are a
   // little taller, so each one reads as a drop and not a dot.
   dayChipGlass: {
-    minHeight: 78,
+    minHeight: 73,
     backgroundColor: 'transparent',
   },
   dayChipClear: {
-    minHeight: 78,
+    minHeight: 73,
     gap: 3,
     backgroundColor: 'transparent',
   },
