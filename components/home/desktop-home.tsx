@@ -22,7 +22,7 @@ import { eventDay, listEvents } from '@/services/events-service';
 import type { EventList, HnEvent } from '@/services/events-service';
 import { feedWhen, listFeed } from '@/services/feed-service';
 import type { Feed, FeedPost } from '@/services/feed-service';
-import { fetchCalendarEvents, restoreCalendarEvents } from '@/services/ical-service';
+import { fetchCalendarEvents, isDeadline, restoreCalendarEvents } from '@/services/ical-service';
 import type { CalendarEvent } from '@/services/ical-service';
 import { classesOn, getCourseSchedule, isBreak, minutesOf, myWeek, nowAndNext, restoreCourseSchedule } from '@/services/schedule-service';
 import type { CourseSchedule, ScheduleBlock } from '@/services/schedule-service';
@@ -73,7 +73,7 @@ function daysUntil(date: Date | number, now: Date) {
 
 // The Calendar's event types are stored data, compared as they are saved.
 const isEvaluation = (event: CalendarEvent) => !!event.eventType?.toLocaleLowerCase('es').startsWith('evaluaci'); // i18n-ignore
-const isTask = (event: CalendarEvent) => event.eventType === 'Tarea'; // i18n-ignore
+const isTask = (event: CalendarEvent) => isDeadline(event);
 
 /** "Hoy", "Mañana" or "5 días", for the numbers of the row on top. */
 function countdown(days: number) {

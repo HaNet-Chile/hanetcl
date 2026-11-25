@@ -10,7 +10,7 @@ import type { AppIconId } from '@/services/app-icon';
 import { describeAuthError, getMyProfile, useSession } from '@/services/auth-service';
 import type { MyProfile } from '@/services/auth-service';
 import { useCached } from '@/services/cache';
-import { examRemindersEnabled, setExamRemindersEnabled } from '@/services/exam-reminders';
+import { dueRemindersEnabled, examRemindersEnabled, setDueRemindersEnabled, setExamRemindersEnabled } from '@/services/exam-reminders';
 import { setWhatsNewPromptEnabled, whatsNewPromptEnabled } from '@/services/whats-new-prompt';
 import { gradesLockAvailable, setGradesLock, useGradesLock } from '@/services/grades-lock';
 import { getProfilePhotoUrl } from '@/services/profile-service';
@@ -53,6 +53,7 @@ export default function SettingsScreen() {
   // The 7:00 summary (saved with the account) and the evaluation reminders (this phone only).
   const [morningOn, setMorningOn] = useState(true);
   const [examsOn, setExamsOn] = useState(true);
+  const [dueOn, setDueOn] = useState(true);
   // Notas behind the phone's lock: a setting of this phone.
   const gradesLock = useGradesLock();
   const [lockAvailable, setLockAvailable] = useState<boolean | null>(null);
@@ -69,6 +70,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     void examRemindersEnabled().then(setExamsOn);
+    void dueRemindersEnabled().then(setDueOn);
     void whatsNewPromptEnabled().then(setWhatsNewOn);
     void gradesLockAvailable().then(setLockAvailable);
   }, []);
@@ -153,6 +155,14 @@ export default function SettingsScreen() {
     if (Platform.OS !== 'web') void Haptics.selectionAsync();
   };
 
+  const chooseDue = async (on: boolean) => {
+    if (on === dueOn) return;
+    setDueOn(on);
+    if (on && permission === 'undetermined') setPermission(await enablePush());
+    await setDueRemindersEnabled(on);
+    if (Platform.OS !== 'web') void Haptics.selectionAsync();
+  };
+
   // Web only: how to add HaNet to the home screen, for whoever closed the Home's guide.
   const [installGuideAvailable] = useState(() => Platform.OS === 'web' && !isInstalled() && installGuideKind() !== 'unsupported');
   const [installGuideOpen, setInstallGuideOpen] = useState(false);
@@ -160,7 +170,7 @@ export default function SettingsScreen() {
   const tapVersion = useSecretTaps(useCallback(() => setEggOpen(true), []));
 
   // Any account notification on while the phone blocks or never asked: say so above the group.
-  const anyPushOn = classhallOn || morningOn || anniversaryOn || feedOn || noticesOn || examsOn;
+  const anyPushOn = classhallOn || morningOn || anniversaryOn || feedOn || noticesOn || examsOn || dueOn;
   const name = profile?.fullName || keptProfile?.fullName || user?.email || 'HaNet ID';
   const avatarSeed = profile?.avatarSeed ?? keptProfile?.avatarSeed ?? null;
 
@@ -296,6 +306,14 @@ export default function SettingsScreen() {
                     detail={onWeb ? t('settings.soloEnLaAppDelTelefono') : t('settings.n24Y4HorasAntesSolo')}
                     value={examsOn}
                     onChange={on => void chooseExams(on)}
+                    disabled={onWeb}
+                  />
+                  <SettingsToggleRow
+                    icon="checkbox-outline"
+                    label={t('settings.avisosDeEntregas')}
+                    detail={onWeb ? t('settings.soloEnLaAppDelTelefono') : t('settings.elDiaAntesY3')}
+                    value={dueOn}
+                    onChange={on => void chooseDue(on)}
                     disabled={onWeb}
                   />
                   <SettingsToggleRow

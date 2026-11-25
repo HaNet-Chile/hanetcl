@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "0.15.1-beta",
+      "date": "2026-11-25",
+      "title": "Plazos de entrega",
+      "items": [
+        "En el Calendar hay un tipo nuevo, \"Entrega\", para trabajos, informes y proyectos. Al elegirlo (o \"Tarea\") se pide el plazo: en una clase del horario o hasta una hora, que parte en las 23:59.",
+        "Las tareas y entregas se muestran con su plazo (\"Hasta las 23:59\" o \"Se entrega en esta clase\") en vez de una hora de inicio y fin.",
+        "El teléfono avisa de cada tarea y entrega del Calendar el día antes a las 19:00 y 3 horas antes. Se apaga en Configuraciones → Notificaciones → Avisos de entregas.",
+        "El resumen de las 7:00 también nombra las entregas del día, y el aviso del Calendar en el Inicio las muestra."
+      ],
+      "highlights": [
+        "Nuevo en el Calendar: plazos de entrega para trabajos, informes y proyectos.",
+        "Te avisamos el día antes y 3 horas antes de cada entrega."
+      ]
+    },
+    {
       "version": "0.15.0-beta",
       "date": "2026-11-25",
       "title": "Notificaciones desde Organizar",

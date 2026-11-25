@@ -84,7 +84,7 @@ export function TodayEventCard({ event, compact, door, style }: { event: HnEvent
             <View style={styles.liveDot} />
             <ThemedText style={styles.kickerText} numberOfLines={1}>
               {compact
-                ? t(door ? 'organize.hoyEscaneasWhen' : 'organize.hoyOrganizasWhen', { when: eventWhen(event).split(' ').pop() })
+                ? (door ? t('organize.hoyEscaneasWhen', { when: eventWhen(event).split(' ').pop() }) : t('organize.hoyOrganizasWhen', { when: eventWhen(event).split(' ').pop() }))
                 : started ? t('organize.enCursoVenue', { venue: event.venueName || eventWhen(event) }) : eventWhen(event)}
             </ThemedText>
           </View>

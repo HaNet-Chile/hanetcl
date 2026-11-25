@@ -28,6 +28,8 @@ import {
   getWeekDays,
   getMonday,
   formatTime,
+  eventTimeText,
+  isDeadline,
   CalendarEvent,
 } from '@/services/ical-service';
 import { EVENT_EDITOR_ROLES, ensureClaims, useRole, useSession } from '@/services/auth-service';
@@ -904,7 +906,7 @@ function DailyTimeline({ isAdmin, events, blocks, change, canManageChanges, refr
               <ClassCard
                 id={item.event.id}
                 title={item.event.title}
-                time={`${formatTime(new Date(item.event.startDate))} - ${formatTime(new Date(item.event.endDate))}`}
+                time={eventTimeText(item.event)}
                 desc={item.event.description}
                 isAdmin={isAdmin}
                 writer={item.event.writer}
@@ -980,6 +982,11 @@ function BlockCard({ block, events, isAdmin, fate = 'normal', endsAt = null }: {
           <ThemedText style={styles.blockEventType}>{(event.eventType || 'Evento').split(/[.\s]/)[0]}</ThemedText>
           <View style={styles.blockEventText}>
             <ThemedText style={[styles.blockEventTitle, event.cancelled && { textDecorationLine: 'line-through' }]} numberOfLines={2}>{event.title}</ThemedText>
+            {isDeadline(event) && !event.moved && (
+              <ThemedText style={styles.blockEventMoved} numberOfLines={1}>
+                {formatTime(new Date(event.startDate)) === block.start ? t('calendar.seEntregaEnEstaClase') : eventTimeText(event)}
+              </ThemedText>
+            )}
             {!!event.moved && (
               <ThemedText style={styles.blockEventMoved} numberOfLines={1}>
                 {event.moved.kind === 'suspended' ? t('calendar.seMovioDesdeElChangedaylabel', { changeDayLabel: changeDayLabel(dateKeyOf(event.moved.from)) }) : t('calendar.seMovioDesdeElChangedaylabel2', { changeDayLabel: changeDayLabel(dateKeyOf(event.moved.from)) })}
