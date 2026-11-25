@@ -1,7 +1,7 @@
 {
   "releases": [
     {
-      "version": "0.14.5-beta",
+      "version": "0.14.6-beta",
       "date": "2026-11-25",
       "title": "Entradas para invitados",
       "items": [
@@ -17,8 +17,13 @@
     {
       "version": "0.14.5-beta",
       "date": "2026-11-25",
-      "title": "",
-      "items": []
+      "title": "Hojas completas",
+      "items": [
+        "En Android y en la web, lo que va al final de una hoja (como \"Compartir como imagen\" en tu entrada) ya no queda escondido bajo el borde de la pantalla."
+      ],
+      "highlights": [
+        "Los botones del final de una hoja, como \"Compartir como imagen\" en tu entrada, ya no quedan escondidos."
+      ]
     },
     {
       "version": "0.14.4-beta",
