@@ -18,8 +18,9 @@ import { ActivityIndicator, Platform, ScrollView, Share, StyleSheet, View } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '@/i18n';
 
-// The ticket opened: a native sheet on iOS, the HaNet sheet on Android and
-// the web, both on the surface color. Its QR changes by itself every 30 seconds, with no
+// The ticket opened: the HaNet sheet on every platform, on the surface color.
+// iOS's native form sheet showed it empty (react-native-screens 4.26 on iOS 26),
+// so it opens as a transparent modal there too. Its QR changes by itself every 30 seconds, with no
 // countdown (muxp: "se ve feo y estorba"). While it is open the screen
 // listens to the ticket, so the moment it is read at the door the phone plays
 // "Entrada válida" (app/tickets/validated.tsx).
@@ -209,8 +210,6 @@ function TicketDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  // The HaNet surface everywhere, painted here: on iOS the sheet itself stays
-  // transparent (app/_layout.tsx), or its glass comes out white.
   sheet: { flex: 1, backgroundColor: AppColors.surface },
   center: { alignItems: 'center', justifyContent: 'center', gap: AppSpacing.lg, padding: AppSpacing.xl },
   content: { paddingTop: AppSpacing.xxl, paddingHorizontal: AppSpacing.lg, gap: AppSpacing.lg },
@@ -226,4 +225,4 @@ const styles = StyleSheet.create({
   actions: { gap: AppSpacing.sm },
 });
 
-export default withSheetFrame(TicketDetailScreen, AppColors.surface);
+export default withSheetFrame(TicketDetailScreen, AppColors.surface, { ios: true });

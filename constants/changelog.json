@@ -1,6 +1,23 @@
 {
   "releases": [
     {
+      "version": "0.14.5-beta",
+      "date": "2026-11-25",
+      "title": "Entrada abierta",
+      "items": [
+        "En iPhone, abrir una entrada ya no muestra una hoja vacía: se abre en la hoja de HaNet, igual que en Android."
+      ],
+      "highlights": [
+        "Abrir una entrada en iPhone vuelve a mostrar la entrada y su QR."
+      ]
+    },
+    {
+      "version": "0.14.5-beta",
+      "date": "2026-11-25",
+      "title": "",
+      "items": []
+    },
+    {
       "version": "0.14.4-beta",
       "date": "2026-11-25",
       "title": "Cristal en el iPhone",

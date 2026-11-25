@@ -249,9 +249,13 @@ function WebClip({ children }: { children: React.ReactNode }) {
   return <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'clip' }}>{children}</div>;
 }
 
-/** Wraps a sheet screen so it is a HaNet sheet on Android and the web; iOS keeps its native sheet. */
-export function withSheetFrame<Props extends object>(Screen: React.ComponentType<Props>, backgroundColor: string) {
-  if (Platform.OS === 'ios') return Screen;
+/**
+ * Wraps a sheet screen so it is a HaNet sheet on Android and the web; iOS
+ * keeps its native sheet unless `ios` asks for this one too (the route then
+ * opens as a transparent modal on iOS as well, see `appSheetOptions`).
+ */
+export function withSheetFrame<Props extends object>(Screen: React.ComponentType<Props>, backgroundColor: string, { ios = false }: { ios?: boolean } = {}) {
+  if (Platform.OS === 'ios' && !ios) return Screen;
 
   return function SheetScreen(props: Props) {
     return (
