@@ -51,9 +51,9 @@ type Frame = { x: number; width: number };
 // Everywhere else (Android, web, older iPhones) the chips stay as they were.
 const LIQUID_GLASS = Platform.OS === 'ios' && isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
 const AnimatedGlassView = Animated.createAnimatedComponent(GlassView);
-// How close two glass shapes get before they start to merge. The chips sit
-// 6 pt apart, so at rest each one stays its own drop.
-const GLASS_SPACING = 4;
+// Glass shapes merge only once they touch: at rest each chip (6 pt apart)
+// is its own drop and none of the selection's light spills onto a neighbour.
+const GLASS_SPACING = 0;
 
 // Moving between levels reads as a camera move anchored on what was tapped:
 // zooming out (day → week → month → year) everything shrinks a little, the
@@ -518,7 +518,7 @@ export default function CalendarScreen() {
       >
         <ThemedText style={[styles.dayName, isSelected && styles.dayNameSelected]}>{day.dayName}</ThemedText>
         <ThemedText style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{day.date}</ThemedText>
-        {dayChange ? <View style={[styles.eventDot, styles.changeDot]} /> : hasEvents && <View style={styles.eventDot} />}
+        <View style={[styles.eventDot, dayChange ? styles.changeDot : !hasEvents && styles.eventDotNone]} />
       </Pressable>
     );
   };
@@ -577,7 +577,7 @@ export default function CalendarScreen() {
               onPress={event => openMonth(pointOf(event))}
               style={({ pressed }) => [styles.headerTitleButton, pressed && styles.pressed]}
             >
-              <ThemedText accessibilityRole="header" style={styles.headerTitle}>{currentDayInfo.fullDate}</ThemedText>
+              <ThemedText accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.headerTitle, styles.headerTitleFit]}>{currentDayInfo.fullDate}</ThemedText>
               <CustomIcon name="calendar" size={16} color={AppColors.textSecondary} />
             </Pressable>
             <View style={styles.headerLinks}>
@@ -1133,6 +1133,7 @@ const styles = StyleSheet.create({
   headerCenter: {
     flex: 1,
     minHeight: 44,
+    paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1144,6 +1145,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     minHeight: 32,
+    maxWidth: '100%',
+  },
+  // A long date ("Mañana, 25 de Noviembre, 2026") stays on one line: it
+  // shrinks a little first, and the icon never leaves the space between the arrows.
+  headerTitleFit: {
+    flexShrink: 1,
   },
   headerLinks: {
     flexDirection: 'row',
@@ -1236,6 +1243,10 @@ const styles = StyleSheet.create({
   },
   dayNumberSelected: {
     color: AppColors.controlOnActive,
+  },
+  // Days without anything keep the dot's space, so every chip's letters line up.
+  eventDotNone: {
+    backgroundColor: 'transparent',
   },
   eventDot: {
     width: 5,
