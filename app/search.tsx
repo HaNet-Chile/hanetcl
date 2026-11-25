@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { HanetChip } from '@/components/ui/hanet-chip';
 import { useKeyboardOverlap } from '@/components/ui/keyboard';
 import { MessageCard } from '@/components/ui/message-card';
+import { GlassFill, LIQUID_GLASS, glassClear } from '@/components/ui/liquid-glass';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppTouch, AppType } from '@/constants/design-tokens';
 import { SPRING_SMOOTH } from '@/constants/motion';
 import { useSideNav } from '@/hooks/use-desktop-layout';
@@ -124,7 +125,9 @@ export default function SearchScreen() {
               </View>
             </Animated.View>
           )}
-          <View style={styles.field}>
+          {/* Glass like the Home's pill, so the pill still seems to grow into this field. */}
+          <View style={[styles.field, LIQUID_GLASS && glassClear]}>
+            <GlassFill radius={AppTouch.minimum / 2} />
             <Ionicons name="search" size={18} color={AppColors.textSecondary} style={styles.fieldIcon} />
             <TextInput
               ref={input}
