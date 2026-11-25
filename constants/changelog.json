@@ -1,6 +1,22 @@
 {
   "releases": [
     {
+      "version": "0.15.0-beta",
+      "date": "2026-11-25",
+      "title": "Notificaciones desde Organizar",
+      "items": [
+        "La administración y el CEE pueden enviar notificaciones desde Organizar: a todo el liceo, a una jornada, a cursos, a los presidentes de curso o a las directivas.",
+        "La administración también puede enviarlas a estudiantes elegidos uno por uno o a grupos guardados, como una selección o un taller.",
+        "Antes de enviarla se ve cómo quedará y a cuántas personas les llega. Las enviadas quedan en una lista.",
+        "Cada notificación llega al teléfono y queda en Notificaciones, al final del Inicio.",
+        "Nuevo interruptor en Configuraciones: \"Avisos de tu liceo\"."
+      ],
+      "highlights": [
+        "Tu liceo y el CEE ahora te pueden avisar con una notificación.",
+        "Si no quieres que te suenen, se apagan en Configuraciones → Avisos de tu liceo."
+      ]
+    },
+    {
       "version": "0.14.6-beta",
       "date": "2026-11-25",
       "title": "Entradas para invitados",

@@ -55,6 +55,13 @@ function build(getAdminApp) {
       return { feedNotifications: feed };
     }
 
+    // The switch for the notices the liceo sends from Organizar.
+    if (typeof request.data?.noticeNotifications === "boolean") {
+      const notices = request.data.noticeNotifications;
+      await accountRef.set({ notifications: { notices } }, { merge: true });
+      return { noticeNotifications: notices };
+    }
+
     const nameFont = request.data?.nameFont;
     if (!NAME_FONTS.includes(nameFont)) {
       throw new HttpsError("invalid-argument", "Esa letra no está disponible.");
@@ -108,6 +115,7 @@ function build(getAdminApp) {
       morningNotifications: account.notifications?.morning !== false,
       anniversaryNotifications: account.notifications?.anniversary !== false,
       feedNotifications: account.notifications?.feed !== false,
+      noticeNotifications: account.notifications?.notices !== false,
       jornada: ["manana", "tarde"].includes(account.jornada) ? account.jornada : null,
     };
   });

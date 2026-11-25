@@ -157,7 +157,8 @@ El catálogo de componentes de la app: qué hay, dónde vive y cuándo usar cada
 | `ArrivalCounter` | `organize/organize-ui.tsx` | "Llegaron 212 de 300" con su barra; `size="large"` en la página del evento. |
 | `TodayEventCard` | `organize/organize-ui.tsx` | El evento con la puerta abierta. `compact` en el Inicio ("Hoy organizas", con Escanear); `door` para el docente que solo escanea (sin conteos, abre el escáner). |
 | `OrganizedEventRow` | `organize/organize-ui.tsx` | Un evento en las listas de Organizar: portada, cuándo, tipo y estado. |
-| `ScanPill` · `CreatePill` · `CreateMenu` · `organizeCenter` | `organize/organize-bar.tsx` | El centro de la barra en Organizar: "Escanear" mientras una puerta está abierta, si no "Crear" con su menú (aviso, evento, votación; Admin y HNT también suspender clases). `scanHref` elige el escáner de entradas o Pasar lista. |
+| `ScanPill` · `CreatePill` · `CreateMenu` · `organizeCenter` | `organize/organize-bar.tsx` | El centro de la barra en Organizar: "Escanear" mientras una puerta está abierta, si no "Crear" con su menú (aviso, notificación, evento, votación; Admin y HNT también suspender clases). `scanHref` elige el escáner de entradas o Pasar lista. |
+| `NoticePreview` · `SentNoticeRow` · `StudentPicker` | `organize/notice-ui.tsx` | Notificaciones de Organizar: cómo se verá en el teléfono (el Espacio que la envía y el mensaje), una fila de Enviadas (a quién, cuántas personas, cuándo; Admin y HNT ven quién la envió) y el selector de estudiantes por curso, con "Elegir a todo el curso" (Algunos estudiantes y Grupos de estudiantes, solo Admin y HNT). |
 | `OrganizeHeaderButton` · `HomeOrganizeToday` · `useOrganizeToday` | `organize/organize-entry.tsx` | Organizar fuera de sí: el botón del encabezado del Inicio (punto rosado con una puerta abierta) y "Hoy organizas". |
 
 ## Web

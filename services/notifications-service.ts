@@ -20,6 +20,8 @@ export type NotificationKind =
   | 'feed'
   | 'test'
   | 'dayChange'
+  // What the liceo sends from Organizar (functions/notices.js).
+  | 'notice'
   // The account's security (functions/security.js).
   | 'signIn'
   | 'account'

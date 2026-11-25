@@ -14,7 +14,7 @@ import { examRemindersEnabled, setExamRemindersEnabled } from '@/services/exam-r
 import { setWhatsNewPromptEnabled, whatsNewPromptEnabled } from '@/services/whats-new-prompt';
 import { gradesLockAvailable, setGradesLock, useGradesLock } from '@/services/grades-lock';
 import { getProfilePhotoUrl } from '@/services/profile-service';
-import { canOpenNotificationSettings, enablePush, openNotificationSettings, pushPermission, pushSupport, saveAnniversaryNotifications, saveClasshallNotifications, saveFeedNotifications, saveMorningNotifications } from '@/services/push-service';
+import { canOpenNotificationSettings, enablePush, openNotificationSettings, pushPermission, pushSupport, saveAnniversaryNotifications, saveClasshallNotifications, saveFeedNotifications, saveMorningNotifications, saveNoticeNotifications } from '@/services/push-service';
 import type { PushPermission } from '@/services/push-service';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -59,6 +59,7 @@ export default function SettingsScreen() {
   const [savingLock, setSavingLock] = useState(false);
   const [anniversaryOn, setAnniversaryOn] = useState(true);
   const [feedOn, setFeedOn] = useState(true);
+  const [noticesOn, setNoticesOn] = useState(true);
   // The summary of a new version on the first Home after updating (this phone only).
   const [whatsNewOn, setWhatsNewOn] = useState(true);
   // The account card: what the phone kept shows until this visit's load answers.
@@ -86,6 +87,7 @@ export default function SettingsScreen() {
         setMorningOn(loaded.morningNotifications !== false);
         setAnniversaryOn(loaded.anniversaryNotifications !== false);
         setFeedOn(loaded.feedNotifications !== false);
+        setNoticesOn(loaded.noticeNotifications !== false);
         setPermission(await pushPermission());
       } catch (error) {
         if (active) setNotificationsError(describeAuthError(error, t('settings.noPudimosCargarTusAjustes')));
@@ -158,7 +160,7 @@ export default function SettingsScreen() {
   const tapVersion = useSecretTaps(useCallback(() => setEggOpen(true), []));
 
   // Any account notification on while the phone blocks or never asked: say so above the group.
-  const anyPushOn = classhallOn || morningOn || anniversaryOn || feedOn || examsOn;
+  const anyPushOn = classhallOn || morningOn || anniversaryOn || feedOn || noticesOn || examsOn;
   const name = profile?.fullName || keptProfile?.fullName || user?.email || 'HaNet ID';
   const avatarSeed = profile?.avatarSeed ?? keptProfile?.avatarSeed ?? null;
 
@@ -310,6 +312,14 @@ export default function SettingsScreen() {
                     detail={t('settings.publicacionesEnviadasComoNotificacion')}
                     value={feedOn}
                     onChange={on => void saveSwitch(on, feedOn, setFeedOn, saveFeedNotifications)}
+                    disabled={loadingNotifications}
+                  />
+                  <SettingsToggleRow
+                    icon="notifications-outline"
+                    label={t('settings.avisosDeTuLiceo')}
+                    detail={t('settings.loQueEnvianLaAdministracion')}
+                    value={noticesOn}
+                    onChange={on => void saveSwitch(on, noticesOn, setNoticesOn, saveNoticeNotifications)}
                     disabled={loadingNotifications}
                   />
                 </SettingsGroup>
