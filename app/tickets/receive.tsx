@@ -1,13 +1,13 @@
 import { ThemedText } from '@/components/themed-text';
-import { TicketView } from '@/components/tickets/ticket';
+import { TicketView, ticketWhen } from '@/components/tickets/ticket';
 import { TicketGlow } from '@/components/tickets/ticket-glow';
 import { Tilt } from '@/components/tickets/tilt';
 import { demoCount, demoGiftPreview, demoQr } from '@/components/showcase/ticket-demo';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError, useSession } from '@/services/auth-service';
-import { acceptGift, giftToken, previewGift, ticketQrValue } from '@/services/tickets-service';
-import type { GiftPreview } from '@/services/tickets-service';
+import { acceptGift, giftToken, openGuestTicket, previewGift, ticketQrValue } from '@/services/tickets-service';
+import type { GiftPreview, GuestTicket } from '@/services/tickets-service';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
@@ -54,7 +54,11 @@ export default function ReceiveTicketScreen() {
   const [accepted, setAccepted] = useState<{ id: string; qr: string | null } | null>(null);
   const enter = useSharedValue(reducedMotion ? 1000 : 0);
   const hop = useSharedValue(reducedMotion ? 520 : 0);
-  const ready = !!preview;
+  // Without an account: a guest's link opens as the ticket itself.
+  const [guest, setGuest] = useState<GuestTicket | null>(null);
+  const guestTicket = guest && !guest.account ? guest : null;
+  const shown = preview ?? guestTicket;
+  const ready = !!shown;
 
   useEffect(() => {
     if (!ready || reducedMotion) return;
@@ -99,6 +103,15 @@ export default function ReceiveTicketScreen() {
     return () => { active = false; };
   }, [demo, token, user]);
 
+  useEffect(() => {
+    if (demo || initializing || user || !token) return;
+    let active = true;
+    openGuestTicket(token)
+      .then(result => { if (active) setGuest(result); })
+      .catch(failure => { if (active) setError(describeAuthError(failure, t('tickets.receive.noPudimosAbrirEsteLink'))); });
+    return () => { active = false; };
+  }, [demo, initializing, token, user]);
+
   const accept = async () => {
     if (demo) {
       setAccepted({ id: 'demo', qr: demoQr() });
@@ -125,6 +138,44 @@ export default function ReceiveTicketScreen() {
   const sheetBody = (() => {
     if (initializing && !demo) return <ActivityIndicator color={AppColors.textSecondary} />;
     if (!token && !demo) return <ThemedText style={styles.lead}>{t('tickets.receive.esteLinkNoEsDe')}</ThemedText>;
+    if (!user && !demo && guestTicket) {
+      const used = guestTicket.ticket.status === 'used';
+      const when = ticketWhen(guestTicket.event.startsAt);
+      const guestRows = [
+        { icon: 'person-outline' as const, label: t('tickets.detail.aNombreDe'), value: guestTicket.ticket.holderName },
+        { icon: 'calendar-outline' as const, label: t('createEvent.fechaYHora'), value: [when.date, when.time].filter(Boolean).join(', ') },
+        { icon: 'location-outline' as const, label: t('anniversary.activity.lugar'), value: [guestTicket.event.venueName, guestTicket.event.address].filter(Boolean).join(' · ') },
+        { icon: 'shirt-outline' as const, label: t('tickets.detail.indicaciones'), value: guestTicket.event.note },
+        { icon: 'megaphone-outline' as const, label: t('tickets.detail.organiza'), value: guestTicket.event.authorName },
+      ].filter(row => !!row.value);
+      return (
+        <>
+          <ThemedText style={styles.title}>{t('tickets.receive.tuEntradaParaTitle', { title: guestTicket.event.title })}</ThemedText>
+          <ThemedText style={styles.lead}>{used ? t('tickets.receive.estaEntradaYaSeUso') : t('tickets.receive.muestraEsteQrEnLaPuerta')}</ThemedText>
+          <View style={styles.card}>
+            {guestRows.map((row, index) => (
+              <View key={row.label} style={[styles.row, index > 0 && styles.rowLine]}>
+                <Ionicons name={row.icon} size={20} color={AppColors.textSecondary} />
+                <View style={styles.rowCopy}>
+                  <ThemedText style={styles.rowLabel}>{row.label}</ThemedText>
+                  <ThemedText style={styles.rowValue}>{row.value}</ThemedText>
+                </View>
+              </View>
+            ))}
+          </View>
+          <ThemedText style={styles.lead}>{t('tickets.receive.codigoCode', { code: guestTicket.code })}</ThemedText>
+        </>
+      );
+    }
+    if (!user && !demo && error) {
+      return (
+        <>
+          <ThemedText style={styles.lead}>{error}</ThemedText>
+          <HanetButton label={t('common.iniciarSesion')} variant="surface" onPress={() => router.push('/auth')} />
+        </>
+      );
+    }
+    if (!user && !demo && !guest) return <ActivityIndicator color={AppColors.textSecondary} />;
     if (!user && !demo) {
       return (
         <>
@@ -187,8 +238,22 @@ export default function ReceiveTicketScreen() {
   return (
     <View style={styles.screen}>
       {/* The cover's light at the top, behind the ticket. */}
-      <TicketGlow id="receive" colors={preview?.event.palette ?? []} y={insets.top + 150} style={lightStyle} />
+      <TicketGlow id="receive" colors={shown?.event.palette ?? []} y={insets.top + 150} style={lightStyle} />
       <View style={[styles.top, { paddingTop: insets.top + 70 }]}>
+        {guestTicket && !preview && (
+          <Animated.View style={dropStyle}>
+            <Tilt>
+              <TicketView
+                event={guestTicket.event}
+                status={guestTicket.ticket.status === 'used' ? 'used' : 'active'}
+                qrValue={guestTicket.qr}
+                number={guestTicket.ticket.number}
+                cap={guestTicket.event.cap}
+                size="large"
+              />
+            </Tilt>
+          </Animated.View>
+        )}
         {preview && (
           <Animated.View style={dropStyle}>
             <Tilt>
