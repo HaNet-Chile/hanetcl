@@ -6,7 +6,7 @@ const { getStorage } = require("firebase-admin/storage");
 const { applicationDefault } = require("firebase-admin/app");
 const { pdfWords, photoWords, docxWords, parseSpecTable } = require("./spec-table");
 const { PLANS, findSubject, subjectKey } = require("./subjects");
-const { notifyHall, hallStudentUids } = require("./classhall-notify");
+const { notifyHall, hallStudentUids, hallStudents } = require("./classhall-notify");
 const { avatarSeeds, avatarSeed } = require("./avatar");
 const { gradesOn, unseenGradesByHall, removeEvaluationGrades } = require("./grades");
 
@@ -607,8 +607,14 @@ function build(getAdminApp) {
     const taskSummaries = tasks.docs.map(taskOut);
     if (isTeacher) {
       await Promise.all(taskSummaries.map(async (task) => {
-        const count = await hallRef.collection("tasks").doc(task.id).collection("submissions").count().get();
+        const submissions = hallRef.collection("tasks").doc(task.id).collection("submissions");
+        const [count, pending] = await Promise.all([
+          submissions.count().get(),
+          submissions.where("reviewed", "==", false).count().get(),
+        ]);
         task.submittedCount = count.data().count;
+        // What the teacher still has to review, for the panel's queue.
+        task.pendingReviewCount = pending.data().count;
       }));
     } else if (taskSummaries.length) {
       const mine = await classhallDb(getAdminApp).getAll(...taskSummaries
@@ -1196,6 +1202,13 @@ function build(getAdminApp) {
       const seeds = await avatarSeeds(getAdminApp, submissions.docs.map(doc => doc.id));
       result.submissions = submissions.docs.map(doc => ({ ...submissionOut(doc), avatarSeed: seeds.get(doc.id) || null }));
       result.expectedSubmissions = await hallSize(getAdminApp, data);
+      // Who has not handed it in yet, so the teacher can remind them in class.
+      // Only the Hall's teacher gets it, like the submissions themselves.
+      const handedIn = new Set(submissions.docs.map(doc => doc.id));
+      const students = await hallStudents(getAdminApp, data);
+      result.missing = students
+        .filter(student => !handedIn.has(student.uid))
+        .sort((a, b) => a.name.localeCompare(b.name, "es"));
     } else {
       const mine = await taskRef.collection("submissions").doc(profile.uid).get();
       result.mySubmission = mine.exists ? submissionOut(mine) : null;
