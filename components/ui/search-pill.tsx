@@ -8,6 +8,7 @@ import { AppState, Pressable, StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+import { GlassFill, GlassPressed, LIQUID_GLASS, glassClear } from '@/components/ui/liquid-glass';
 
 /** How long each suggestion stays before the next one comes up. */
 export const SEARCH_PILL_INTERVAL = 3200;
@@ -83,13 +84,17 @@ export function SearchPill({ label, shortLabel, suggestions, onPress, tone = 'su
   const lineStyle = useAnimatedStyle(() => ({ opacity: opacity.get(), transform: [{ translateY: shift.get() }] }));
   const position = index % lines.length;
 
+  // On iOS 26 the pill on the canvas is Liquid Glass; over a photo (`tone="glass"`) it keeps its own tint.
+  const glass = LIQUID_GLASS && tone === 'surface';
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => [styles.pill, tone === 'glass' && styles.glass, pressed && AppPressed, style]}
+      style={({ pressed }) => [styles.pill, tone === 'glass' && styles.glass, glass && glassClear, pressed && (glass ? GlassPressed : AppPressed), style]}
     >
+      {glass && <GlassFill radius={AppTouch.minimum / 2} />}
       <Ionicons name="search" size={18} color={AppColors.textSecondary} style={styles.icon} />
       <View style={styles.lines} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <Animated.View style={[styles.line, lineStyle]}>
