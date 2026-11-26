@@ -10,6 +10,11 @@ import type { LiveActivityEnvironment } from 'expo-widgets';
 //
 // It runs in the widget's own runtime: only @expo/ui/swift-ui, no hooks and
 // nothing from outside the function.
+//
+// The countdown is a closed interval that ends when the test starts, so it
+// stops at 0:00 (a timer pointed at a date keeps counting up once it passes).
+// The activity goes stale right at the start (staleDate, exam-reminders.ts):
+// iOS redraws it on its own, without the app, and it says that it started.
 
 export type ExamActivityProps = {
   /** The Calendar event, to know which test it is. */
@@ -28,6 +33,10 @@ const ExamActivity = (props: ExamActivityProps, environment: LiveActivityEnviron
   const primary = '#F9F9FA';
   const secondary = '#DDDDE2';
   const start = new Date(props.startsAt);
+  // Up to 24 h before (the app starts it within that window); before the lower
+  // end the timer would stand still.
+  const countdown = { lower: new Date(props.startsAt - 86_400_000), upper: start };
+  const started = environment.isStale === true;
 
   return {
     banner: (
@@ -39,13 +48,17 @@ const ExamActivity = (props: ExamActivityProps, environment: LiveActivityEnviron
         </VStack>
         <Spacer />
         <VStack alignment="trailing" spacing={2}>
-          <Text modifiers={[font({ size: 12 }), foregroundStyle(secondary)]}>Empieza en</Text>
-          <Text date={start} dateStyle="timer" modifiers={[font({ size: 24, weight: 'bold' }), monospacedDigit(), foregroundStyle(primary)]} />
+          <Text modifiers={[font({ size: 12 }), foregroundStyle(secondary)]}>{started ? 'Empezó a las' : 'Empieza en'}</Text>
+          {started
+            ? <Text date={start} dateStyle="time" modifiers={[font({ size: 24, weight: 'bold' }), monospacedDigit(), foregroundStyle(primary)]} />
+            : <Text timerInterval={countdown} countsDown modifiers={[font({ size: 24, weight: 'bold' }), monospacedDigit(), foregroundStyle(primary)]} />}
         </VStack>
       </HStack>
     ),
     compactLeading: <Image systemName="pencil.and.list.clipboard" color={accent} />,
-    compactTrailing: <Text date={start} dateStyle="timer" modifiers={[font({ size: 14, weight: 'semibold' }), monospacedDigit()]} />,
+    compactTrailing: started
+      ? <Text modifiers={[font({ size: 14, weight: 'semibold' }), foregroundStyle(accent)]}>Ahora</Text>
+      : <Text timerInterval={countdown} countsDown modifiers={[font({ size: 14, weight: 'semibold' }), monospacedDigit()]} />,
     minimal: <Image systemName="pencil.and.list.clipboard" color={accent} />,
     expandedLeading: (
       <VStack alignment="leading" spacing={2} modifiers={[padding({ leading: 8 })]}>
@@ -53,9 +66,9 @@ const ExamActivity = (props: ExamActivityProps, environment: LiveActivityEnviron
         <Text modifiers={[font({ size: 16, weight: 'bold' }), lineLimit(1)]}>{props.subject}</Text>
       </VStack>
     ),
-    expandedTrailing: (
-      <Text date={start} dateStyle="timer" modifiers={[font({ size: 20, weight: 'bold' }), monospacedDigit(), padding({ trailing: 8 })]} />
-    ),
+    expandedTrailing: started
+      ? <Text modifiers={[font({ size: 20, weight: 'bold' }), foregroundStyle(accent), padding({ trailing: 8 })]}>Ahora</Text>
+      : <Text timerInterval={countdown} countsDown modifiers={[font({ size: 20, weight: 'bold' }), monospacedDigit(), padding({ trailing: 8 })]} />,
     expandedBottom: (
       <VStack alignment="leading" spacing={2} modifiers={[padding({ horizontal: 8, bottom: 4 })]}>
         <Text modifiers={[font({ size: 14 }), lineLimit(1)]}>{props.title}</Text>

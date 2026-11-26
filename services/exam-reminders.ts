@@ -22,8 +22,8 @@ const AHEAD = [
 // Only the next weeks: iOS keeps at most 64 scheduled notifications.
 const HORIZON_MS = 21 * 86_400_000;
 const LIVE_WINDOW_MS = 24 * 3_600_000;
-// The countdown stays up a while after the test starts, then goes away.
-const LIVE_LINGER_MS = 30 * 60_000;
+// The countdown goes stale when the test starts: iOS redraws it as "Empezó"
+// without the app (widgets/exam-activity.tsx), and the next sync ends it.
 
 // Deadlines of the course (Tarea, Entrega) get two local notifications too:
 // the day before at 19:00, and 3 hours before when that is after 9:00 (an
@@ -208,13 +208,13 @@ async function syncLiveActivity(upcoming: CalendarEvent[], now: Date) {
       if (soon && known[id] === soon.id && !shown) {
         shown = true;
         kept[id] = soon.id;
-        await instance.update(activityProps(soon, now), new Date(soon.startDate.getTime() + LIVE_LINGER_MS));
+        await instance.update(activityProps(soon, now), soon.startDate);
       } else {
         await instance.end('immediate');
       }
     }
     if (soon && !shown) {
-      const instance = factory.start(activityProps(soon, now), `hanetcl://event-info?id=${encodeURIComponent(soon.id)}&canEdit=0`, new Date(soon.startDate.getTime() + LIVE_LINGER_MS));
+      const instance = factory.start(activityProps(soon, now), `hanetcl://event-info?id=${encodeURIComponent(soon.id)}&canEdit=0`, soon.startDate);
       kept[instance.getId()] = soon.id;
     }
     await AsyncStorage.setItem(ACTIVITIES_KEY, JSON.stringify(kept)).catch(() => undefined);
@@ -266,15 +266,15 @@ export async function previewExamReminder(hours: 24 | 4) {
   return true;
 }
 
-/** A Live Activity for an example test in 4 hours; null where they do not exist. */
-export function previewExamActivity() {
+/** A Live Activity for an example test in some minutes (4 hours by default); null where they do not exist. */
+export function previewExamActivity(minutes = 240) {
   const factory = examActivities();
   if (!factory) return null;
-  const startsAt = Date.now() + 4 * 3_600_000;
+  const startsAt = Date.now() + minutes * 60_000;
   const instance = factory.start(
     { id: PREVIEW_ID, subject: 'Matemática', title: t('services.examReminders.ejemploFuncionesCuadraticas'), startsAt, when: t('services.examReminders.hoyClockSala12', { clock: clock(new Date(startsAt)) }) },
     undefined,
-    new Date(startsAt + LIVE_LINGER_MS),
+    new Date(startsAt),
   );
   return () => void instance.end('immediate');
 }

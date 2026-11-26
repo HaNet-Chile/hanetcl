@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "0.16.3-beta",
+      "date": "2026-11-26",
+      "title": "",
+      "items": [
+        "La cuenta regresiva de una prueba en la pantalla bloqueada y en la Dynamic Island ahora se detiene en 0:00 y dice que la prueba empezó, en vez de seguir contando."
+      ],
+      "highlights": [
+        "La cuenta regresiva de las pruebas ahora se detiene cuando empiezan."
+      ]
+    },
+    {
       "version": "0.16.1-beta",
       "date": "2026-11-26",
       "title": "",
