@@ -1,13 +1,18 @@
-import { BlockedScreen, FatalScreen, OfflineScreen, ServerScreen } from '@/components/errors/AppErrorScreens';
+import { BlockedScreen, FatalScreen, MovedScreen, OfflineScreen, ServerScreen } from '@/components/errors/AppErrorScreens';
 import { TopNotice } from '@/components/system/top-notice';
 import { clearAppError, continueOffline, isAppErrorPreview, isBlockedError, isOfflineMode, leaveOffline, showAppError, useAppError, useOfflineMode } from '@/services/app-error';
 import { useSession } from '@/services/auth-service';
 import { checkConnection } from '@/services/connection';
+import { onOldAppHost } from '@/services/web-move';
 import { t } from '@/i18n';
-import React, { Component, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Component, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { AppState, Platform, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+
+// The address doesn't change while the page is open.
+const neverChanges = () => () => {};
+const notMoved = () => false;
 
 // A resume shortly after the last check does not check again.
 const RECHECK_AFTER_MS = 60_000;
@@ -25,6 +30,8 @@ export function AppErrorLayer() {
   const { user } = useSession();
   const [retrying, setRetrying] = useState(false);
   const lastCheck = useRef(0);
+  // The static web page is built as "not moved"; the browser's answer comes right after hydrating.
+  const moved = useSyncExternalStore(neverChanges, onOldAppHost, notMoved);
 
   const check = useCallback(async () => {
     lastCheck.current = Date.now();
@@ -74,6 +81,14 @@ export function AppErrorLayer() {
     setRetrying(false);
     if (ok) clearAppError();
   };
+
+  if (moved || kind === 'moved') {
+    return (
+      <Animated.View entering={FadeIn.duration(200)} style={styles.layer}>
+        <MovedScreen onDismiss={clearAppError} preview={!moved && isAppErrorPreview()} />
+      </Animated.View>
+    );
+  }
 
   if (!kind) {
     return offline ? (

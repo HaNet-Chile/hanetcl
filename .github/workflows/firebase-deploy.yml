@@ -8,7 +8,7 @@ name: Deploy Firebase
 #                                           to the hanet-app site (live)
 #   firebase-deploy-hosting-1             → only the hanet-edu site (logos, terms, /vincular)
 #   firebase-deploy-all-1                 → everything in firebase.json (web app included)
-#   firebase-deploy-panel-1               → builds martinuxp/hanet-panel (main, or the
+#   firebase-deploy-panel-1               → builds HaNet-Chile/panel (main, or the
 #                                           `panel_ref` input) and publishes it to the
 #                                           hanet-panel site, creating the site if missing
 # By hand, "functions:nombreA,functions:nombreB" publishes only those functions
@@ -121,7 +121,7 @@ jobs:
         if: steps.target.outputs.panel == 'true'
         uses: actions/checkout@v4
         with:
-          repository: martinuxp/hanet-panel
+          repository: HaNet-Chile/panel
           ref: ${{ github.event.inputs.panel_ref || 'main' }}
           path: hanet-panel
 

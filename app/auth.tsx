@@ -36,7 +36,7 @@ const ICONS = {
   google: require('@/assets/icons/auth/google-circle.svg'),
 };
 
-const TERMS_URL = 'https://hanet-edu.web.app/terminos';
+const TERMS_URL = 'https://id.hanet.muxp.art/terminos';
 
 type Mode = 'login' | 'signup';
 

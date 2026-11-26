@@ -2,10 +2,11 @@ import { useSyncExternalStore } from 'react';
 
 /**
  * Full-screen problems that stop the app: a blocked account, servers that do
- * not answer, no internet. Any part of the app can raise one; the root layer
+ * not answer, no internet, the web app opened on its old address
+ * (hanet-app.web.app, which the root layer detects itself). Any part of the app can raise one; the root layer
  * (components/errors/AppErrorLayer.tsx) shows it over everything.
  */
-export type AppErrorKind = 'blocked' | 'server' | 'offline';
+export type AppErrorKind = 'blocked' | 'server' | 'offline' | 'moved';
 
 let current: AppErrorKind | null = null;
 // Opened from the HNT panel to look at it: its buttons only close it.

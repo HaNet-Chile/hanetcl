@@ -473,11 +473,12 @@ export default function UiShowcaseScreen() {
           />
         </Section>
 
-        <Section title="Pantallas de error" description="Bloqueo, servidores, sin conexión, error fatal y pantalla no encontrada. En la vista previa los botones solo cierran la pantalla.">
+        <Section title="Pantallas de error" description="Bloqueo, servidores, sin conexión, cambio de dirección de la web, error fatal y pantalla no encontrada. En la vista previa los botones solo cierran la pantalla.">
           <View style={styles.buttonStack}>
             <HanetButton label="Cuenta bloqueada" variant="surface" onPress={() => showAppError('blocked', true)} />
             <HanetButton label="Servidores" variant="surface" onPress={() => showAppError('server', true)} />
             <HanetButton label="Sin conexión" variant="surface" onPress={() => showAppError('offline', true)} />
+            <HanetButton label="Cambio de dirección" variant="surface" onPress={() => showAppError('moved', true)} />
             <HanetButton label="Error fatal" variant="surface" onPress={() => setFatalVisible(true)} />
             <HanetButton label="Pantalla no encontrada" variant="surface" onPress={() => setNotFoundVisible(true)} />
           </View>

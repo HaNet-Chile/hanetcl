@@ -32,6 +32,8 @@ export const AppColors = {
   // Accents of HaNet Eventos (Figma "Accents/Mint" and "Accents/Yellow"): perks and featured lines.
   accentMint: '#00C8B3',
   accentYellow: '#FFCC00',
+  // The warm end of the error screen's sunset card (Figma "[sunsetting beta error]").
+  sunset: '#FFBF33',
   // The scratch card's darker stripe over the accent (see `Stripes`).
   stripe: '#D81D68',
   // The accent at 18 %: the square behind a pink icon, a "done" status.

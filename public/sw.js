@@ -1,4 +1,4 @@
-/* HaNet's service worker (web app only, https://hanet-app.web.app).
+/* HaNet's service worker (web app only, https://app.hanet.muxp.art).
  *
  * 1. Offline: keeps the app (every page and its scripts) from the build it
  *    belongs to, so HaNet opens without internet and shows what the phone

@@ -5,9 +5,9 @@ const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 
 const FROM = "HaNet <no-responder@hanet.muxp.art>";
 // Email clients only load images from a public URL (served by Firebase Hosting).
-const LOGO_BASE = "https://hanet-edu.web.app/email";
+const LOGO_BASE = "https://id.hanet.muxp.art/email";
 const TAGLINE = "Calendario, anuncios, tareas y evaluaciones en una sola app.";
-const TERMS_URL = "https://hanet-edu.web.app/terminos";
+const TERMS_URL = "https://id.hanet.muxp.art/terminos";
 const CONTACT = "muxp@muxp.art";
 
 function escapeHtml(value) {

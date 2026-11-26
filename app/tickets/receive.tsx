@@ -25,7 +25,7 @@ import { t } from '@/i18n';
 // it is accepted its stub shows a blurred placeholder QR with "Por aceptar"
 // (the real code never reaches this phone before). The sheet holds only the
 // information and "Aceptar entrada". Opened from the link
-// https://hanet-app.web.app/tickets/receive?t=<token> (or hanetcl://).
+// https://app.hanet.muxp.art/tickets/receive?t=<token> (or hanetcl://).
 
 // The canvas keyframes (board Recibir): the sheet rises as a material in
 // 440 ms, the ticket drops in from above 120 ms later and settles with a small

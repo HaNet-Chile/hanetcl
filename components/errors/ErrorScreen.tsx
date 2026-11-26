@@ -5,12 +5,14 @@ import type { ImageSource } from 'expo-image';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 export const ERROR_ICONS = {
   lock: require('@/assets/errors/lock.svg'),
   server: require('@/assets/errors/server.svg'),
   offline: require('@/assets/errors/wifi-off.svg'),
   arrow: require('@/assets/errors/arrow-right.svg'),
+  sunset: require('@/assets/errors/sea-and-sun.svg'),
 };
 
 type Action = { label: string; onPress: () => void; disabled?: boolean };
@@ -25,6 +27,8 @@ type Props = {
   note?: React.ReactNode;
   primary: Action;
   secondary?: Action;
+  /** "sunset": the main card warms up to orange at its top left, for a goodbye or a move rather than a failure. */
+  tone?: 'accent' | 'sunset';
 };
 
 // Text grows with the system size only this much, so the screen always fits.
@@ -37,7 +41,7 @@ const BODY_MAX_SCALE = 1.2;
  * buttons. Everything fits the screen without scrolling: the type steps down
  * on shorter phones and the main card takes whatever height is left.
  */
-export function ErrorScreen({ icon, title, body, note, primary, secondary }: Props) {
+export function ErrorScreen({ icon, title, body, note, primary, secondary, tone = 'accent' }: Props) {
   const { height } = useWindowDimensions();
   const titleSize = height >= 840 ? 48 : height >= 760 ? 42 : height >= 680 ? 36 : 30;
   const bodySize = height >= 760 ? 16 : 15;
@@ -46,6 +50,7 @@ export function ErrorScreen({ icon, title, body, note, primary, secondary }: Pro
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={[styles.card, styles.main, !roomy && styles.cardTight]}>
+        {tone === 'sunset' && <SunsetFill />}
         {typeof icon === 'string'
           ? <ThemedText maxFontSizeMultiplier={TITLE_MAX_SCALE} style={[styles.textIcon, { fontSize: titleSize * 0.75, lineHeight: titleSize * 0.9 }]}>{icon}</ThemedText>
           : <Image source={icon} style={styles.icon} contentFit="contain" accessibilityIgnoresInvertColors />}
@@ -99,6 +104,34 @@ export function ErrorScreen({ icon, title, body, note, primary, secondary }: Pro
         )}
       </View>
     </SafeAreaView>
+  );
+}
+
+/** A color partway (0–1) from one #RRGGBB to another. */
+function mixHex(from: string, to: string, amount: number) {
+  const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  return '#' + [0, 1, 2].map(i => Math.round(channel(from, i) + (channel(to, i) - channel(from, i)) * amount).toString(16).padStart(2, '0')).join('');
+}
+
+// Figma's linear-gradient(-39deg, accent 49.7 %, sunset 129.2 %): on a card
+// this shape it runs corner to corner, and the top left corner (100 %) is
+// only partway to the yellow. SVG stops stop at 1, so that color is worked out.
+const SUNSET_START = 0.497;
+const SUNSET_CORNER = mixHex(AppColors.accent, AppColors.sunset, (1 - SUNSET_START) / (1.292 - SUNSET_START));
+
+/** The sunset card's fill, under its content. */
+function SunsetFill() {
+  return (
+    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+      <Defs>
+        <LinearGradient id="error-sunset" x1="1" y1="1" x2="0" y2="0">
+          <Stop offset="0" stopColor={AppColors.accent} />
+          <Stop offset={SUNSET_START} stopColor={AppColors.accent} />
+          <Stop offset="1" stopColor={SUNSET_CORNER} />
+        </LinearGradient>
+      </Defs>
+      <Rect width="100%" height="100%" fill="url(#error-sunset)" />
+    </Svg>
   );
 }
 

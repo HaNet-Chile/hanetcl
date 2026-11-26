@@ -71,7 +71,7 @@ export function WebGroup() {
           <WideHallCard hall={HALL} next="Mañana 10:15 · Sala 12" now={false} onOpen={() => setNote('En la web esto abre el Hall.')} />
         </View>
         <Note>{note}</Note>
-        <Note>La barra lateral (SideNav), el panel de entrada (EntryAside) y el Inicio de escritorio (desktop-home) solo aparecen en una ventana ancha: míralos en hanet-app.web.app desde el computador.</Note>
+        <Note>La barra lateral (SideNav), el panel de entrada (EntryAside) y el Inicio de escritorio (desktop-home) solo aparecen en una ventana ancha: míralos en app.hanet.muxp.art desde el computador.</Note>
       </Section>
 
       <Section
@@ -99,7 +99,7 @@ export function WebGroup() {
             ))}
           </WideGrid>
         </Stage>
-        <Note>{layout.wide ? (layout.columns ? 'Ventana ancha: columnas lado a lado.' : 'Ventana ancha pero angosta: las columnas se apilan y la grilla queda en 2.') : 'En el teléfono: todo apilado. Ábrelo en hanet-app.web.app desde el computador para ver las columnas.'}</Note>
+        <Note>{layout.wide ? (layout.columns ? 'Ventana ancha: columnas lado a lado.' : 'Ventana ancha pero angosta: las columnas se apilan y la grilla queda en 2.') : 'En el teléfono: todo apilado. Ábrelo en app.hanet.muxp.art desde el computador para ver las columnas.'}</Note>
         <Note>Cada pantalla y su vista de escritorio están en constants/desktop-screens.ts; npm run desktop:check revisa que estén todas.</Note>
       </Section>
 

@@ -4,11 +4,15 @@ import { HanetDialog } from '@/components/ui/hanet-dialog';
 import { AppSpacing } from '@/constants/design-tokens';
 import { auth } from '@/services/firebase';
 import { unregisterDevice } from '@/services/push-service';
+import * as Clipboard from 'expo-clipboard';
 import * as Updates from 'expo-updates';
 import { signOut } from 'firebase/auth';
 import React, { useState } from 'react';
 import { DevSettings, Linking, Platform, StyleSheet, View } from 'react-native';
 import { t } from '@/i18n';
+import { APP_HOST } from '@/constants/web-hosts';
+import { isInstalled } from '@/services/web-install';
+import { openNewAppHost } from '@/services/web-move';
 
 export const SUPPORT_EMAIL = 'muxp@muxp.art';
 export const STATUS_PAGE = 'status.hanet.muxp.art';
@@ -127,6 +131,36 @@ export function FatalScreen({ onDismiss, preview }: { onDismiss: () => void; pre
       body={<>{t('components.errors.appErrorScreens.hanetTuvoQueDetenerseSi')}{' '}<Strong>{SUPPORT_EMAIL}</Strong>{' '}{t('components.errors.appErrorScreens.yCuentanosQueEstabasHaciendo')}</>}
       primary={{ label: t('components.errors.appErrorScreens.reiniciar'), onPress: () => (preview ? onDismiss() : void restartApp()) }}
       secondary={{ label: t('common.cerrarSesion'), onPress: () => endSession(onDismiss, preview) }}
+    />
+  );
+}
+
+/**
+ * The web app moved to app.hanet.muxp.art: on the old address this is all
+ * HaNet shows, with no way past it (Figma "[sunsetting beta error]"). The
+ * session doesn't travel (each address keeps its own), so it says to sign in
+ * again there.
+ */
+export function MovedScreen({ onDismiss, preview }: { onDismiss: () => void; preview?: boolean }) {
+  const installed = Platform.OS === 'web' && isInstalled();
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    await Clipboard.setStringAsync(`https://${APP_HOST}`);
+    setCopied(true);
+  };
+
+  return (
+    <ErrorScreen
+      icon={ERROR_ICONS.sunset}
+      tone="sunset"
+      title={t('components.errors.appErrorScreens.hanetSeCambioDeCasa')}
+      body={<>{t('components.errors.appErrorScreens.ahoraEstamosEn')}{' '}<Strong>{APP_HOST}</Strong>{t('components.errors.appErrorScreens.tuCuentaEsLaMisma')}</>}
+      note={t('components.errors.appErrorScreens.siTeniasHanetEnTu')}
+      primary={preview
+        ? { label: t('common.volver'), onPress: onDismiss }
+        : { label: copied ? t('common.copiado') : t('organize.copiarLink'), onPress: () => void copy() }}
+      secondary={{ label: t('components.errors.appErrorScreens.irALaNueva'), onPress: () => (preview ? onDismiss() : openNewAppHost(installed)) }}
     />
   );
 }
