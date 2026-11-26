@@ -282,14 +282,16 @@ export default function UiShowcaseScreen() {
     say(key, ok ? 'Llega en 5 segundos. Bloquea el teléfono o sal de la app para verla.' : 'Sin permiso de notificaciones: actívalo en Configuraciones.');
   };
 
-  const testActivity = () => {
+  const testActivity = (minutes: number) => {
     stopActivity.current?.();
     stopActivity.current = null;
     try {
-      const stop = previewExamActivity();
+      const stop = previewExamActivity(minutes);
       if (!stop) return;
       stopActivity.current = stop;
-      say('live', 'Lista: mira la pantalla bloqueada o la Dynamic Island. Se quita al salir de esta pantalla.');
+      say('live', minutes < 60
+        ? 'Lista: en 1 minuto llega a 0:00 y cambia a “Empezó”. Mírala en la pantalla bloqueada o la Dynamic Island. Se quita al salir de esta pantalla.'
+        : 'Lista: mira la pantalla bloqueada o la Dynamic Island. Se quita al salir de esta pantalla.');
     } catch {
       say('live', 'iOS no dejó iniciarla. Revisa que las Actividades en vivo estén activadas para HaNet.');
     }
@@ -393,7 +395,10 @@ export default function UiShowcaseScreen() {
         </Section>
 
         <Section title="Live Activity y widget" description="Cuenta regresiva de una prueba en la pantalla bloqueada y en la Dynamic Island. El widget “HaNet hoy” se agrega desde la pantalla de inicio del iPhone.">
-          <HanetButton label="Iniciar Live Activity" variant="surface" disabled={!widgetsAvailable} onPress={testActivity} />
+          <View style={styles.buttonStack}>
+            <HanetButton label="Iniciar Live Activity" variant="surface" disabled={!widgetsAvailable} onPress={() => testActivity(240)} />
+            <HanetButton label="Probar el final (1 minuto)" variant="surface" disabled={!widgetsAvailable} onPress={() => testActivity(1)} />
+          </View>
           <Note>{notice?.key === 'live'
             ? notice.text
             : !widgetsAvailable
