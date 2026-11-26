@@ -1539,6 +1539,11 @@
         "eligeQueEventosMuestra": "Elige qué eventos muestra",
         "todos": "Todos"
       },
+      "morningTimeRow": {
+        "eligeAQueHoraTe": "Elige a qué hora te llega el resumen del día",
+        "horaDelResumen": "Hora del resumen",
+        "teLlegaLosDiasDe": "Te llega los días de clases con el clima, tus pruebas y tu primera clase."
+      },
       "versionEasterEgg": {
         "hanetVersionVersionValueToca": "HaNet versión {{version}}{{value}}. Toca para cerrar.",
         "tocaParaCerrar": "Toca para cerrar"
@@ -2311,6 +2316,8 @@
     "countPersonasValue_other": "{{count}} personas{{value}}",
     "crearInstitucion": "Crear institución",
     "elCodigoActualDejaraDe": "El código actual dejará de funcionar de inmediato. Quienes ya se unieron no se ven afectados.",
+    "elegirCiudad": "Elegir ciudad",
+    "elResumenDelDiaTrae": "El resumen del día trae el clima de esta ciudad.",
     "escribeElNombreCortoDe": "Escribe el nombre corto de la institución.",
     "estaSeccionEsSoloPara": "Esta sección es solo para el equipo HaNet.",
     "filaValueReason": "Fila {{value}}: {{reason}}",
@@ -2335,6 +2342,7 @@
     "noPudimosCargarLasInstituciones": "No pudimos cargar las instituciones. Inténtalo nuevamente.",
     "noPudimosCrearLaInstitucion": "No pudimos crear la institución.",
     "noPudimosGenerarElCodigo": "No pudimos generar el código.",
+    "noPudimosGuardarLaCiudad": "No pudimos guardar la ciudad.",
     "noPudimosGuardarLaImagen": "No pudimos guardar la imagen. Revisa tu conexión e inténtalo nuevamente.",
     "noPudimosQuitarLaImagen": "No pudimos quitar la imagen. Inténtalo nuevamente.",
     "nuevaInstitucion": "Nueva institución",
@@ -2771,7 +2779,7 @@
       "mananaPruebaDeMatematica": "Mañana: prueba de Matemática",
       "mananaPruebaDeSubjectof": "Mañana: prueba de {{subjectOf}}",
       "mananaSeEntregaTitle": "Mañana se entrega: {{title}}",
-      "pruebaMatematicaALas10": "Prueba: Matemática a las 10:15 · Entras a las 08:00 con Lenguaje"
+      "pruebaMatematicaALas10": "Temuco: parcialmente nublado, 9° a 17° · Prueba: Matemática a las 10:15 · Entras a las 08:00 con Lenguaje"
     },
     "feedService": {
       "aplausos": "Aplausos",
@@ -2880,6 +2888,7 @@
   "settings": {
     "acercaDeHanet": "Acerca de HaNet",
     "agregarHanetATuInicio": "Agregar HaNet a tu inicio",
+    "aLasMorninglabelElClima": "A las {{morningLabel}}: el clima, tus pruebas y tu primera clase",
     "anunciosTareasYRevisiones": "Anuncios, tareas y entregas revisadas",
     "avisosDeEntregas": "Avisos de entregas",
     "avisosDePruebas": "Avisos de pruebas",
@@ -2889,6 +2898,7 @@
     "contacto": "Contacto",
     "cuenta": "Cuenta",
     "dispositivosYAlertas": "Dispositivos y alertas",
+    "elClimaDelResumenEs": "El clima del resumen es de MET Norway (met.no).",
     "elDiaAntesY3": "El día antes y 3 horas antes, solo en este teléfono",
     "elFeedIgualQuedaEn": "Lo que publica el Feed igual queda en Notificaciones, al final del Inicio.",
     "elIconoSeCambiaDesde": "El ícono se cambia desde la app del teléfono.",
@@ -2921,11 +2931,10 @@
     "pruebasFlashYPlazosDe": "Pruebas flash y plazos de tu alianza",
     "publicacionesEnviadasComoNotificacion": "Publicaciones enviadas como notificación",
     "resumenAlActualizar": "Resumen al actualizar",
-    "resumenDeLas700": "Resumen de las 7:00",
+    "resumenDelDia": "Resumen del día",
     "sesionIniciadaComoEmail": "Sesión iniciada como {{email}}",
     "soloEnLaAppDelTelefono": "Solo en la app del teléfono",
     "tuDiaYTusPruebas": "Tu día y tus pruebas",
-    "tuPrimeraClaseYLo": "Tu primera clase y lo del día",
     "valeSoloEnEsteTelefono": "Vale solo en este teléfono.",
     "version": "Versión"
   },

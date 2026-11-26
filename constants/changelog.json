@@ -12,6 +12,20 @@
       ]
     },
     {
+      "version": "0.16.2-beta",
+      "date": "2026-11-26",
+      "title": "Tu resumen, a tu hora",
+      "items": [
+        "Elige a qué hora te llega el resumen del día, en Configuraciones → Notificaciones. Puede ser entre las 5:00 y las 13:45, cada 15 minutos.",
+        "El resumen ahora trae el clima de la ciudad de tu liceo: cómo va a estar el día y la mínima y la máxima.",
+        "Si eliges una hora después de que empiezan tus clases, el resumen te dice cuál es tu próxima clase."
+      ],
+      "highlights": [
+        "Elige a qué hora te llega el resumen del día.",
+        "El resumen trae el clima de tu ciudad."
+      ]
+    },
+    {
       "version": "0.16.1-beta",
       "date": "2026-11-26",
       "title": "",

@@ -177,15 +177,36 @@ export function HanetDateTimePicker({ value, onChange, style, dateOnly = false }
   );
 }
 
-/** Just the hour and minute wheels, for a time of day as minutes since midnight. */
-export function HanetTimeWheels({ minutes, onChange, label = t('components.ui.hanetDateTimePicker.hora') }: { minutes: number; onChange: (minutes: number) => void; label?: string }) {
+/**
+ * Just the hour and minute wheels, for a time of day as minutes since midnight.
+ * `minuteStep` and `hours` narrow the choice (the day's summary: every 15
+ * minutes in the morning); by default every 5 minutes of the whole day.
+ */
+export function HanetTimeWheels({ minutes, onChange, label = t('components.ui.hanetDateTimePicker.hora'), minuteStep = MINUTE_STEP, hours: hourRange }: {
+  minutes: number;
+  onChange: (minutes: number) => void;
+  label?: string;
+  minuteStep?: number;
+  /** First and last hour offered, both included. */
+  hours?: [number, number];
+}) {
+  const hourValues = useMemo(
+    () => (hourRange ? Array.from({ length: hourRange[1] - hourRange[0] + 1 }, (_, index) => hourRange[0] + index) : HOURS),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hourRange?.[0], hourRange?.[1]],
+  );
+  const minuteValues = useMemo(
+    () => (minuteStep === MINUTE_STEP ? MINUTES : Array.from({ length: 60 / minuteStep }, (_, index) => index * minuteStep)),
+    [minuteStep],
+  );
   const hours = Math.floor(minutes / 60) % 24;
-  const minuteIndex = Math.round((minutes % 60) / MINUTE_STEP) % MINUTES.length;
+  const hourIndex = Math.max(0, hourValues.indexOf(hours));
+  const minuteIndex = Math.round((minutes % 60) / minuteStep) % minuteValues.length;
   return (
     <View style={styles.timeControls} accessibilityLabel={label}>
-      <Wheel label={t('components.ui.hanetDateTimePicker.labelHora', { label })} values={HOURS} selectedIndex={hours} onSelect={index => onChange(HOURS[index] * 60 + MINUTES[minuteIndex])} />
+      <Wheel label={t('components.ui.hanetDateTimePicker.labelHora', { label })} values={hourValues} selectedIndex={hourIndex} onSelect={index => onChange(hourValues[index] * 60 + minuteValues[minuteIndex])} />
       <ThemedText style={styles.timeColon}>:</ThemedText>
-      <Wheel label={t('components.ui.hanetDateTimePicker.labelMinutos', { label })} values={MINUTES} selectedIndex={minuteIndex} onSelect={index => onChange(hours * 60 + MINUTES[index])} />
+      <Wheel label={t('components.ui.hanetDateTimePicker.labelMinutos', { label })} values={minuteValues} selectedIndex={minuteIndex} onSelect={index => onChange(hourValues[hourIndex] * 60 + minuteValues[index])} />
     </View>
   );
 }

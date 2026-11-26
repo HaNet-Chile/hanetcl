@@ -389,7 +389,7 @@ export default function UiShowcaseScreen() {
           <View style={styles.buttonStack}>
             <HanetButton label="Prueba mañana (24 h)" variant="surface" disabled={Platform.OS === 'web'} onPress={() => void testReminder('exam', () => previewExamReminder(24))} />
             <HanetButton label="Prueba en 4 horas" variant="surface" disabled={Platform.OS === 'web'} onPress={() => void testReminder('exam', () => previewExamReminder(4))} />
-            <HanetButton label="Resumen de las 7:00" variant="surface" disabled={Platform.OS === 'web'} onPress={() => void testReminder('exam', previewMorningSummary)} />
+            <HanetButton label="Resumen del día" variant="surface" disabled={Platform.OS === 'web'} onPress={() => void testReminder('exam', previewMorningSummary)} />
           </View>
           <Note>{notice?.key === 'exam' ? notice.text : Platform.OS === 'web' ? 'Las notificaciones se prueban en el teléfono.' : null}</Note>
         </Section>
