@@ -3,10 +3,12 @@ const { onCall, HttpsError } = require("./regions");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const WORDS = require("./wordlist");
 const { requireStaff } = require("./staff");
+const { cityById } = require("./cities");
 
 // institutions/{institutionId}
 //   name, fullName, methods, inviteHash, inviteUpdatedAt, createdAt,
 //   branding: { logoUrl, bannerUrl, updatedAt }   (images in Storage, see storage.rules)
+//   cityId   (cities.js: the weather of the day's summary is from there)
 // institutions/{institutionId}/roster/{rut}
 //   rut, nombres, apellidos, curso, email, updatedAt, linkedUid?
 //
@@ -187,6 +189,7 @@ function build(getAdminApp) {
         hasInviteCode: Boolean(data.inviteHash),
         inviteUpdatedAt: data.inviteUpdatedAt ? data.inviteUpdatedAt.toMillis() : null,
         ...brandingOf(data),
+        cityId: cityById(data.cityId)?.id || null,
         // null: no list yet, so every module is on.
         modules: Array.isArray(data.modules) ? data.modules.filter(module => MODULES.includes(module)) : null,
       };
@@ -352,7 +355,21 @@ function build(getAdminApp) {
     return { modules: list };
   });
 
-  return { setInstitutionModules, redeemInviteCode, adminListInstitutions, adminCreateInstitution, adminRotateInviteCode, adminImportRoster, adminSetInstitutionBranding };
+  // The institution's city, for the weather in the summary of the day. null clears it.
+  const setInstitutionCity = onCall({ invoker: "public" }, async (request) => {
+    requireHnt(request);
+    const institutionId = text(request.data?.institutionId, 60);
+    const cityId = request.data?.cityId ?? null;
+    if (cityId !== null && !cityById(cityId)) throw new HttpsError("invalid-argument", "Elige una ciudad de la lista.");
+    const ref = identityDb(getAdminApp).collection("institutions").doc(institutionId);
+    if (!institutionId || !(await ref.get()).exists) {
+      throw new HttpsError("not-found", "No encontramos esa institución.");
+    }
+    await ref.update({ cityId: cityId === null ? FieldValue.delete() : cityId });
+    return { cityId };
+  });
+
+  return { setInstitutionCity, setInstitutionModules, redeemInviteCode, adminListInstitutions, adminCreateInstitution, adminRotateInviteCode, adminImportRoster, adminSetInstitutionBranding };
 }
 
 module.exports = { build, normalizeRut };

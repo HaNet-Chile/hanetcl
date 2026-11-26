@@ -6,6 +6,8 @@ import InstitutionBanner from '@/components/InstitutionBanner';
 import { ThemedText } from '@/components/themed-text';
 import { HanetField } from '@/components/ui/hanet-auth-fields';
 import { HanetButton } from '@/components/ui/hanet-button';
+import { HanetSelect } from '@/components/ui/hanet-select';
+import { CITIES } from '@/constants/cities';
 import { AppStatusCard } from '@/components/hnt/AppStatusCard';
 import { PushTestCard } from '@/components/hnt/PushTestCard';
 import { AppColors, AppPressed, AppRadii, AppSpacing } from '@/constants/design-tokens';
@@ -19,6 +21,7 @@ import {
   listInstitutions,
   parseRoster,
   rotateInviteCode,
+  setInstitutionCity,
 } from '@/services/hnt-admin-service';
 import type { AdminInstitution, BrandingKind, RosterImportResult } from '@/services/hnt-admin-service';
 import * as Clipboard from 'expo-clipboard';
@@ -85,6 +88,23 @@ export default function HntAdminScreen() {
 
   const [brandingBusy, setBrandingBusy] = useState<{ id: string; kind: BrandingKind } | null>(null);
   const [brandingError, setBrandingError] = useState<{ id: string; message: string } | null>(null);
+
+  // The city of the weather in the summary of the day.
+  const [cityBusy, setCityBusy] = useState<string | null>(null);
+  const [cityError, setCityError] = useState<{ id: string; message: string } | null>(null);
+  const changeCity = async (institution: AdminInstitution, cityId: string) => {
+    if (cityBusy || cityId === institution.cityId) return;
+    setCityBusy(institution.id);
+    setCityError(null);
+    try {
+      await setInstitutionCity(institution.id, cityId);
+      setInstitutions(list => list.map(item => (item.id === institution.id ? { ...item, cityId } : item)));
+    } catch (cityFailure) {
+      setCityError({ id: institution.id, message: describeAuthError(cityFailure, t('hntAdmin.noPudimosGuardarLaCiudad')) });
+    } finally {
+      setCityBusy(null);
+    }
+  };
 
   const changeBranding = async (institution: AdminInstitution, kind: BrandingKind) => {
     if (brandingBusy) return;
@@ -377,6 +397,23 @@ export default function HntAdminScreen() {
                   )}
                   {brandingError?.id === institution.id && (
                     <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{brandingError.message}</ThemedText>
+                  )}
+                </View>
+
+                {/* Where the weather of the day's summary is from. */}
+                <View style={styles.branding}>
+                  <ThemedText style={styles.brandingTitle}>{t('events.ciudad')}</ThemedText>
+                  <HanetSelect
+                    label={t('events.ciudad')}
+                    placeholder={t('hntAdmin.elegirCiudad')}
+                    options={CITIES.map(city => ({ value: city.id, label: city.name }))}
+                    value={institution.cityId ?? null}
+                    onChange={cityId => void changeCity(institution, cityId)}
+                    disabled={cityBusy === institution.id}
+                  />
+                  <ThemedText style={styles.muted}>{t('hntAdmin.elResumenDelDiaTrae')}</ThemedText>
+                  {cityError?.id === institution.id && (
+                    <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{cityError.message}</ThemedText>
                   )}
                 </View>
 

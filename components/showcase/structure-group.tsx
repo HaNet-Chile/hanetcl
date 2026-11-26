@@ -59,7 +59,7 @@ export function StructureGroup() {
         source="components/settings/settings-list.tsx · SettingsGroup, SettingsLinkRow, SettingsToggleRow, SettingsNote"
       >
         <SettingsGroup title="Notificaciones (ejemplo)" footer="Se guardan en tu cuenta, para todos tus dispositivos.">
-          <SettingsToggleRow icon="sunny-outline" label="Resumen de las 7:00" detail="Clases y pruebas del día" value={morning} onChange={setMorning} />
+          <SettingsToggleRow icon="sunny-outline" label="Resumen del día" detail="A las 7:00: el clima, tus pruebas y tu primera clase" value={morning} onChange={setMorning} />
           <SettingsToggleRow icon="lock-closed-outline" label="Proteger Notas" value={lock} onChange={setLock} />
           <SettingsLinkRow icon="sparkles-outline" label="Novedades" detail="v0.10.1-beta" onPress={() => {}} />
         </SettingsGroup>

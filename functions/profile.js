@@ -2,6 +2,7 @@ const { onCall, HttpsError } = require("./regions");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
 const { avatarSeed, newSeed } = require("./avatar");
+const { morningTime, MORNING_DEFAULT } = require("./schedule");
 
 // Typefaces offered for the profile name. Keep in step with constants/name-fonts.ts.
 const NAME_FONTS = ["dm-sans", "fraunces", "unbounded", "space-mono", "caveat"];
@@ -34,11 +35,19 @@ function build(getAdminApp) {
       return { classhallNotifications: classhall };
     }
 
-    // The switch for the 7:00 summary of the day.
+    // The switch for the summary of the day.
     if (typeof request.data?.morningNotifications === "boolean") {
       const morning = request.data.morningNotifications;
       await accountRef.set({ notifications: { morning } }, { merge: true });
       return { morningNotifications: morning };
+    }
+
+    // The time of the summary of the day (schedule.js runs every 15 minutes).
+    if (request.data?.morningAt !== undefined) {
+      const morningAt = morningTime(request.data.morningAt);
+      if (!morningAt) throw new HttpsError("invalid-argument", "Elige una hora entre las 5:00 y las 13:45, cada 15 minutos.");
+      await accountRef.set({ notifications: { morningAt } }, { merge: true });
+      return { morningAt };
     }
 
     // The switch for the anniversary's flash tests and deadlines.
@@ -113,6 +122,7 @@ function build(getAdminApp) {
       avatarSeed: seed,
       classhallNotifications: account.notifications?.classhall !== false,
       morningNotifications: account.notifications?.morning !== false,
+      morningAt: morningTime(account.notifications?.morningAt) || MORNING_DEFAULT,
       anniversaryNotifications: account.notifications?.anniversary !== false,
       feedNotifications: account.notifications?.feed !== false,
       noticeNotifications: account.notifications?.notices !== false,

@@ -4,6 +4,7 @@ const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestor
 const { sendPush } = require("./classhall-notify");
 const { subjectKey } = require("./subjects");
 const { loadChanges, changesForCourse, changeOn, minutesOf: changeMinutes } = require("./day-changes");
+const { weatherFor } = require("./weather");
 
 // The course's weekly timetable (Horario) and the morning summary.
 //
@@ -20,9 +21,13 @@ const { loadChanges, changesForCourse, changeOn, minutesOf: changeMinutes } = re
 // It is edited by the course's Directiva, the school's administration and HNT;
 // everyone in the course reads it.
 //
-// At 7:00 on school days, each account with a course gets one notification
-// with its day: evaluations and tasks of the Calendar and the first block.
-// It is turned off in Configuraciones (accounts/{uid}.notifications.morning).
+// On school days, each account with a course gets one notification with its
+// day: the weather of the institution's city (weather.js, when the institution
+// has one, institutions/{id}.cityId), evaluations and tasks of the Calendar
+// and the first block. At 7:00 unless the person chose another time in
+// Configuraciones (accounts/{uid}.notifications.morningAt "HH:MM", every 15
+// minutes from 05:00 to 13:45, so the afternoon jornada fits too). It is
+// turned off there as well (accounts/{uid}.notifications.morning).
 
 const COLLECTION = "courseSchedules";
 const EDIT_ROLES = ["Directiva", "Admin", "HNT"];
@@ -35,6 +40,27 @@ const TIME_ZONE = "America/Santiago";
 const WEEKDAYS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 // Android shows the summary in its own channel (services/push-service.ts).
 const ANDROID_CHANNEL = "agenda";
+// The summary's times: the scheduler runs every 15 minutes in this window.
+// Keep in step with services/push-service.ts (MORNING_*).
+const MORNING_DEFAULT = "07:00";
+const MORNING_STEP = 15;
+const MORNING_FIRST_HOUR = 5;
+const MORNING_LAST_HOUR = 13;
+
+/** A time the summary can go out at, or null. */
+function morningTime(value) {
+  if (typeof value !== "string" || !TIME.test(value)) return null;
+  const [hours, mins] = value.split(":").map(Number);
+  if (hours < MORNING_FIRST_HOUR || hours > MORNING_LAST_HOUR || mins % MORNING_STEP !== 0) return null;
+  return value;
+}
+
+/** The slot a run belongs to: Chile's time, down to the 15 minutes. */
+function morningSlot(ms) {
+  const [hours, mins] = clock(ms).split(":").map(Number);
+  const slot = mins - (mins % MORNING_STEP);
+  return `${String(hours).padStart(2, "0")}:${String(slot).padStart(2, "0")}`;
+}
 
 function calendarDb(getAdminApp) {
   return getFirestore(getAdminApp(), "hn-calendar");
@@ -158,14 +184,15 @@ function truncate(value, max) {
 /**
  * The morning notification for a course, or null when its day is empty.
  *   change: the day's suspension or early dismissal for the course (day-changes.js), if any
+ *   weather: the line with the city's weather (weather.js), if any
  */
-function morningMessage(blocks, events, now, change = null) {
+function morningMessage(blocks, events, now, change = null, weather = null) {
   const { weekday } = chileDay(now);
   const day = new Intl.DateTimeFormat("es-CL", { timeZone: TIME_ZONE, day: "numeric", month: "long" }).format(new Date(now));
   if (change?.kind === "suspended") {
     return {
       title: `Hoy no hay clases · ${WEEKDAYS[weekday]} ${day}`,
-      body: truncate(change.reason || "Clases suspendidas.", 220),
+      body: truncate([change.reason || "Clases suspendidas.", weather].filter(Boolean).join(" · "), 220),
       data: { url: "/calendar" },
       channelId: ANDROID_CHANNEL,
     };
@@ -184,9 +211,15 @@ function morningMessage(blocks, events, now, change = null) {
     ...evaluations.map(event => `Prueba: ${event.subject || event.title} a las ${clock(event.startDate.toMillis())}`),
     ...tasks.map(event => `Se entrega: ${event.title}`),
   ];
-  if (today.length) lines.push(`Entras a las ${today[0].start} con ${today[0].subject}`);
+  // A summary that comes later in the day names the class that comes next.
+  const nowMinutes = minutes(clock(now));
+  const next = today.find(block => minutes(block.start) >= nowMinutes);
+  if (today.length && minutes(today[0].start) >= nowMinutes) lines.push(`Entras a las ${today[0].start} con ${today[0].subject}`);
+  else if (next) lines.push(`Tu próxima clase: ${next.subject} a las ${next.start}`);
   if (change?.kind === "early") lines.unshift(`Hoy sales a las ${change.endsAt}${change.reason ? ` (${change.reason})` : ""}`);
+  // Only the weather is not a day worth a notification.
   if (!lines.length) return null;
+  if (weather) lines.unshift(weather);
   return {
     title: evaluations.length ? `Hoy tienes ${evaluations.length === 1 ? "una prueba" : `${evaluations.length} pruebas`} · ${WEEKDAYS[weekday]} ${day}` : `Tu día · ${WEEKDAYS[weekday]} ${day}`,
     body: truncate(lines.join(" · "), 220),
@@ -272,22 +305,38 @@ function build(getAdminApp) {
     return { blocks };
   });
 
-  const sendMorningSummary = onSchedule({ region: SCHEDULE_REGION, schedule: "0 7 * * 1-5", timeZone: TIME_ZONE, memory: "512MiB", timeoutSeconds: 300 }, async () => {
+  // Every 15 minutes of the morning window; each run sends to the people whose
+  // time it is. The 7:00 run, everyone's default, reads the whole list; the
+  // others only look up who chose them (one query, usually empty).
+  const sendMorningSummary = onSchedule({ region: SCHEDULE_REGION, schedule: `*/${MORNING_STEP} ${MORNING_FIRST_HOUR}-${MORNING_LAST_HOUR} * * 1-5`, timeZone: TIME_ZONE, memory: "512MiB", timeoutSeconds: 300 }, async () => {
     const now = Date.now();
     const identity = identityDb(getAdminApp);
     const calendar = calendarDb(getAdminApp);
     const { start, end } = chileDayRange(now);
+    const slot = morningSlot(now);
 
-    // Who has a course, by institution and course.
-    const users = await identity.collection("users").select("institutionId", "courseId").get();
+    // Who gets it now, with their course.
+    let users;
+    if (slot === MORNING_DEFAULT) {
+      users = (await identity.collection("users").select("institutionId", "courseId").get()).docs;
+    } else {
+      const chosen = await identity.collection("accounts").where("notifications.morningAt", "==", slot).select().get();
+      if (chosen.empty) return;
+      users = [];
+      for (let index = 0; index < chosen.docs.length; index += 100) {
+        const refs = chosen.docs.slice(index, index + 100).map(doc => identity.collection("users").doc(doc.id));
+        users.push(...(await identity.getAll(...refs, { fieldMask: ["institutionId", "courseId"] })).filter(doc => doc.exists));
+      }
+    }
     const courses = new Map();
-    for (const doc of users.docs) {
+    for (const doc of users) {
       const { institutionId, courseId } = doc.data();
       if (!institutionId || !validCourse(courseId)) continue;
       const key = scheduleId(institutionId, courseId);
       if (!courses.has(key)) courses.set(key, { institutionId, courseId, uids: [] });
       courses.get(key).uids.push(doc.id);
     }
+    if (!courses.size) return;
 
     // Electivos and dominios with blocks, by student.
     const hallDocs = await classhallDb(getAdminApp).collection("halls").where("plan", "in", HALL_PLANS).get();
@@ -301,26 +350,41 @@ function build(getAdminApp) {
       }
     }
 
-    // Each institution's suspensions and early dismissals, read once.
+    // Each institution's suspensions and early dismissals and its city's
+    // weather, read once.
     const changesOf = new Map();
+    const weatherOf = new Map();
     const todayDate = chileDay(now).date;
+    const institutionWeather = async (institutionId) => {
+      if (!weatherOf.has(institutionId)) {
+        const cityId = (await identity.collection("institutions").doc(institutionId).get()).get("cityId");
+        weatherOf.set(institutionId, await weatherFor(cityId, now));
+      }
+      return weatherOf.get(institutionId);
+    };
 
     let sent = 0;
     for (const [key, { institutionId, courseId, uids }] of courses) {
       try {
+        const accounts = await identity.getAll(...uids.map(uid => identity.collection("accounts").doc(uid)));
+        const wanted = uids.filter((uid, index) => {
+          const notifications = accounts[index].data()?.notifications;
+          // At their own time, not at 7:00 as well.
+          return notifications?.morning !== false && (morningTime(notifications?.morningAt) || MORNING_DEFAULT) === slot;
+        });
+        if (!wanted.length) continue;
         if (!changesOf.has(institutionId)) changesOf.set(institutionId, await loadChanges(getAdminApp, institutionId));
         const change = changeOn(changesOf.get(institutionId), courseId, todayDate);
-        const [scheduleDoc, events] = await Promise.all([
+        const [scheduleDoc, events, weather] = await Promise.all([
           calendar.collection(COLLECTION).doc(key).get(),
           calendar.collection(`HNC-LCH.${courseId}`)
             .where("startDate", ">=", Timestamp.fromMillis(start))
             .where("startDate", "<", Timestamp.fromMillis(end))
             .get(),
+          institutionWeather(institutionId),
         ]);
         const courseBlocks = scheduleDoc.data()?.blocks || [];
         const dayEvents = events.docs.map(doc => doc.data());
-        const accounts = await identity.getAll(...uids.map(uid => identity.collection("accounts").doc(uid)));
-        const wanted = uids.filter((uid, index) => accounts[index].data()?.notifications?.morning !== false);
         // Students in the same electivos and dominios get the same message.
         const groups = new Map();
         for (const uid of wanted) {
@@ -330,7 +394,7 @@ function build(getAdminApp) {
           groups.get(group).uids.push(uid);
         }
         for (const group of groups.values()) {
-          const message = morningMessage([...courseBlocks, ...group.blocks], dayEvents, now, change);
+          const message = morningMessage([...courseBlocks, ...group.blocks], dayEvents, now, change, weather);
           if (!message) continue;
           const tokens = [];
           for (let index = 0; index < group.uids.length; index += 30) {
@@ -345,10 +409,10 @@ function build(getAdminApp) {
         console.error("sendMorningSummary", key, error.message);
       }
     }
-    console.log("sendMorningSummary", { courses: courses.size, sent });
+    console.log("sendMorningSummary", { slot, courses: courses.size, sent });
   });
 
   return { getCourseSchedule, saveCourseSchedule, saveHallSchedule, sendMorningSummary };
 }
 
-module.exports = { build, morningMessage, chileDayRange };
+module.exports = { build, morningMessage, chileDayRange, morningTime, morningSlot, MORNING_DEFAULT };

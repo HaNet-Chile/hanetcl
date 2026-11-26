@@ -23,7 +23,7 @@ export type PushSupport = 'supported' | 'expo-go-android' | 'web' | 'web-install
 export type PushPermission = 'granted' | 'denied' | 'undetermined';
 
 const ANDROID_CHANNEL = 'classhall';
-// The day's summary at 7:00 and the reminders of evaluations (services/exam-reminders.ts).
+// The day's summary and the reminders of evaluations (services/exam-reminders.ts).
 export const AGENDA_CHANNEL = 'agenda';
 // Security alerts: new sign-ins and changes to the account (functions/security.js).
 const ACCOUNT_CHANNEL = 'account';
@@ -196,9 +196,31 @@ export async function dismissPushPrompt() {
   }
 }
 
-/** The 7:00 summary's switch, saved with the account. */
+/** The day's summary's switch, saved with the account. */
 export async function saveMorningNotifications(on: boolean) {
   await httpsCallable(functions, 'updateMyProfile')({ morningNotifications: on });
+}
+
+// When the day's summary can arrive: every 15 minutes from 5:00 to 13:45, so
+// the afternoon jornada fits too. Keep in step with functions/schedule.js.
+export const MORNING_DEFAULT = '07:00';
+export const MORNING_STEP = 15;
+export const MORNING_HOURS: [number, number] = [5, 13];
+
+/** "07:15" as minutes since midnight. */
+export function morningMinutes(time: string) {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+/** Minutes since midnight as "07:15". */
+export function morningClock(minutes: number) {
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+}
+
+/** The time of the day's summary ("07:15"), saved with the account. */
+export async function saveMorningTime(time: string) {
+  await httpsCallable(functions, 'updateMyProfile')({ morningAt: time });
 }
 
 /** The anniversary's switch (flash tests and deadlines), saved with the account. */

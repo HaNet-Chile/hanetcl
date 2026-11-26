@@ -132,6 +132,8 @@ export type MyProfile = {
   /** The ClassHall notifications switch (on unless turned off). */
   classhallNotifications: boolean;
   morningNotifications: boolean;
+  /** When the day's summary arrives, "HH:MM" (07:00 unless chosen). */
+  morningAt?: string;
   /** The anniversary's flash tests and deadlines (on unless turned off). */
   anniversaryNotifications?: boolean;
   /** Feed posts sent as a notification (on unless turned off). */
