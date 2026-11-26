@@ -9,7 +9,7 @@ import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDK__CRF5iUlnGnRlembV9XUsnnajkFMaA",
-  authDomain: "hanet-edu.firebaseapp.com",
+  authDomain: "id.hanet.muxp.art",
   projectId: "hanet-edu",
   storageBucket: "hanet-edu.firebasestorage.app",
   messagingSenderId: "283230293926",

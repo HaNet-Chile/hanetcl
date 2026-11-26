@@ -1,5 +1,5 @@
 const { onCall, onRequest, HttpsError, SANTIAGO, IOWA } = require("./regions");
-const { initializeApp } = require("firebase-admin/app");
+const { getApp, getApps, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
 const { FieldValue } = require("firebase-admin/firestore");
@@ -16,7 +16,8 @@ function normalizeRut(value) {
 
 function getAdminApp() {
   if (!app) {
-    app = initializeApp();
+    // app-status.js may have started the default app already.
+    app = getApps().length ? getApp() : initializeApp();
   }
   return app;
 }
@@ -56,6 +57,9 @@ Object.assign(exports, require("./classhall-notify").build(getAdminApp));
 
 // The Home's notifications section: what each account was told.
 Object.assign(exports, require("./inbox").build(getAdminApp));
+
+// "Cerrar HaNet al público": the public state and HNT's switch.
+Object.assign(exports, require("./app-status").build(onCall, onRequest));
 
 // The account's security alerts: new sign-ins, password, email and role changes.
 Object.assign(exports, require("./security").build(getAdminApp));

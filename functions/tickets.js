@@ -36,7 +36,7 @@ const ORGANIZERS = ["CEE", "Admin", "HNT"];
 const STAFF_ROLES = ["Profesor", "Admin", "HNT"];
 const STATUSES = ["active", "link", "shared", "printed", "used", "voided"];
 const BUCKET = "hanet-edu.firebasestorage.app";
-const WEB_BASE = "https://hanet-app.web.app";
+const WEB_BASE = "https://app.hanet.muxp.art";
 // A gift link works for 24 hours (muxp, 2026-11-19); a guest's link, sent by
 // who organizes, lasts until the event or a week, whichever is later.
 const GIFT_LINK_MS = 24 * 60 * 60 * 1000;

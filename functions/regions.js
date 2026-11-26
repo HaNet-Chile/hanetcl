@@ -11,6 +11,7 @@
 // Paulo is the closest region that has it.
 
 const https = require("firebase-functions/v2/https");
+const { assertAppOpen } = require("./app-status");
 
 const SANTIAGO = "southamerica-west1";
 const IOWA = "us-central1";
@@ -26,6 +27,23 @@ function inRegions(trigger) {
       : trigger({ region: HTTPS_REGIONS, ...optionsOrHandler }, handler);
 }
 
+// Every callable first checks that HaNet is open (app-status.js): while it
+// is closed only HNT gets through.
+function gated(handler) {
+  return async (request, response) => {
+    await assertAppOpen(request);
+    return handler(request, response);
+  };
+}
+
+const callable = inRegions(https.onCall);
+
+function onCall(optionsOrHandler, handler) {
+  return typeof optionsOrHandler === "function"
+    ? callable(gated(optionsOrHandler))
+    : callable(optionsOrHandler, gated(handler));
+}
+
 module.exports = {
   SANTIAGO,
   IOWA,
@@ -33,6 +51,6 @@ module.exports = {
   HTTPS_REGIONS,
   SCHEDULE_REGION,
   HttpsError: https.HttpsError,
-  onCall: inRegions(https.onCall),
+  onCall,
   onRequest: inRegions(https.onRequest),
 };

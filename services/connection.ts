@@ -23,6 +23,16 @@ async function hasInternet() {
   }
 }
 
+async function isAppClosedAnswer(response: Response) {
+  if (response.status !== 503) return false;
+  try {
+    const body = await response.json() as { error?: { details?: { appClosed?: boolean } } };
+    return body.error?.details?.appClosed === true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Whether HaNet can reach its servers: 'ok', 'offline' (no internet on the
  * phone) or 'server' (internet works but the servers fail or do not answer).
@@ -35,7 +45,11 @@ export async function checkConnection(): Promise<'ok' | 'offline' | 'server'> {
       body: '{"data":{}}',
       cache: 'no-store',
     });
-    return response.status >= 500 ? 'server' : 'ok';
+    if (response.status < 500) return 'ok';
+    // While HaNet is closed to the public (functions/app-status.js) every
+    // callable answers 503 with appClosed: the servers are up, and
+    // AppErrorLayer shows PausedScreen after asking getAppStatus.
+    return (await isAppClosedAnswer(response)) ? 'ok' : 'server';
   } catch {
     return (await hasInternet()) ? 'server' : 'offline';
   }

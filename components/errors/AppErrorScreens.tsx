@@ -4,11 +4,16 @@ import { HanetDialog } from '@/components/ui/hanet-dialog';
 import { AppSpacing } from '@/constants/design-tokens';
 import { auth } from '@/services/firebase';
 import { unregisterDevice } from '@/services/push-service';
+import * as Clipboard from 'expo-clipboard';
 import * as Updates from 'expo-updates';
 import { signOut } from 'firebase/auth';
 import React, { useState } from 'react';
 import { DevSettings, Linking, Platform, StyleSheet, View } from 'react-native';
-import { t } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
+import { APP_HOST } from '@/constants/web-hosts';
+import { isInstalled } from '@/services/web-install';
+import { openNewAppHost } from '@/services/web-move';
+import type { AppStatus } from '@/services/app-status';
 
 export const SUPPORT_EMAIL = 'muxp@muxp.art';
 export const STATUS_PAGE = 'status.hanet.muxp.art';
@@ -127,6 +132,87 @@ export function FatalScreen({ onDismiss, preview }: { onDismiss: () => void; pre
       body={<>{t('components.errors.appErrorScreens.hanetTuvoQueDetenerseSi')}{' '}<Strong>{SUPPORT_EMAIL}</Strong>{' '}{t('components.errors.appErrorScreens.yCuentanosQueEstabasHaciendo')}</>}
       primary={{ label: t('components.errors.appErrorScreens.reiniciar'), onPress: () => (preview ? onDismiss() : void restartApp()) }}
       secondary={{ label: t('common.cerrarSesion'), onPress: () => endSession(onDismiss, preview) }}
+    />
+  );
+}
+
+/**
+ * The web app moved to app.hanet.muxp.art: on the old address this is all
+ * HaNet shows, with no way past it (Figma "[sunsetting beta error]"). The
+ * session doesn't travel (each address keeps its own), so it says to sign in
+ * again there.
+ */
+export function MovedScreen({ onDismiss, preview }: { onDismiss: () => void; preview?: boolean }) {
+  const installed = Platform.OS === 'web' && isInstalled();
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    await Clipboard.setStringAsync(`https://${APP_HOST}`);
+    setCopied(true);
+  };
+
+  return (
+    <ErrorScreen
+      icon={ERROR_ICONS.sunset}
+      tone="sunset"
+      title={t('components.errors.appErrorScreens.hanetSeCambioDeCasa')}
+      body={<>{t('components.errors.appErrorScreens.ahoraEstamosEn')}{' '}<Strong>{APP_HOST}</Strong>{t('components.errors.appErrorScreens.tuCuentaEsLaMisma')}</>}
+      note={t('components.errors.appErrorScreens.siTeniasHanetEnTu')}
+      primary={preview
+        ? { label: t('common.volver'), onPress: onDismiss }
+        : { label: copied ? t('common.copiado') : t('organize.copiarLink'), onPress: () => void copy() }}
+      secondary={{ label: t('components.errors.appErrorScreens.irALaNueva'), onPress: () => (preview ? onDismiss() : openNewAppHost(installed)) }}
+    />
+  );
+}
+
+// When HaNet should be back: the time today, or the day and time.
+function backAt(until: number) {
+  const date = new Date(until);
+  const time = date.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  if (date.toDateString() === new Date().toDateString()) return t('components.errors.appErrorScreens.volvemosCercaDeLasTime', { time });
+  const day = date.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
+  return t('components.errors.appErrorScreens.volvemosCercaDelDayA', { day, time });
+}
+
+/**
+ * HaNet closed to the public by the team (services/app-status.ts): for
+ * maintenance, a problem, or for now. The team's message, if there is one,
+ * replaces the explanation. "Reintentar" asks again; signed out, "Soy del
+ * equipo" lets the team sign in, and with a session that isn't HNT the
+ * screen comes back.
+ */
+export function PausedScreen({ status, onRetry, retrying, signedIn, onDismiss, preview }: RetryProps & { status: AppStatus | null }) {
+  const kind = status?.kind ?? 'maintenance';
+  const titles = {
+    maintenance: t('components.errors.appErrorScreens.estamosHaciendoMantencion'),
+    incident: t('components.errors.appErrorScreens.algoNoAndaBienEn'),
+    closed: t('components.errors.appErrorScreens.hanetEstaCerradoPorAhora'),
+  };
+  const bodies = {
+    maintenance: t('components.errors.appErrorScreens.hanetVuelveEnUnRato'),
+    incident: t('components.errors.appErrorScreens.yaLoEstamosRevisandoLo'),
+    closed: t('components.errors.appErrorScreens.noTePreocupesLoTuyo'),
+  };
+  return (
+    <ErrorScreen
+      icon={kind === 'closed' ? ERROR_ICONS.sunset : kind === 'incident' ? ':/' : ERROR_ICONS.server}
+      tone={kind === 'closed' ? 'sunset' : 'accent'}
+      title={titles[kind]}
+      body={status?.message || bodies[kind]}
+      note={
+        <>
+          {status?.until ? <>{backAt(status.until)}{' '}</> : null}
+          {t('components.errors.appErrorScreens.mantenteAlTantoDeErrores')}{' '}
+          <Strong onPress={() => void Linking.openURL(`https://${STATUS_PAGE}`)}>{STATUS_PAGE}</Strong>
+        </>
+      }
+      primary={{ label: retrying ? t('components.errors.appErrorScreens.probando') : t('common.reintentar'), onPress: onRetry, disabled: retrying }}
+      secondary={preview
+        ? { label: t('common.volver'), onPress: onDismiss }
+        : signedIn
+          ? { label: t('common.cerrarSesion'), onPress: () => endSession(onDismiss, preview) }
+          : { label: t('components.errors.appErrorScreens.soyDelEquipo'), onPress: onDismiss }}
     />
   );
 }

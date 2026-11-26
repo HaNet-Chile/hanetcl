@@ -6,6 +6,7 @@ import InstitutionBanner from '@/components/InstitutionBanner';
 import { ThemedText } from '@/components/themed-text';
 import { HanetField } from '@/components/ui/hanet-auth-fields';
 import { HanetButton } from '@/components/ui/hanet-button';
+import { AppStatusCard } from '@/components/hnt/AppStatusCard';
 import { PushTestCard } from '@/components/hnt/PushTestCard';
 import { AppColors, AppPressed, AppRadii, AppSpacing } from '@/constants/design-tokens';
 import { describeAuthError, ensureClaims, useSession } from '@/services/auth-service';
@@ -276,6 +277,8 @@ export default function HntAdminScreen() {
 
           <HanetButton label={t('hntAdmin.sistemaHanetUi')} variant="surface" onPress={() => router.push('/ui-showcase')} />
           <HanetButton label={t('hntAdmin.verOnboarding')} variant="surface" onPress={() => router.push({ pathname: '/onboarding', params: { preview: '1' } })} />
+
+          <AppStatusCard />
 
           <PushTestCard />
 

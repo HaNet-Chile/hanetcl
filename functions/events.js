@@ -29,7 +29,7 @@ const { readIdQr } = require("./hanet-id");
 
 const BUCKET = "hanet-edu.firebasestorage.app";
 const COLLECTION = "hnEvents";
-const USER_AGENT = "HaNetEventos/1.0 (+https://hanet-edu.web.app; muxp@muxp.art)";
+const USER_AGENT = "HaNetEventos/1.0 (+https://hanet.muxp.art; muxp@muxp.art)";
 const REGIONAL_EDITORS = ["HNT"];
 const INSTITUTION_EDITORS = ["CEE", "Admin", "HNT"];
 const JORNADAS = ["manana", "tarde", "ambas"];

@@ -10,6 +10,7 @@ import { NowNextCard } from '@/components/schedule/now-next-card';
 import { StoryShareSheet, storyShareAvailable } from '@/components/share/story-share';
 import type { StoryItem } from '@/components/share/story-share';
 import { showAppError } from '@/services/app-error';
+import { previewPausedScreen } from '@/services/app-status';
 import { HanetChoice } from '@/components/ui/hanet-select';
 import { SUBJECTS } from '@/constants/subjects';
 import { ThemedText } from '@/components/themed-text';
@@ -473,11 +474,15 @@ export default function UiShowcaseScreen() {
           />
         </Section>
 
-        <Section title="Pantallas de error" description="Bloqueo, servidores, sin conexión, error fatal y pantalla no encontrada. En la vista previa los botones solo cierran la pantalla.">
+        <Section title="Pantallas de error" description="Bloqueo, servidores, sin conexión, cambio de dirección de la web, HaNet cerrado al público (mantención, un problema, cerrado), error fatal y pantalla no encontrada. En la vista previa los botones solo cierran la pantalla.">
           <View style={styles.buttonStack}>
             <HanetButton label="Cuenta bloqueada" variant="surface" onPress={() => showAppError('blocked', true)} />
             <HanetButton label="Servidores" variant="surface" onPress={() => showAppError('server', true)} />
             <HanetButton label="Sin conexión" variant="surface" onPress={() => showAppError('offline', true)} />
+            <HanetButton label="Cambio de dirección" variant="surface" onPress={() => showAppError('moved', true)} />
+            <HanetButton label="Mantención" variant="surface" onPress={() => previewPausedScreen({ open: false, kind: 'maintenance', message: null, until: Date.now() + 3_600_000 })} />
+            <HanetButton label="Un problema" variant="surface" onPress={() => previewPausedScreen({ open: false, kind: 'incident', message: null, until: null })} />
+            <HanetButton label="Cerrado por ahora" variant="surface" onPress={() => previewPausedScreen({ open: false, kind: 'closed', message: null, until: null })} />
             <HanetButton label="Error fatal" variant="surface" onPress={() => setFatalVisible(true)} />
             <HanetButton label="Pantalla no encontrada" variant="surface" onPress={() => setNotFoundVisible(true)} />
           </View>

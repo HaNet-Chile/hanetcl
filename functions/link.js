@@ -18,7 +18,7 @@ const { alertAccount } = require("./security");
 const LINK_MINUTES = 30;
 const RESEND_WAIT_SECONDS = 60;
 const SENDS_PER_HOUR = 5;
-const CONFIRM_URL = "https://hanet-edu.web.app/vincular";
+const CONFIRM_URL = "https://id.hanet.muxp.art/vincular";
 
 function identityDb(getAdminApp) {
   return getFirestore(getAdminApp(), "hn-enrollmentdata");
@@ -63,7 +63,7 @@ function page(title, body, form = "") {
 <meta name="robots" content="noindex"><title>${escapeHtml(title)} · HaNet</title></head>
 <body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#282829;color:#f9f9fa;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;">
 <main style="width:100%;max-width:420px;box-sizing:border-box;padding:24px;">
-<img src="https://hanet-edu.web.app/email/hanet-logo-blanco.png" alt="HaNet" width="147" height="40" style="display:block;margin-bottom:24px;">
+<img src="https://id.hanet.muxp.art/email/hanet-logo-blanco.png" alt="HaNet" width="147" height="40" style="display:block;margin-bottom:24px;">
 <div style="background:#3c3b3e;border-radius:32px;padding:32px;">
 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.2;letter-spacing:-1px;">${escapeHtml(title)}</h1>
 <p style="margin:0;font-size:16px;line-height:1.4;color:#dddde2;">${escapeHtml(body)}</p>
