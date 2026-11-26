@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "0.16.1-beta",
+      "date": "2026-11-26",
+      "title": "",
+      "items": [
+        "Si entras a id.hanet.muxp.art, ahora te lleva directo a HaNet web."
+      ],
+      "highlights": []
+    },
+    {
       "version": "0.16.0-beta",
       "date": "2026-11-26",
       "title": "HaNet en su propia dirección",

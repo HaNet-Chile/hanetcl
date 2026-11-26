@@ -42,6 +42,13 @@
           ]
         }
       ],
+      "redirects": [
+        {
+          "source": "/",
+          "destination": "https://app.hanet.muxp.art",
+          "type": 302
+        }
+      ],
       "rewrites": [
         {
           "source": "/vincular",
