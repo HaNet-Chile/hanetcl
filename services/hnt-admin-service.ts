@@ -14,6 +14,8 @@ export type AdminInstitution = {
   /** The institution's shield and banner, shown in Home, the identity link and its emails. */
   logoUrl: string | null;
   bannerUrl: string | null;
+  /** The city of the weather in the summary of the day (constants/cities.ts). */
+  cityId?: string | null;
 };
 
 export type BrandingKind = 'logo' | 'banner';
@@ -108,6 +110,11 @@ export async function joinInstitution(institutionId: string) {
 export async function listInstitutions() {
   const result = await httpsCallable<void, { institutions: AdminInstitution[] }>(functions, 'adminListInstitutions')();
   return result.data.institutions;
+}
+
+/** The institution's city, for the weather in the summary of the day; null clears it. */
+export async function setInstitutionCity(institutionId: string, cityId: string | null) {
+  await httpsCallable(functions, 'setInstitutionCity')({ institutionId, cityId });
 }
 
 export async function createInstitution(name: string, fullName: string) {

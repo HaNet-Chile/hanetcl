@@ -1,5 +1,6 @@
 import { useSecretTaps, VersionEasterEgg } from '@/components/settings/version-easter-egg';
 import { HomeCalendarSetting } from '@/components/settings/home-calendar-setting';
+import { MorningTimeRow, morningLabel } from '@/components/settings/morning-time-row';
 import { SettingsGroup, SettingsLinkRow, SettingsNote, SettingsToggleRow } from '@/components/settings/settings-list';
 import { ThemedText } from '@/components/themed-text';
 import { HanetAvatar } from '@/components/ui/hanet-avatar';
@@ -14,7 +15,7 @@ import { dueRemindersEnabled, examRemindersEnabled, setDueRemindersEnabled, setE
 import { setWhatsNewPromptEnabled, whatsNewPromptEnabled } from '@/services/whats-new-prompt';
 import { gradesLockAvailable, setGradesLock, useGradesLock } from '@/services/grades-lock';
 import { getProfilePhotoUrl } from '@/services/profile-service';
-import { canOpenNotificationSettings, enablePush, openNotificationSettings, pushPermission, pushSupport, saveAnniversaryNotifications, saveClasshallNotifications, saveFeedNotifications, saveMorningNotifications, saveNoticeNotifications } from '@/services/push-service';
+import { canOpenNotificationSettings, enablePush, openNotificationSettings, pushPermission, pushSupport, saveAnniversaryNotifications, saveClasshallNotifications, saveFeedNotifications, saveMorningNotifications, saveMorningTime, saveNoticeNotifications, MORNING_DEFAULT } from '@/services/push-service';
 import type { PushPermission } from '@/services/push-service';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -50,8 +51,9 @@ export default function SettingsScreen() {
   const [loadingNotifications, setLoadingNotifications] = useState(true);
   const [notificationsError, setNotificationsError] = useState<string | null>(null);
   const support = pushSupport();
-  // The 7:00 summary (saved with the account) and the evaluation reminders (this phone only).
+  // The day's summary and its time (saved with the account) and the evaluation reminders (this phone only).
   const [morningOn, setMorningOn] = useState(true);
+  const [morningAt, setMorningAt] = useState(MORNING_DEFAULT);
   const [examsOn, setExamsOn] = useState(true);
   const [dueOn, setDueOn] = useState(true);
   // Notas behind the phone's lock: a setting of this phone.
@@ -87,6 +89,7 @@ export default function SettingsScreen() {
         setProfile(loaded);
         setClasshallOn(loaded.classhallNotifications !== false);
         setMorningOn(loaded.morningNotifications !== false);
+        setMorningAt(loaded.morningAt || MORNING_DEFAULT);
         setAnniversaryOn(loaded.anniversaryNotifications !== false);
         setFeedOn(loaded.feedNotifications !== false);
         setNoticesOn(loaded.noticeNotifications !== false);
@@ -130,6 +133,18 @@ export default function SettingsScreen() {
     } catch (error) {
       set(!on);
       setNotificationsError(describeAuthError(error, t('settings.noPudimosGuardarElCambio')));
+    }
+  };
+
+  const chooseMorningTime = async (time: string) => {
+    setNotificationsError(null);
+    try {
+      await saveMorningTime(time);
+      setMorningAt(time);
+      if (Platform.OS !== 'web') void Haptics.selectionAsync();
+    } catch (error) {
+      setNotificationsError(describeAuthError(error, t('settings.noPudimosGuardarElCambio')));
+      throw error;
     }
   };
 
@@ -281,6 +296,8 @@ export default function SettingsScreen() {
                     <>
                       {!!notificationsError && <SettingsNote error>{notificationsError}</SettingsNote>}
                       <SettingsNote>{notificationsFooter}</SettingsNote>
+                      {/* MET Norway's data is CC BY 4.0: the credit goes where the weather is chosen. */}
+                      {morningOn && <SettingsNote>{t('settings.elClimaDelResumenEs')}</SettingsNote>}
                     </>
                   )}
                 >
@@ -294,12 +311,15 @@ export default function SettingsScreen() {
                   />
                   <SettingsToggleRow
                     icon="sunny-outline"
-                    label={t('settings.resumenDeLas700')}
-                    detail={t('settings.tuPrimeraClaseYLo')}
+                    label={t('settings.resumenDelDia')}
+                    detail={t('settings.aLasMorninglabelElClima', { morningLabel: morningLabel(morningAt) })}
                     value={morningOn}
                     onChange={on => void saveSwitch(on, morningOn, setMorningOn, saveMorningNotifications)}
                     disabled={loadingNotifications}
                   />
+                  {morningOn && !loadingNotifications && (
+                    <MorningTimeRow value={morningAt} onSave={chooseMorningTime} />
+                  )}
                   <SettingsToggleRow
                     icon="hourglass-outline"
                     label={t('settings.avisosDePruebas')}
