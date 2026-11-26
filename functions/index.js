@@ -1,5 +1,5 @@
 const { onCall, onRequest, HttpsError, SANTIAGO, IOWA } = require("./regions");
-const { getApp, getApps, initializeApp } = require("firebase-admin/app");
+const { getApp, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
 const { FieldValue } = require("firebase-admin/firestore");
@@ -14,10 +14,20 @@ function normalizeRut(value) {
     .toUpperCase();
 }
 
+function defaultApp() {
+  try {
+    return getApp();
+  } catch {
+    return initializeApp();
+  }
+}
+
 function getAdminApp() {
   if (!app) {
-    // app-status.js may have started the default app already.
-    app = getApps().length ? getApp() : initializeApp();
+    // app-status.js may have started the default app already. Not
+    // getApps(): the Functions SDK starts its own named app to check tokens,
+    // and getApp() asks for the default one.
+    app = defaultApp();
   }
   return app;
 }

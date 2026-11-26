@@ -9,7 +9,7 @@
 // The state lives in hn-enrollmentdata config/appStatus, written only by
 // setAppStatus. getAppStatus is public (the app asks before signing in).
 
-const { getApp, getApps, initializeApp } = require("firebase-admin/app");
+const { getApp, initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { HttpsError } = require("firebase-functions/v2/https");
 
@@ -24,7 +24,14 @@ let cached = null;
 let cachedAt = 0;
 
 function statusRef() {
-  const app = getApps().length ? getApp() : initializeApp();
+  // The default app (index.js may have started it). getApps() isn't enough:
+  // the Functions SDK keeps its own named app to check tokens.
+  let app;
+  try {
+    app = getApp();
+  } catch {
+    app = initializeApp();
+  }
   return getFirestore(app, "hn-enrollmentdata").collection("config").doc("appStatus");
 }
 
