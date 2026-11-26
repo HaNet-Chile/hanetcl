@@ -1,8 +1,10 @@
-import { BlockedScreen, FatalScreen, MovedScreen, OfflineScreen, ServerScreen } from '@/components/errors/AppErrorScreens';
+import { BlockedScreen, FatalScreen, MovedScreen, OfflineScreen, PausedScreen, ServerScreen } from '@/components/errors/AppErrorScreens';
 import { TopNotice } from '@/components/system/top-notice';
-import { clearAppError, continueOffline, isAppErrorPreview, isBlockedError, isOfflineMode, leaveOffline, showAppError, useAppError, useOfflineMode } from '@/services/app-error';
-import { useSession } from '@/services/auth-service';
+import { clearAppError, continueOffline, currentAppError, isAppErrorPreview, isBlockedError, isOfflineMode, leaveOffline, showAppError, useAppError, useOfflineMode } from '@/services/app-error';
+import { useRole, useSession } from '@/services/auth-service';
 import { checkConnection } from '@/services/connection';
+import { endPausedPreview, fetchAppStatus, pausedStatus, useKnownAppStatus } from '@/services/app-status';
+import { router } from 'expo-router';
 import { onOldAppHost } from '@/services/web-move';
 import { t } from '@/i18n';
 import React, { Component, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -22,7 +24,9 @@ const RECHECK_AFTER_MS = 60_000;
  * everything, the tab bar included: on launch and each time the app comes
  * back to the front it checks the connection and, with a session, whether the
  * HaNet ID was blocked. After "Ver lo guardado" the app goes on offline with
- * a small notice on top, until a check finds the connection again.
+ * a small notice on top, until a check finds the connection again. It also
+ * asks whether the team closed HaNet to the public (services/app-status.ts):
+ * then everyone but HNT gets PausedScreen, and HNT a notice on top.
  */
 export function AppErrorLayer() {
   const kind = useAppError();
@@ -30,6 +34,10 @@ export function AppErrorLayer() {
   const { user } = useSession();
   const [retrying, setRetrying] = useState(false);
   const lastCheck = useRef(0);
+  const role = useRole();
+  const appStatus = useKnownAppStatus();
+  // "Soy del equipo" on PausedScreen: the sign-in stays reachable until someone signs in.
+  const letTeamIn = useRef(false);
   // The static web page is built as "not moved"; the browser's answer comes right after hydrating.
   const moved = useSyncExternalStore(neverChanges, onOldAppHost, notMoved);
 
@@ -54,7 +62,21 @@ export function AppErrorLayer() {
         }
       }
     }
+    const pause = await fetchAppStatus();
+    if (pause && !pause.open) {
+      const tokenRole = user ? (await user.getIdTokenResult().catch(() => null))?.claims.role : null;
+      if (tokenRole !== 'HNT' && !(letTeamIn.current && !user)) {
+        showAppError('paused');
+        return false;
+      }
+    } else if (pause?.open && currentAppError() === 'paused' && !isAppErrorPreview()) {
+      clearAppError();
+    }
     return true;
+  }, [user]);
+
+  useEffect(() => {
+    if (user) letTeamIn.current = false;
   }, [user]);
 
   useEffect(() => {
@@ -73,6 +95,7 @@ export function AppErrorLayer() {
 
   const retry = async () => {
     if (isAppErrorPreview()) {
+      endPausedPreview();
       clearAppError();
       return;
     }
@@ -91,6 +114,15 @@ export function AppErrorLayer() {
   }
 
   if (!kind) {
+    if (appStatus && !appStatus.open && role === 'HNT') {
+      return (
+        <TopNotice
+          icon="construct-outline"
+          text={t('components.errors.appErrorLayer.hanetEstaCerradoAlPublico')}
+          action={{ label: t('components.errors.appErrorLayer.abrir'), onPress: () => router.push('/hnt-admin') }}
+        />
+      );
+    }
     return offline ? (
       <TopNotice
         icon="cloud-offline-outline"
@@ -105,6 +137,19 @@ export function AppErrorLayer() {
       {kind === 'blocked' && <BlockedScreen {...common} />}
       {kind === 'server' && <ServerScreen {...common} onRetry={retry} retrying={retrying} />}
       {kind === 'offline' && <OfflineScreen {...common} onRetry={retry} retrying={retrying} onContinue={continueOffline} />}
+      {kind === 'paused' && (
+        <PausedScreen
+          {...common}
+          status={pausedStatus()}
+          onRetry={retry}
+          retrying={retrying}
+          onDismiss={() => {
+            if (!common.preview && !user) letTeamIn.current = true;
+            endPausedPreview();
+            clearAppError();
+          }}
+        />
+      )}
     </Animated.View>
   );
 }

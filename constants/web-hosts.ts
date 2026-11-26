@@ -1,4 +1,4 @@
-// Where HaNet lives on the web (muxp.art, since v0.15.3). The Firebase
+// Where HaNet lives on the web (muxp.art, since v0.16.0). The Firebase
 // defaults still answer, so links already sent keep working.
 //   id.hanet.muxp.art   site hanet-edu: sign-in with Google, the Auth email
 //                       links, /terminos, /vincular and the emails' logos

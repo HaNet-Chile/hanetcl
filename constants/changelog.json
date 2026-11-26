@@ -1,13 +1,14 @@
 {
   "releases": [
     {
-      "version": "0.15.3-beta",
+      "version": "0.16.0-beta",
       "date": "2026-11-26",
       "title": "HaNet en su propia dirección",
       "items": [
         "La web de HaNet ahora está en app.hanet.muxp.art. Si entras a la dirección antigua, HaNet te avisa y te lleva a la nueva.",
         "Si tenías HaNet en la pantalla de inicio de tu teléfono, agrégala de nuevo desde app.hanet.muxp.art y vuelve a entrar con tu cuenta.",
-        "Entrar con Google y los correos de HaNet usan ahora id.hanet.muxp.art."
+        "Entrar con Google y los correos de HaNet usan ahora id.hanet.muxp.art.",
+        "Si HaNet tiene que cerrar un rato por mantención o por un problema, verás una pantalla que lo explica y te dice cuándo volvemos."
       ],
       "highlights": [
         "HaNet web se cambió a app.hanet.muxp.art.",

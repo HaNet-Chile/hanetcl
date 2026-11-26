@@ -142,7 +142,7 @@ async function alertAccount(getAdminApp, uid, alert, { exceptDeviceId = null, pu
     ]);
     if (!push) return;
     const tokens = await pushTokensOf(getAdminApp, uid, exceptDeviceId);
-    if (tokens.length) await sendPush(getAdminApp, tokens, { ...message, channelId: ANDROID_CHANNEL });
+    if (tokens.length) await sendPush(getAdminApp, tokens, { ...message, channelId: ANDROID_CHANNEL }, { evenWhenClosed: true });
   } catch (error) {
     console.error("alertAccount", alert.kind, error.message);
   }

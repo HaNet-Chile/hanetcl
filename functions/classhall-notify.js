@@ -3,6 +3,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 const { onCall, HttpsError } = require("./regions");
 const { recordInbox } = require("./inbox");
+const { appClosed } = require("./app-status");
 
 // ClassHall's push notifications, sent through Expo's push service: a new
 // announcement, task or material reaches the Hall's students, the day before
@@ -168,7 +169,12 @@ async function sendWeb(getAdminApp, db, tokens, message) {
 
 // Sends to phones through Expo and to browsers through FCM. Returns a ticket
 // for each token, in order.
-async function sendPush(getAdminApp, tokens, message) {
+async function sendPush(getAdminApp, tokens, message, { evenWhenClosed = false } = {}) {
+  // While HaNet is closed to the public nobody gets pinged (app-status.js),
+  // except security alerts and HNT's own test.
+  if (!evenWhenClosed && await appClosed()) {
+    return tokens.map(() => ({ status: "error", message: "HaNet está cerrado", details: { error: "AppClosed" } }));
+  }
   const db = identityDb(getAdminApp);
   const web = [];
   const phones = [];
@@ -305,7 +311,7 @@ function build(getAdminApp) {
     const devices = snapshot.docs.map(doc => ({ id: doc.id, token: doc.data().token, platform: doc.data().platform || "unknown", updatedAt: doc.data().updatedAt?.toMillis() ?? null }));
     if (!devices.length) return { devices: [] };
 
-    const tickets = await sendPush(getAdminApp, devices, message);
+    const tickets = await sendPush(getAdminApp, devices, message, { evenWhenClosed: true });
     return {
       devices: devices.map((device, index) => ({
         platform: device.platform,

@@ -207,6 +207,9 @@ export function routeForStep(step: OnboardingStep) {
 /** Message for an error thrown by one of our callables or by Firebase Auth. */
 export function describeAuthError(error: unknown, fallback: string) {
   const code = typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
+  // HaNet closed to the public (functions/app-status.js): not the connection.
+  const details = typeof error === 'object' && error !== null && 'details' in error ? (error as { details?: { appClosed?: boolean } }).details : undefined;
+  if (details?.appClosed) return t('services.authService.hanetEstaCerradoAlPublico');
 
   switch (code) {
     case 'auth/invalid-credential':
