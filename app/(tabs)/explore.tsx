@@ -215,7 +215,7 @@ export default function ProfileScreen() {
                   <QRCode
                     value={qrValue ?? `hanet://id/${current.username ?? user.uid}`}
                     size={236}
-                    color={AppColors.surface}
+                    color={AppColors.textOnPaperMuted}
                     backgroundColor="transparent"
                   />
                   <ThemedText style={styles.qrHandle}>{handle ?? 'Tu HaNet ID'}</ThemedText>

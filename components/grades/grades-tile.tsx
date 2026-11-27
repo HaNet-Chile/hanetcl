@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   subtitle: {
     ...AppType.footnote,
     fontFamily: 'DMSans_500Medium',
-    color: AppColors.surface,
+    color: AppColors.textOnPaperMuted,
   },
   badge: {
     width: 112,
