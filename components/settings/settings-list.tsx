@@ -96,6 +96,8 @@ export function SettingsToggleRow({ icon, label, detail, value, onChange, disabl
         disabled={disabled}
         trackColor={{ false: AppColors.surfaceMuted, true: AppColors.accent }}
         thumbColor="#FFFFFF"
+        // react-native-web paints the "on" thumb teal unless told otherwise.
+        {...({ activeThumbColor: '#FFFFFF' } as object)}
         ios_backgroundColor={AppColors.surfaceMuted}
         // The row already speaks for the switch.
         accessibilityElementsHidden

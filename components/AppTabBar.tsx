@@ -726,7 +726,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: AppColors.glassBorder,
-    boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.3)',
+    boxShadow: AppTheme.floatShadow,
     elevation: 8,
   },
   // As wide as the card: an open panel spreads the controls to its edges.

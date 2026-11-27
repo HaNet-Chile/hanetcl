@@ -79,36 +79,37 @@ const DARK = {
 
 /**
  * The light theme (an option in Configuraciones → Apariencia; dark stays the
- * default). Chosen by muxp on 2026-11-26 (mockup "opción A", with Instagram's
- * light UI as the reference): a soft grey canvas, white tiles with a faint
- * lift (`AppTileLift`), crisp near-black text, quiet grey chips and hairline
- * separators. Black is only for small active controls (pills, the tab bar's
- * active button), with white on them; text on tiles (`textOnLight`) stays
- * dark. Pink is the same.
+ * default). Reworked on 2026-11-27 after muxp found
+ * the white-cards-on-grey version ugly (reviewed with the Apple and
+ * Impeccable guides, Instagram's light UI as the reference): a white canvas,
+ * no shadows, and the dark theme's figure-ground kept the other way round:
+ * the Home's tiles are solid misty-lilac blocks (`tile`), lists and cards a
+ * softer grey (`surface`). Near-black only for small active controls, with
+ * white on them; text on tiles (`textOnLight`) stays dark. Pink is the same.
  */
 const LIGHT: Palette = {
-  canvas: '#F2F1F5',
-  surface: '#FFFFFF',
-  surfaceMuted: '#E5E4EA',
-  surfaceRaised: '#E5E4EA',
+  canvas: '#FFFFFF',
+  surface: '#F3F2F7',
+  surfaceMuted: '#E6E5EC',
+  surfaceRaised: '#E6E5EC',
   surfaceSoft: '#8E8D94',
-  textPrimary: '#121214',
-  textSecondary: '#4A494F',
-  textOnLight: '#121214',
+  textPrimary: '#111113',
+  textSecondary: '#5A5960',
+  textOnLight: '#111113',
   accent: '#EF2274',
   errorText: '#B0124F',
   errorTextOnLight: '#B0124F',
-  primary: '#E5E4EA',
+  primary: '#E6E5EC',
   primaryStrong: '#D9D8DE',
-  controlContainer: '#E5E4EA',
-  controlActive: '#121214',
+  controlContainer: '#F3F2F7',
+  controlActive: '#1C1C1E',
   controlOnActive: '#FFFFFF',
   neutral2: '#3C3B3E',
   neutral3: '#504F53',
   neutral5: '#6E6D73',
   neutral8: '#C7C6CF',
-  neutral85: '#E5E4EA',
-  neutral9: '#F2F1F5',
+  neutral85: '#E6E5EC',
+  neutral9: '#FFFFFF',
   neutral05: '#121214',
   success: '#4C5A6F',
   info: '#4C5A6F',
@@ -121,27 +122,27 @@ const LIGHT: Palette = {
   sunset: '#FFBF33',
   stripe: '#D81D68',
   accentTint: 'rgba(239,34,116,0.12)',
-  hairline: 'rgba(18,18,20,0.06)',
-  separator: 'rgba(18,18,20,0.10)',
+  hairline: 'rgba(17,17,19,0.06)',
+  separator: 'rgba(17,17,19,0.08)',
   scrim: 'rgba(0,0,0,0.35)',
   paper: '#FFFFFF',
   textOnPaper: '#121214',
   textOnPaperMuted: '#3C3B3E',
   placeholder: 'rgba(18,18,20,0.38)',
-  overlay: 'rgba(18,18,20,0.05)',
-  glassFill: 'rgba(255,255,255,0.86)',
-  glassBorder: 'rgba(18,18,20,0.06)',
+  overlay: 'rgba(17,17,19,0.05)',
+  glassFill: 'rgba(255,255,255,0.78)',
+  glassBorder: 'rgba(17,17,19,0.08)',
   onControlOverlay: 'rgba(255,255,255,0.16)',
   cancelledSurface: '#F5E3E8',
   placeholderMuted: '#A3A2AA',
   placeholderOnControl: 'rgba(255,255,255,0.6)',
-  tile: '#FFFFFF',
-  onTile: 'rgba(18,18,20,0.06)',
+  tile: '#ECEBF2',
+  onTile: 'rgba(17,17,19,0.06)',
   textOnDark: '#F9F9FA',
-  cardFill: '#FFFFFF',
-  cardOutline: 'rgba(18,18,20,0.06)',
-  feedGap: 'rgba(18,18,20,0.04)',
-  cardChip: '#EFEFF2',
+  cardFill: '#F3F2F7',
+  cardOutline: 'transparent',
+  feedGap: 'rgba(17,17,19,0.05)',
+  cardChip: '#E6E5EC',
 };
 
 type Palette = { [K in keyof typeof DARK]: string };
@@ -162,6 +163,10 @@ export const AppTheme = {
   blurTint: 'systemUltraThinMaterialDark' as 'systemUltraThinMaterialDark' | 'systemUltraThinMaterialLight',
   /** BlurView tint for heavier chrome (sheets over content). */
   chromeTint: 'systemChromeMaterialDark' as 'systemChromeMaterialDark' | 'systemChromeMaterialLight',
+  /** How strong the ambient color glows are (the Home's alianza light): soft on white. */
+  glow: 1,
+  /** The shadow under floating chrome (the tab bar). */
+  floatShadow: '0px 10px 20px rgba(0, 0, 0, 0.3)',
 };
 
 /** The fixed palettes, for previews of each theme. */
@@ -174,16 +179,13 @@ export function applyColorScheme(scheme: AppScheme) {
   AppTheme.blurTint = scheme === 'light' ? 'systemUltraThinMaterialLight' : 'systemUltraThinMaterialDark';
   AppTheme.chromeTint = scheme === 'light' ? 'systemChromeMaterialLight' : 'systemChromeMaterialDark';
   AppRowPressed.backgroundColor = scheme === 'light' ? 'rgba(18,18,20,0.05)' : 'rgba(249,249,250,0.06)';
-  if (scheme === 'light') {
-    AppTileLift.boxShadow = '0 1px 2px rgba(18,18,20,0.05), 0 6px 16px rgba(18,18,20,0.05)';
-  } else {
-    delete AppTileLift.boxShadow;
-  }
+  AppTheme.glow = scheme === 'light' ? 0.4 : 1;
+  AppTheme.floatShadow = scheme === 'light' ? '0px 8px 24px rgba(17,17,19,0.10)' : '0px 10px 20px rgba(0, 0, 0, 0.3)';
 }
 
 /**
- * The faint lift under a tile in the light theme (nothing in the dark one).
- * Spread it into a tile's style: `{ ...AppTileLift }`.
+ * A lift under a tile. Empty in both themes today (the light theme separates
+ * tiles by fill, not shadow); kept so a theme can add one in one place.
  */
 export const AppTileLift: { boxShadow?: string } = {};
 
