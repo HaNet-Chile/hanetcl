@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
     fontSize: 19,
     lineHeight: 24,
     letterSpacing: -0.6,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   groupLabel: {
     marginTop: AppSpacing.sm,
@@ -574,14 +574,14 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_500Medium',
     fontSize: 12,
     lineHeight: 16,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   cardTeacher: {
     marginTop: AppSpacing.md,
     fontFamily: 'DMSans_500Medium',
     fontSize: 12,
     lineHeight: 16,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   cardStrip: {
     minHeight: AppTouch.minimum,

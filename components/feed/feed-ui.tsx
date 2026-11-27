@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: AppSpacing.sm,
     borderBottomWidth: 8,
-    borderBottomColor: 'rgba(0, 0, 0, 0.28)',
+    borderBottomColor: AppColors.feedGap,
   },
   postHeader: {
     flexDirection: 'row',

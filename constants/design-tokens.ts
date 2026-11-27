@@ -67,6 +67,12 @@ const DARK = {
   tile: '#C7C6CF',
   onTile: 'rgba(40,40,41,0.12)',
   textOnDark: '#F9F9FA',
+  // An outlined card on the canvas (the Calendar's class blocks): no fill in
+  // the dark theme, white in the light one.
+  cardFill: 'transparent',
+  cardOutline: '#3C3B3E',
+  // The band between two posts of the Feed.
+  feedGap: 'rgba(0,0,0,0.28)',
 };
 
 /**
@@ -81,25 +87,25 @@ const DARK = {
 const LIGHT: Palette = {
   canvas: '#F2F1F5',
   surface: '#FFFFFF',
-  surfaceMuted: '#EFEFF2',
-  surfaceRaised: '#E3E7EE',
+  surfaceMuted: '#E5E4EA',
+  surfaceRaised: '#E5E4EA',
   surfaceSoft: '#8E8D94',
   textPrimary: '#121214',
-  textSecondary: '#6B6A70',
+  textSecondary: '#4A494F',
   textOnLight: '#121214',
   accent: '#EF2274',
   errorText: '#B0124F',
   errorTextOnLight: '#B0124F',
-  primary: '#E3E7EE',
-  primaryStrong: '#CFD6E0',
-  controlContainer: '#EFEFF2',
+  primary: '#E5E4EA',
+  primaryStrong: '#D9D8DE',
+  controlContainer: '#E5E4EA',
   controlActive: '#121214',
   controlOnActive: '#FFFFFF',
   neutral2: '#3C3B3E',
   neutral3: '#504F53',
   neutral5: '#6E6D73',
   neutral8: '#C7C6CF',
-  neutral85: '#EFEFF2',
+  neutral85: '#E5E4EA',
   neutral9: '#F2F1F5',
   neutral05: '#121214',
   success: '#4C5A6F',
@@ -130,6 +136,9 @@ const LIGHT: Palette = {
   tile: '#FFFFFF',
   onTile: 'rgba(18,18,20,0.06)',
   textOnDark: '#F9F9FA',
+  cardFill: '#FFFFFF',
+  cardOutline: 'rgba(18,18,20,0.06)',
+  feedGap: 'rgba(18,18,20,0.04)',
 };
 
 type Palette = { [K in keyof typeof DARK]: string };

@@ -1345,7 +1345,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: AppColors.surface,
+    borderColor: AppColors.cardOutline,
+    backgroundColor: AppColors.cardFill,
   },
   // A class lost to a suspension or an early dismissal.
   blockCardLost: {

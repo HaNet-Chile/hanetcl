@@ -323,14 +323,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 28,
     letterSpacing: -0.96,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   heroCourse: {
     fontFamily: 'DMSans_500Medium',
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.56,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   heroTeacher: {
     paddingRight: '30%',
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 15,
     letterSpacing: -0.44,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   tile: {
     minHeight: 98,
