@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "0.17.1-beta",
+      "date": "2026-11-27",
+      "title": "",
+      "items": [
+        "Si tu liceo te nombró en un rol (por ejemplo, administración o docente) antes de que te unieras, HaNet te lo da apenas te vinculas con tu correo institucional."
+      ],
+      "highlights": [
+        "Si tu liceo ya te nombró en un rol, lo recibes apenas te unes."
+      ]
+    },
+    {
       "version": "0.17.0-beta",
       "date": "2026-11-26",
       "title": "Modo claro",
