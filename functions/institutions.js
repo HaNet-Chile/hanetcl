@@ -4,11 +4,15 @@ const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestor
 const WORDS = require("./wordlist");
 const { requireStaff } = require("./staff");
 const { cityById } = require("./cities");
+const { statusRef, closureOf, closureActive, resetAppStatusCache, KINDS: CLOSURE_KINDS, MESSAGE_MAX: CLOSURE_MESSAGE_MAX } = require("./app-status");
 
 // institutions/{institutionId}
 //   name, fullName, methods, inviteHash, inviteUpdatedAt, createdAt,
 //   branding: { logoUrl, bannerUrl, updatedAt }   (images in Storage, see storage.rules)
 //   cityId   (cities.js: the weather of the day's summary is from there)
+//   closure: { closed, kind, message, from, until, teachers, updatedAt, updatedBy }
+//            HaNet closed for this liceo only (app-status.js has the gate)
+//   schoolYear: { start, end, secondSemester }   "YYYY-MM-DD", Chile's dates
 // institutions/{institutionId}/roster/{rut}
 //   rut, nombres, apellidos, curso, email, updatedAt, linkedUid?
 //
@@ -105,12 +109,49 @@ function isBrandingUrl(url, institutionId, kind) {
   return typeof url === "string" && url.length < 2000 && url.startsWith(prefix);
 }
 
+// Up to when a closure may be set ahead, and how long a school year may last.
+const CLOSURE_AHEAD_MS = 400 * 24 * 3600 * 1000;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const YEAR_MAX_DAYS = 400;
+
+function validDate(value) {
+  if (typeof value !== "string" || !DATE.test(value)) return false;
+  const date = new Date(`${value}T12:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function dayNumber(value) {
+  return Math.round(Date.parse(`${value}T12:00:00Z`) / 86400000);
+}
+
+function schoolYearOf(data) {
+  const year = data?.schoolYear;
+  if (!year || !validDate(year.start) || !validDate(year.end)) return null;
+  return { start: year.start, end: year.end, secondSemester: validDate(year.secondSemester) ? year.secondSemester : null };
+}
+
+// What the panels show of a closure: null when there is none or it ended.
+function closureOut(data, now = Date.now()) {
+  const closure = closureOf(data?.closure);
+  if (!closure || (closure.until !== null && closure.until <= now)) return null;
+  return { kind: closure.kind, message: closure.message, from: closure.from, until: closure.until, teachers: closure.teachers, active: closureActive(closure, now) };
+}
+
+function optionalMillis(value, label) {
+  if (value === null || value === undefined) return null;
+  const millis = Number(value);
+  if (!Number.isFinite(millis) || millis < Date.now() - 24 * 3600 * 1000 || millis > Date.now() + CLOSURE_AHEAD_MS) {
+    throw new HttpsError("invalid-argument", `${label} tiene que ser dentro del próximo año.`);
+  }
+  return millis;
+}
+
 function build(getAdminApp) {
   // ── Student side ──────────────────────────────────────────────────────────
 
   // Checks an invitation phrase and ties the account to its institution. It
   // grants nothing by itself: academic data still needs the identity link.
-  const redeemInviteCode = onCall(async (request) => {
+  const redeemInviteCode = onCall({ institutionGate: false }, async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
     }
@@ -192,6 +233,8 @@ function build(getAdminApp) {
         cityId: cityById(data.cityId)?.id || null,
         // null: no list yet, so every module is on.
         modules: Array.isArray(data.modules) ? data.modules.filter(module => MODULES.includes(module)) : null,
+        closure: closureOut(data),
+        schoolYear: schoolYearOf(data),
       };
     }));
 
@@ -369,7 +412,106 @@ function build(getAdminApp) {
     return { cityId };
   });
 
-  return { setInstitutionCity, setInstitutionModules, redeemInviteCode, adminListInstitutions, adminCreateInstitution, adminRotateInviteCode, adminImportRoster, adminSetInstitutionBranding };
+  // Closes HaNet for this liceo only, now or from a later time, and opens it
+  // again (by hand, or by itself at `until`). HNT, or the liceo's Admin from
+  // the web panel. Written to the institution and copied to config/appStatus,
+  // which is what the gate reads (app-status.js).
+  const setInstitutionClosure = onCall({ invoker: "public" }, async (request) => {
+    const institutionId = text(request.data?.institutionId, 60);
+    await requireStaff(getAdminApp, request, ["Admin"], institutionId);
+    const data = request.data || {};
+    if (typeof data.closed !== "boolean") throw new HttpsError("invalid-argument", "Falta decir si HaNet queda abierto o cerrado en el liceo.");
+    const db = identityDb(getAdminApp);
+    const ref = db.collection("institutions").doc(institutionId);
+    const snapshot = institutionId ? await ref.get() : null;
+    if (!snapshot?.exists) throw new HttpsError("not-found", "No encontramos esa institución.");
+
+    const batch = db.batch();
+    if (!data.closed) {
+      batch.update(ref, { closure: FieldValue.delete() });
+      batch.set(statusRef(), { institutions: { [institutionId]: FieldValue.delete() } }, { merge: true });
+    } else {
+      if (!CLOSURE_KINDS.includes(data.kind)) throw new HttpsError("invalid-argument", "Elige qué pasa: mantención, un problema o cerrado.");
+      const message = typeof data.message === "string" ? data.message.trim() : "";
+      if (message.length > CLOSURE_MESSAGE_MAX) throw new HttpsError("invalid-argument", `El mensaje puede tener hasta ${CLOSURE_MESSAGE_MAX} caracteres.`);
+      const from = optionalMillis(data.from, "El inicio del cierre");
+      const until = optionalMillis(data.until, "La reapertura");
+      if (until !== null && until <= Math.max(from ?? 0, Date.now())) {
+        throw new HttpsError("invalid-argument", "La reapertura tiene que ser después del cierre.");
+      }
+      const closure = {
+        closed: true,
+        kind: data.kind,
+        message: message || null,
+        from: from === null ? null : Timestamp.fromMillis(from),
+        until: until === null ? null : Timestamp.fromMillis(until),
+        teachers: data.teachers === true,
+      };
+      batch.update(ref, { closure: { ...closure, updatedAt: FieldValue.serverTimestamp(), updatedBy: request.auth.uid } });
+      // The copy carries the name, for the closed screen of whoever isn't signed in to it yet.
+      batch.set(statusRef(), { institutions: { [institutionId]: { ...closure, name: snapshot.get("name") || null } } }, { merge: true });
+    }
+    await batch.commit();
+    resetAppStatusCache();
+    console.log("setInstitutionClosure", { institutionId, closed: data.closed, kind: data.kind || null, by: request.auth.uid });
+    return { closure: closureOut((await ref.get()).data()) };
+  });
+
+  // The liceo's school year: first and last day of classes, and optionally
+  // the first day of the 2nd semester (Notas splits the semesters there).
+  // null clears it. HNT, or the liceo's Admin from the web panel.
+  const setInstitutionSchoolYear = onCall({ invoker: "public" }, async (request) => {
+    const institutionId = text(request.data?.institutionId, 60);
+    await requireStaff(getAdminApp, request, ["Admin"], institutionId);
+    const input = request.data?.schoolYear ?? null;
+    const ref = identityDb(getAdminApp).collection("institutions").doc(institutionId);
+    if (!institutionId || !(await ref.get()).exists) throw new HttpsError("not-found", "No encontramos esa institución.");
+
+    if (input === null) {
+      await ref.update({ schoolYear: FieldValue.delete() });
+      return { schoolYear: null };
+    }
+    const start = input?.start;
+    const end = input?.end;
+    const second = input?.secondSemester ?? null;
+    if (!validDate(start) || !validDate(end)) throw new HttpsError("invalid-argument", "Elige el primer y el último día de clases.");
+    const days = dayNumber(end) - dayNumber(start);
+    if (days <= 0) throw new HttpsError("invalid-argument", "El último día de clases tiene que ser después del primero.");
+    if (days > YEAR_MAX_DAYS) throw new HttpsError("invalid-argument", "El año escolar no puede durar más de 13 meses.");
+    if (second !== null && (!validDate(second) || dayNumber(second) <= dayNumber(start) || dayNumber(second) > dayNumber(end))) {
+      throw new HttpsError("invalid-argument", "El 2° semestre tiene que empezar dentro del año escolar.");
+    }
+    const schoolYear = { start, end, secondSemester: second };
+    await ref.update({ schoolYear: { ...schoolYear, updatedAt: FieldValue.serverTimestamp(), updatedBy: request.auth.uid } });
+    console.log("setInstitutionSchoolYear", { institutionId, ...schoolYear, by: request.auth.uid });
+    return { schoolYear };
+  });
+
+  // Renames the institution (the short name and the full one). HNT only. The
+  // id stays: it is in every account, Hall and Calendar of the liceo.
+  const setInstitutionName = onCall({ invoker: "public" }, async (request) => {
+    requireHnt(request);
+    const institutionId = text(request.data?.institutionId, 60);
+    const name = text(request.data?.name, 40);
+    const fullName = text(request.data?.fullName, 120);
+    if (name.length < 2) throw new HttpsError("invalid-argument", "Escribe el nombre corto de la institución, por ejemplo \"LCH Temuco\".");
+    const db = identityDb(getAdminApp);
+    const ref = db.collection("institutions").doc(institutionId);
+    const snapshot = institutionId ? await ref.get() : null;
+    if (!snapshot?.exists) throw new HttpsError("not-found", "No encontramos esa institución.");
+    const batch = db.batch();
+    batch.update(ref, { name, fullName, renamedAt: FieldValue.serverTimestamp() });
+    // The closed screen shows the name too.
+    if (snapshot.get("closure.closed") === true) {
+      batch.set(statusRef(), { institutions: { [institutionId]: { name } } }, { merge: true });
+    }
+    await batch.commit();
+    resetAppStatusCache();
+    console.log("setInstitutionName", { institutionId, by: request.auth.uid });
+    return { name, fullName };
+  });
+
+  return { setInstitutionClosure, setInstitutionSchoolYear, setInstitutionName, setInstitutionCity, setInstitutionModules, redeemInviteCode, adminListInstitutions, adminCreateInstitution, adminRotateInviteCode, adminImportRoster, adminSetInstitutionBranding };
 }
 
-module.exports = { build, normalizeRut };
+module.exports = { build, normalizeRut, schoolYearOf };
