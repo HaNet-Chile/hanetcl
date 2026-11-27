@@ -73,6 +73,8 @@ const DARK = {
   cardOutline: '#3C3B3E',
   // The band between two posts of the Feed.
   feedGap: 'rgba(0,0,0,0.28)',
+  // A pill inside such a card (a test inside a class block).
+  cardChip: '#3C3B3E',
 };
 
 /**
@@ -139,6 +141,7 @@ const LIGHT: Palette = {
   cardFill: '#FFFFFF',
   cardOutline: 'rgba(18,18,20,0.06)',
   feedGap: 'rgba(18,18,20,0.04)',
+  cardChip: '#EFEFF2',
 };
 
 type Palette = { [K in keyof typeof DARK]: string };
