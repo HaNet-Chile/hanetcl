@@ -173,7 +173,7 @@ export default function ScaleScreen() {
                     value={scoreText}
                     onChangeText={setScoreText}
                     placeholder={t('tools.scale.puntaje')}
-                    placeholderTextColor={AppColors.surfaceMuted}
+                    placeholderTextColor={AppColors.placeholderMuted}
                     keyboardType="decimal-pad"
                     maxLength={6}
                     selectionColor={AppColors.accent}

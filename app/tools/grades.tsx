@@ -132,7 +132,7 @@ export default function GradesScreen() {
                         value={entry.grade}
                         onChangeText={text => updateEntry(entry.id, { grade: typeGrade(text, entry.grade) })}
                         placeholder={t('tools.grades.nota')}
-                        placeholderTextColor={AppColors.surfaceMuted}
+                        placeholderTextColor={AppColors.placeholderMuted}
                         keyboardType="number-pad"
                         maxLength={3}
                         selectionColor={AppColors.accent}
@@ -145,7 +145,7 @@ export default function GradesScreen() {
                             value={entry.weight}
                             onChangeText={weight => updateEntry(entry.id, { weight })}
                             placeholder={t('tools.grades.peso')}
-                            placeholderTextColor={AppColors.surfaceMuted}
+                            placeholderTextColor={AppColors.placeholderMuted}
                             keyboardType="decimal-pad"
                             maxLength={5}
                             selectionColor={AppColors.accent}

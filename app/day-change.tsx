@@ -165,7 +165,7 @@ function DayChangeScreen() {
         <View style={styles.separator} />
         <ThemedText style={styles.lead}>{t('dayChange.suspendeLasClasesOAdelanta')}</ThemedText>
 
-        {existing === null && !loadError && <ActivityIndicator color={AppColors.textOnLight} style={styles.loading} />}
+        {existing === null && !loadError && <ActivityIndicator color={AppColors.textOnPaper} style={styles.loading} />}
         {!!loadError && (
           <View style={styles.section}>
             <ThemedText style={styles.fieldError}>{loadError}</ThemedText>
@@ -365,7 +365,7 @@ function DateButton({ value, onPress, disabled }: { value: string; onPress: () =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.neutral2,
+    backgroundColor: AppColors.paper,
     borderTopLeftRadius: Platform.OS === 'android' ? 50 : 0,
     borderTopRightRadius: Platform.OS === 'android' ? 50 : 0,
     overflow: 'hidden',
@@ -374,13 +374,13 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: 30, paddingBottom: 0 },
   header: { paddingBottom: 16 },
   logo: { width: 148, height: 36, marginLeft: 5 },
-  title: { fontSize: 32, lineHeight: 38, fontFamily: 'DMSans_700Bold', letterSpacing: -2, color: AppColors.textOnLight, paddingBottom: 10 },
-  separator: { height: 2, backgroundColor: AppColors.textOnLight, marginBottom: 12 },
-  lead: { fontSize: 14, lineHeight: 20, fontFamily: 'DMSans_500Medium', color: AppColors.surface, marginBottom: 25 },
+  title: { fontSize: 32, lineHeight: 38, fontFamily: 'DMSans_700Bold', letterSpacing: -2, color: AppColors.textOnPaper, paddingBottom: 10 },
+  separator: { height: 2, backgroundColor: AppColors.textOnPaper, marginBottom: 12 },
+  lead: { fontSize: 14, lineHeight: 20, fontFamily: 'DMSans_500Medium', color: AppColors.textOnPaperMuted, marginBottom: 25 },
   loading: { marginBottom: 20 },
   section: { marginBottom: 20 },
-  label: { color: AppColors.textOnLight, fontFamily: 'DMSans_700Bold', fontSize: 15, marginBottom: 10 },
-  hint: { fontSize: 13, lineHeight: 18, color: AppColors.surface, fontFamily: 'DMSans_500Medium', marginTop: 10 },
+  label: { color: AppColors.textOnPaper, fontFamily: 'DMSans_700Bold', fontSize: 15, marginBottom: 10 },
+  hint: { fontSize: 13, lineHeight: 18, color: AppColors.textOnPaperMuted, fontFamily: 'DMSans_500Medium', marginTop: 10 },
   fieldError: { color: AppColors.errorTextOnLight, fontFamily: 'DMSans_700Bold', fontSize: 13, lineHeight: 18, marginBottom: 8 },
   saveError: { color: AppColors.errorTextOnLight, fontFamily: 'DMSans_700Bold', fontSize: 14, lineHeight: 20, marginBottom: 12 },
   pressed: { opacity: 0.75 },
@@ -427,10 +427,10 @@ const styles = StyleSheet.create({
   courses: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
   reason: {
     fontSize: 16,
-    color: AppColors.textOnLight,
+    color: AppColors.textOnPaper,
     paddingVertical: 8,
     borderBottomWidth: 1.5,
-    borderBottomColor: AppColors.textOnLight,
+    borderBottomColor: AppColors.textOnPaper,
     fontFamily: 'DMSans_400Regular',
     outlineStyle: 'none' as any,
   },
@@ -446,8 +446,8 @@ const styles = StyleSheet.create({
   },
   boxOn: { backgroundColor: AppColors.accent },
   notifyText: { flex: 1, gap: 2 },
-  notifyTitle: { fontSize: 15, lineHeight: 20, fontFamily: 'DMSans_700Bold', color: AppColors.textOnLight },
-  notifyBody: { fontSize: 13, lineHeight: 18, fontFamily: 'DMSans_500Medium', color: AppColors.surface },
+  notifyTitle: { fontSize: 15, lineHeight: 20, fontFamily: 'DMSans_700Bold', color: AppColors.textOnPaper },
+  notifyBody: { fontSize: 13, lineHeight: 18, fontFamily: 'DMSans_500Medium', color: AppColors.textOnPaperMuted },
   plan: {
     gap: AppSpacing.xs,
     padding: 16,
@@ -462,4 +462,4 @@ const styles = StyleSheet.create({
   footerButton: { flex: 1 },
 });
 
-export default withSheetFrame(DayChangeScreen, AppColors.neutral2);
+export default withSheetFrame(DayChangeScreen, AppColors.paper);

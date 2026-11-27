@@ -342,7 +342,7 @@ function EvaluationFormScreen() {
           value={form.title}
           onChangeText={title => update({ title })}
           placeholder={t('classhall.evaluationForm.evaluacionSumativa2')}
-          placeholderTextColor={AppColors.surfaceMuted}
+          placeholderTextColor={AppColors.placeholderMuted}
           maxLength={80}
           editable={!submitting}
           selectionColor={AppColors.accent}
@@ -384,7 +384,7 @@ function EvaluationFormScreen() {
                   value={skill}
                   onChangeText={name => renameSkill(column, name)}
                   placeholder={t('classhall.evaluationForm.comprension')}
-                  placeholderTextColor={AppColors.surfaceMuted}
+                  placeholderTextColor={AppColors.placeholderMuted}
                   maxLength={40}
                   editable={!submitting}
                   selectionColor={AppColors.accent}
@@ -410,7 +410,7 @@ function EvaluationFormScreen() {
                   value={row.name}
                   onChangeText={name => updateRow(index, { name })}
                   placeholder={t('classhall.evaluationForm.contenidoNumber', { number: index + 1 })}
-                  placeholderTextColor={AppColors.surfaceMuted}
+                  placeholderTextColor={AppColors.placeholderMuted}
                   maxLength={80}
                   editable={!submitting}
                   selectionColor={AppColors.accent}
@@ -426,7 +426,7 @@ function EvaluationFormScreen() {
                   value={row.detail}
                   onChangeText={detail => updateRow(index, { detail })}
                   placeholder={t('classhall.evaluationForm.detalleOpcional')}
-                  placeholderTextColor={AppColors.surfaceMuted}
+                  placeholderTextColor={AppColors.placeholderMuted}
                   maxLength={160}
                   editable={!submitting}
                   selectionColor={AppColors.accent}
@@ -446,7 +446,7 @@ function EvaluationFormScreen() {
                       value={row.points[column] ?? ''}
                       onChangeText={value => setPoint(index, column, value)}
                       placeholder="0"
-                      placeholderTextColor={AppColors.surfaceMuted}
+                      placeholderTextColor={AppColors.placeholderMuted}
                       keyboardType="number-pad"
                       editable={!submitting}
                       selectionColor={AppColors.accent}
@@ -472,7 +472,7 @@ function EvaluationFormScreen() {
                 value={objective.code}
                 onChangeText={code => updateObjective(index, { code })}
                 placeholder={t('classhall.evaluationForm.oa3')}
-                placeholderTextColor={AppColors.surfaceMuted}
+                placeholderTextColor={AppColors.placeholderMuted}
                 autoCapitalize="characters"
                 maxLength={40}
                 editable={!submitting}
@@ -488,7 +488,7 @@ function EvaluationFormScreen() {
               value={objective.text}
               onChangeText={text => updateObjective(index, { text })}
               placeholder={t('classhall.evaluationForm.queSeEsperaQueAprendan')}
-              placeholderTextColor={AppColors.surfaceMuted}
+              placeholderTextColor={AppColors.placeholderMuted}
               multiline
               maxLength={600}
               editable={!submitting}
@@ -511,7 +511,7 @@ function EvaluationFormScreen() {
               value={form.exigency}
               onChangeText={text => update({ exigency: digits(text) })}
               placeholder="60"
-              placeholderTextColor={AppColors.surfaceMuted}
+              placeholderTextColor={AppColors.placeholderMuted}
               keyboardType="number-pad"
               editable={!submitting}
               selectionColor={AppColors.accent}
@@ -528,7 +528,7 @@ function EvaluationFormScreen() {
             value={form.prep}
             onChangeText={prep => update({ prep })}
             placeholder={t('classhall.evaluationForm.apuntesDeClasesGuiaDe')}
-            placeholderTextColor={AppColors.surfaceMuted}
+            placeholderTextColor={AppColors.placeholderMuted}
             multiline
             maxLength={1500}
             editable={!submitting}
@@ -785,7 +785,7 @@ const local = StyleSheet.create({
     padding: AppSpacing.md,
     borderRadius: AppRadii.md,
     borderCurve: 'continuous',
-    backgroundColor: 'rgba(40, 40, 41, 0.12)',
+    backgroundColor: AppColors.onControlOverlay,
   },
   notesTitle: {
     fontFamily: 'DMSans_700Bold',

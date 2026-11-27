@@ -90,7 +90,7 @@ function AnnounceScreen() {
         value={body}
         onChangeText={(text) => { setBody(text); setError(null); }}
         placeholder={t('classhall.announce.cuestionarioDeEstudioPresentarloTerminado')}
-        placeholderTextColor={AppColors.surfaceMuted}
+        placeholderTextColor={AppColors.placeholderMuted}
         multiline
         maxLength={MAX_LENGTH}
         editable={!submitting}

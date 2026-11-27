@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   glass: {
     borderWidth: 1,
     borderColor: AppColors.hairline,
-    backgroundColor: 'rgba(40, 40, 41, 0.6)',
+    backgroundColor: AppColors.glassFill,
   },
   icon: {
     opacity: 0.8,

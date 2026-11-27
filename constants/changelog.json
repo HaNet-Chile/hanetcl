@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "0.17.0-beta",
+      "date": "2026-11-26",
+      "title": "Modo claro",
+      "items": [
+        "HaNet ahora tiene modo claro. Elígelo en Configuraciones → Apariencia; el oscuro sigue siendo el de siempre.",
+        "Con Automático, HaNet usa el modo claro u oscuro de tu teléfono cada vez que la abres.",
+        "La apariencia es un ajuste de cada dispositivo. Al cambiarla, HaNet se vuelve a abrir."
+      ],
+      "highlights": [
+        "HaNet ahora tiene modo claro, en Configuraciones → Apariencia."
+      ]
+    },
+    {
       "version": "0.16.3-beta",
       "date": "2026-11-26",
       "title": "",

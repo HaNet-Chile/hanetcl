@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     backgroundColor: AppColors.canvas,
     borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: 'rgba(255, 255, 255, 0.12)',
+    borderRightColor: AppColors.hairline,
   },
   logo: {
     alignSelf: 'flex-start',

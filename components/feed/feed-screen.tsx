@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   rule: {
     height: 1,
     marginHorizontal: AppSpacing.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: AppColors.overlay,
   },
   loader: {
     marginTop: AppSpacing.xxl,

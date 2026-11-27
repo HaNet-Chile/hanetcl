@@ -332,7 +332,7 @@ function FeedPostScreen() {
         onChangeText={text => { setBody(text); setError(null); }}
         onSelectionChange={event => setSelection(event.nativeEvent.selection)}
         placeholder={poll ? t('feedPost.escribeLaPreguntaDeLa') : spaceGroup(space.key) === 'course' ? t('feedPost.queQuieresContarleATu') : startTag === ANNIVERSARY_TAG ? t('feedPost.queQuieresAvisarleALas') : t('feedPost.queQuieresContarleATu2')}
-        placeholderTextColor="rgba(221, 221, 226, 0.4)"
+        placeholderTextColor={AppColors.placeholder}
         multiline
         maxLength={MAX_FEED_BODY}
         editable={!submitting}
@@ -407,7 +407,7 @@ function FeedPostScreen() {
                 value={option}
                 onChangeText={value => setPoll({ ...poll, options: poll.options.map((item, position) => (position === index ? value : item)) })}
                 placeholder={t('feedPost.opcionNumber', { number: index + 1 })}
-                placeholderTextColor="rgba(221, 221, 226, 0.4)"
+                placeholderTextColor={AppColors.placeholder}
                 maxLength={MAX_POLL_OPTION}
                 editable={!submitting}
                 selectionColor={AppColors.accent}
@@ -555,8 +555,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: AppRadii.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    backgroundColor: 'rgba(60, 59, 62, 0.72)',
+    borderColor: AppColors.glassBorder,
+    backgroundColor: AppColors.glassFill,
   },
   cancelText: {
     fontFamily: 'DMSans_500Medium',
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: AppRadii.pill,
-    backgroundColor: 'rgba(40, 40, 41, 0.8)',
+    backgroundColor: AppColors.glassFill,
   },
   addPicture: {
     width: 120,

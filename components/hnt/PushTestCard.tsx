@@ -105,7 +105,7 @@ export function PushTestCard() {
         value={username}
         onChangeText={setUsername}
         placeholder={t('components.hnt.pushTestCard.hanetidVacioTuCuenta')}
-        placeholderTextColor="rgba(221,221,226,0.4)"
+        placeholderTextColor={AppColors.placeholder}
         autoCapitalize="none"
         autoCorrect={false}
         style={styles.input}
@@ -115,7 +115,7 @@ export function PushTestCard() {
         value={title}
         onChangeText={setTitle}
         placeholder={t('components.hnt.pushTestCard.pruebaDeHanet')}
-        placeholderTextColor="rgba(221,221,226,0.4)"
+        placeholderTextColor={AppColors.placeholder}
         maxLength={80}
         style={styles.input}
       />
@@ -124,7 +124,7 @@ export function PushTestCard() {
         value={body}
         onChangeText={setBody}
         placeholder={t('components.hnt.pushTestCard.siVesEstoLasNotificaciones')}
-        placeholderTextColor="rgba(221,221,226,0.4)"
+        placeholderTextColor={AppColors.placeholder}
         maxLength={200}
         multiline
         style={[styles.input, styles.multiline]}

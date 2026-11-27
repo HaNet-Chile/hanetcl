@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     marginTop: AppSpacing.sm,
     borderRadius: 2,
     overflow: 'hidden',
-    backgroundColor: 'rgba(40, 40, 41, 0.15)',
+    backgroundColor: AppColors.onControlOverlay,
   },
   fill: {
     height: '100%',
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     borderRadius: AppRadii.md,
   },
   rowPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: AppColors.overlay,
   },
   rowText: {
     flex: 1,
@@ -285,6 +285,6 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     marginVertical: AppSpacing.xs,
     marginHorizontal: AppSpacing.md + 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: AppColors.overlay,
   },
 });

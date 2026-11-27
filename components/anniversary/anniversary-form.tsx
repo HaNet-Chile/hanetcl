@@ -86,7 +86,7 @@ export function TextField({ label, optional, value, onChange, placeholder, multi
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
-        placeholderTextColor={AppColors.surfaceMuted}
+        placeholderTextColor={AppColors.placeholderMuted}
         multiline={multiline}
         maxLength={maxLength}
         editable={!disabled}
@@ -164,7 +164,7 @@ export function PointsFields({ label, points, count, onChange, disabled }: { lab
                 onChange(next);
               }}
               placeholder="0"
-              placeholderTextColor={AppColors.surfaceMuted}
+              placeholderTextColor={AppColors.placeholderMuted}
               keyboardType="number-pad"
               editable={!disabled}
               selectionColor={AppColors.accent}

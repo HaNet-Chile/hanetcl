@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 10,
     borderRadius: AppRadii.pill,
-    backgroundColor: 'rgba(40, 40, 41, 0.6)',
+    backgroundColor: AppColors.glassFill,
   },
   bannerChipText: {
     fontFamily: 'DMSans_700Bold',

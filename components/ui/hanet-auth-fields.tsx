@@ -1,4 +1,4 @@
-import { AppColors, AppRadii, AppSpacing } from '@/constants/design-tokens';
+import { AppColors, AppTheme, AppRadii, AppSpacing } from '@/constants/design-tokens';
 import { ThemedText } from '@/components/themed-text';
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -31,7 +31,7 @@ export const HanetField = forwardRef<TextInputInstance, FieldProps>(function Han
         <TextInput
           ref={ref}
           accessibilityLabel={label}
-          placeholderTextColor="rgba(221,221,226,0.4)"
+          placeholderTextColor={AppColors.placeholder}
           selectionColor={AppColors.accent}
           style={[styles.fieldInput, style]}
           onFocus={(event) => { setFocused(true); onFocus?.(event); }}
@@ -116,7 +116,7 @@ export function HanetSegmented<T extends string>({ options, value, onChange, acc
         <AnimatedGlassView
           pointerEvents="none"
           glassEffectStyle="regular"
-          colorScheme="dark"
+          colorScheme={AppTheme.scheme}
           tintColor={AppColors.controlActive}
           style={[styles.pill, styles.pillGlass, tall && styles.pillTall, tall && styles.pillGlassTall, glassPillStyle]}
         />

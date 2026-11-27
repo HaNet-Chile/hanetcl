@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { AppState, Platform, StyleSheet, View } from 'react-native';
-import { DarkTheme, Stack, ThemeProvider, usePathname, useRootNavigationState, useRouter } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, usePathname, useRootNavigationState, useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaFrameContext, SafeAreaInsetsContext, type EdgeInsets, type Rect } from 'react-native-safe-area-context';
-import { PaperProvider, MD3DarkTheme, configureFonts } from 'react-native-paper';
+import { PaperProvider, MD3DarkTheme, MD3LightTheme, configureFonts } from 'react-native-paper';
 import { useFonts, DMSans_300Light, DMSans_400Regular, DMSans_400Regular_Italic, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold, DMSans_700Bold_Italic } from '@expo-google-fonts/dm-sans';
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -17,7 +17,7 @@ import { ShareIntake } from '@/components/share/share-intake';
 import { LaunchSplash } from '@/components/LaunchSplash';
 import { AppErrorLayer, FatalBoundary } from '@/components/errors/AppErrorLayer';
 import { UpdatePrompt } from '@/components/system/update-prompt';
-import { AppColors } from '@/constants/design-tokens';
+import { AppColors, AppTheme } from '@/constants/design-tokens';
 import { sheetDetents } from '@/constants/sheets';
 import { useSession } from '@/services/auth-service';
 import { useLaunchContentReady } from '@/services/launch-ready';
@@ -44,10 +44,15 @@ export const unstable_settings = {
 // Prevent auto-hide until fonts load
 SplashScreen.preventAutoHideAsync();
 
+const lightTheme = AppTheme.scheme === 'light';
+const baseNavigationTheme = lightTheme ? DefaultTheme : DarkTheme;
+const basePaperTheme = lightTheme ? MD3LightTheme : MD3DarkTheme;
+
 const navigationTheme = {
-  ...DarkTheme,
+  ...baseNavigationTheme,
+  dark: !lightTheme,
   colors: {
-    ...DarkTheme.colors,
+    ...baseNavigationTheme.colors,
     primary: AppColors.accent,
     background: AppColors.canvas,
     card: AppColors.surface,
@@ -58,11 +63,11 @@ const navigationTheme = {
 };
 
 const paperTheme = {
-  ...MD3DarkTheme,
+  ...basePaperTheme,
   roundness: 16,
   fonts: configureFonts({ config: { fontFamily: 'DMSans_400Regular' } }),
   colors: {
-    ...MD3DarkTheme.colors,
+    ...basePaperTheme.colors,
     primary: AppColors.accent,
     onPrimary: AppColors.textPrimary,
     primaryContainer: AppColors.surfaceRaised,
@@ -297,7 +302,7 @@ export default function RootLayout() {
           <GlobalTabBar />
           <ShareIntake ready={!!user && routed && navigationReady} />
           </FatalBoundary>
-          <StatusBar style="light" />
+          <StatusBar style={lightTheme ? 'dark' : 'light'} />
           <LaunchSplash ready={routed && (!signedInAtLaunch || contentReady || waitedEnough)} quick={returning} />
           <AppErrorLayer />
           <UpdatePrompt />

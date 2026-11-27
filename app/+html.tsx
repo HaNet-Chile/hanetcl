@@ -7,6 +7,12 @@ import type { PropsWithChildren } from 'react';
 import { DOCUMENT_SCROLL_CSS, DOCUMENT_SCROLL_SPACER } from '@/constants/document-scroll';
 
 const BACKGROUND = '#282829';
+const LIGHT_BACKGROUND = '#F2F2F5';
+
+// The light theme (Configuraciones → Apariencia) is a setting of this
+// browser, so the page picks its background before anything draws, without
+// a dark flash. The key is the one of services/color-scheme.ts.
+const THEME_SCRIPT = `try{var m=localStorage.getItem('hanet.colorScheme');if(m==='light'||(m==='system'&&matchMedia('(prefers-color-scheme: light)').matches)){var s=document.createElement('style');s.textContent='html,body{background-color:${LIGHT_BACKGROUND}!important;color-scheme:light}';document.head.appendChild(s);var t=document.querySelector('meta[name=theme-color]');if(t)t.setAttribute('content','${LIGHT_BACKGROUND}');}}catch(e){}`;
 
 export default function Root({ children }: PropsWithChildren) {
   const { bodyAttributes, bodyNodes, htmlAttributes, headNodes } = useServerDocumentContext();
@@ -30,6 +36,7 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: `html,body{background-color:${BACKGROUND};}${DOCUMENT_SCROLL_CSS}` }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {headNodes}
       </head>
       <body {...bodyAttributes}>

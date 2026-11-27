@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     borderRadius: AppRadii.md,
   },
   rowPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: AppColors.overlay,
   },
   icon: {
     width: 24,

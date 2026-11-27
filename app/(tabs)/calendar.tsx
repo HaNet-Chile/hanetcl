@@ -1,4 +1,4 @@
-import { AppColors, AppSpacing, AppType } from '@/constants/design-tokens';
+import { AppColors, AppTheme, AppSpacing, AppType } from '@/constants/design-tokens';
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { View, StyleSheet, Pressable, ScrollView, Platform, RefreshControl, type ScrollViewInstance, type ViewInstance } from 'react-native';
 import { FrostedScreen, useFrostedInset, withTopInset } from '@/components/ui/frosted-screen';
@@ -651,12 +651,12 @@ export default function CalendarScreen() {
       <View style={styles.daySelectorWrap}>
         <GlassContainer spacing={GLASS_SPACING} style={styles.daySelector}>
           {weekDays.map((day, index) => (
-            <GlassView key={index} glassEffectStyle="regular" colorScheme="dark" style={[styles.dayChip, styles.dayChipGlass]} />
+            <GlassView key={index} glassEffectStyle="regular" colorScheme={AppTheme.scheme} style={[styles.dayChip, styles.dayChipGlass]} />
           ))}
           <AnimatedGlassView
             pointerEvents="none"
             glassEffectStyle="regular"
-            colorScheme="dark"
+            colorScheme={AppTheme.scheme}
             tintColor={AppColors.controlActive}
             style={[styles.dayIndicator, styles.dayIndicatorGlass, glassIndicatorStyle]}
           />
@@ -1001,7 +1001,7 @@ function BlockCard({ block, events, isAdmin, fate = 'normal', endsAt = null }: {
 }
 
 function ClassCard({ id, title, time, desc, isAdmin, writer, verified, verifier, subject, eventType, outstanding, cancelled, fullEvent }: any) {
-  const cardColor = cancelled ? '#4A3535' : outstanding ? AppColors.primary : AppColors.surface;
+  const cardColor = cancelled ? AppColors.cancelledSurface : outstanding ? AppColors.primary : AppColors.surface;
   const router = useRouter();
 
   // Format event type for display
@@ -1058,7 +1058,7 @@ function ClassCard({ id, title, time, desc, isAdmin, writer, verified, verifier,
               </View>
             )}
             {eventType && (
-              <View style={[styles.metaChip, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+              <View style={[styles.metaChip, { backgroundColor: AppColors.overlay }]}>
                 <ThemedText style={styles.metaChipText}>{formatType(eventType)}</ThemedText>
               </View>
             )}
@@ -1436,7 +1436,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   timeBadgeSolid: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: AppColors.overlay,
   },
   timeBadgeGhost: {
     backgroundColor: 'transparent',
@@ -1500,7 +1500,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   metaChip: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: AppColors.overlay,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
