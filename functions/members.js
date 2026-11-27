@@ -83,6 +83,8 @@ function build(getAdminApp) {
         uid: linkedUid,
         role: linkedUid ? roleByUid.get(linkedUid) : null,
         blocked: linkedUid ? blockedUids.has(linkedUid) : false,
+        // The role this person gets when they link (adminSetPendingRole).
+        pendingRole: !linkedUid && ROLES.includes(data.pendingRole) ? data.pendingRole : null,
       };
     }).sort((a, b) => a.fullName.localeCompare(b.fullName, "es"));
 
@@ -91,7 +93,7 @@ function build(getAdminApp) {
       return {
         members: members
           .filter(member => member.uid)
-          .map(({ fullName, curso, uid, role }) => ({ rut: uid, fullName, curso, email: null, uid, role, blocked: false })),
+          .map(({ fullName, curso, uid, role }) => ({ rut: uid, fullName, curso, email: null, uid, role, blocked: false, pendingRole: null })),
         truncated: roster.size >= MAX_MEMBERS,
         grants: GRANTS.CEE,
       };
@@ -140,6 +142,43 @@ function build(getAdminApp) {
       });
     }
     return { role };
+  });
+
+  // Names someone on the roster for a role before they link their HaNet ID:
+  // completeInstitutionalLink gives it to them instead of Estudiante. That way
+  // a new institution's first Admin can start the day they join. HaNet team
+  // roles are never given this way. null (or Estudiante) takes it back.
+  const adminSetPendingRole = onCall({ invoker: "public" }, async (request) => {
+    const institutionId = id(request.data?.institutionId);
+    const staff = await requireStaff(getAdminApp, request, ["Admin"], institutionId || null);
+    const rut = typeof request.data?.rut === "string" ? request.data.rut.replace(/[^0-9kK]/g, "").toUpperCase() : "";
+    const requested = request.data?.role ?? null;
+    const role = requested === "Estudiante" ? null : requested;
+    const grants = staff.hnt ? ROLES.filter(item => item !== "HNT") : GRANTS[staff.role];
+
+    if (!institutionId || !/^\d{6,8}[0-9K]$/.test(rut)) {
+      throw new HttpsError("invalid-argument", "Elige a una persona de la nómina.");
+    }
+    if (role !== null && !grants.includes(role)) {
+      throw new HttpsError("permission-denied", "Ese rol lo asigna el equipo HaNet.");
+    }
+
+    const ref = identityDb(getAdminApp).collection("institutions").doc(institutionId).collection("roster").doc(rut);
+    const row = await ref.get();
+    if (!row.exists) throw new HttpsError("not-found", "Esa persona no está en la nómina.");
+    if (row.data().linkedUid) {
+      throw new HttpsError("failed-precondition", "Esa persona ya se unió a HaNet: cámbiale el rol en Personas y roles.");
+    }
+    const current = row.data().pendingRole || null;
+    if (!staff.hnt && current && !grants.includes(current)) {
+      throw new HttpsError("permission-denied", "Ese rol lo asignó el equipo HaNet.");
+    }
+
+    await ref.update(role === null
+      ? { pendingRole: FieldValue.delete(), pendingRoleBy: FieldValue.delete(), pendingRoleAt: FieldValue.delete() }
+      : { pendingRole: role, pendingRoleBy: staff.auth.uid, pendingRoleAt: FieldValue.serverTimestamp() });
+    console.log("adminSetPendingRole", { institutionId, role, by: staff.auth.uid });
+    return { pendingRole: role };
   });
 
   // Blocks or unblocks a HaNet ID for breaking the terms. Firebase Auth
@@ -255,7 +294,7 @@ function build(getAdminApp) {
     return { institutionId };
   });
 
-  return { adminListMembers, adminSetRole, adminSetBlocked, adminUnlinkMember, adminJoinInstitution };
+  return { adminListMembers, adminSetRole, adminSetPendingRole, adminSetBlocked, adminUnlinkMember, adminJoinInstitution };
 }
 
 module.exports = { build };

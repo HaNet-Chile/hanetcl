@@ -19,6 +19,8 @@ const LINK_MINUTES = 30;
 const RESEND_WAIT_SECONDS = 60;
 const SENDS_PER_HOUR = 5;
 const CONFIRM_URL = "https://id.hanet.muxp.art/vincular";
+// Roles that can be waiting on a roster row (adminSetPendingRole in members.js).
+const PENDING_ROLES = ["Directiva", "CEE", "Profesor", "Admin"];
 
 function identityDb(getAdminApp) {
   return getFirestore(getAdminApp(), "hn-enrollmentdata");
@@ -282,8 +284,11 @@ function build(getAdminApp) {
         throw new HttpsError("already-exists", "Esa ficha ya está vinculada a otro HaNet ID. Contacta a tu institución.");
       }
 
+      // Someone named ahead of time in the panel (adminSetPendingRole) gets
+      // that role; HaNet team roles are never given this way.
+      const pending = PENDING_ROLES.includes(data.pendingRole) ? data.pendingRole : null;
       const created = {
-        role: "Estudiante",
+        role: pending || "Estudiante",
         courseId: data.curso,
         institutionId: institution.id,
         rut: data.rut,
@@ -299,7 +304,11 @@ function build(getAdminApp) {
         method: "institutional-email",
         linkedAt: FieldValue.serverTimestamp(),
       });
-      tx.update(personRef, { linkedUid: auth.uid, linkedAt: FieldValue.serverTimestamp() });
+      tx.update(personRef, {
+        linkedUid: auth.uid,
+        linkedAt: FieldValue.serverTimestamp(),
+        ...(data.pendingRole ? { pendingRole: FieldValue.delete(), pendingRoleBy: FieldValue.delete(), pendingRoleAt: FieldValue.delete() } : {}),
+      });
       tx.delete(requestRef);
       return created;
     });
@@ -313,7 +322,9 @@ function build(getAdminApp) {
     await alertAccount(getAdminApp, auth.uid, {
       kind: "role",
       title: "Tu cuenta quedó vinculada",
-      body: `Tu HaNet ID ahora es parte de ${institution.data().name}, en ${profile.courseId}.`,
+      body: profile.role === "Estudiante"
+        ? `Tu HaNet ID ahora es parte de ${institution.data().name}, en ${profile.courseId}.`
+        : `Tu HaNet ID ahora es parte de ${institution.data().name}, con el rol ${profile.role}.`,
     }, { push: false });
 
     return { linked: true, institutionName: institution.data().name, courseId: profile.courseId };
