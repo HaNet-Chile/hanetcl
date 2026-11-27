@@ -1099,7 +1099,7 @@ function ClassCard({ id, title, time, desc, isAdmin, writer, verified, verifier,
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.textOnLight,
+    backgroundColor: AppColors.canvas,
   },
   addButton: {
     position: 'absolute',

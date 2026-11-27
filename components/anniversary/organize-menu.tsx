@@ -72,10 +72,10 @@ export function OrganizePill({ open }: { open: boolean }) {
       style={({ pressed }) => pressed && styles.pressed}
     >
       <Animated.View layout={reduceMotion ? undefined : LinearTransition.springify().stiffness(SPRING_SMOOTH.stiffness).damping(SPRING_SMOOTH.damping)} style={styles.pill}>
-        <Ionicons name="options-outline" size={18} color={AppColors.textOnLight} />
+        <Ionicons name="options-outline" size={18} color={AppColors.controlOnActive} />
         <ThemedText maxFontSizeMultiplier={MAX_SCALE} style={styles.pillText}>{t('anniversary.welcome.organizar')}</ThemedText>
         <Animated.View style={chevronStyle}>
-          <CustomIcon name="chevron-right" size={14} color={AppColors.textOnLight} />
+          <CustomIcon name="chevron-right" size={14} color={AppColors.controlOnActive} />
         </Animated.View>
       </Animated.View>
     </Pressable>
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.controlActive,
   },
   pillText: {
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
     fontFamily: 'DMSans_700Bold',
     fontSize: 14,
   },

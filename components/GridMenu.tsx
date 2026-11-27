@@ -1,4 +1,4 @@
-import { AppColors, AppFlexFonts, AppType } from '@/constants/design-tokens';
+import { AppColors, AppFlexFonts, AppTileLift, AppType } from '@/constants/design-tokens';
 import React from 'react';
 import { Pressable, View, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
@@ -295,7 +295,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   gridItem: {
-    backgroundColor: AppColors.surfaceSoft,
+    ...AppTileLift,
+    backgroundColor: AppColors.tile,
     borderRadius: 24,
     borderCurve: 'continuous',
     overflow: 'hidden',

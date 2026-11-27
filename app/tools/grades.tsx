@@ -245,7 +245,7 @@ export default function GradesScreen() {
                     <Ionicons
                       name={tone === 'low' ? 'alert-circle-outline' : tone === 'done' ? 'checkmark-circle-outline' : 'flag-outline'}
                       size={20}
-                      color={tone === 'done' ? AppColors.textOnLight : AppColors.textPrimary}
+                      color={tone === 'done' ? AppColors.controlOnActive : AppColors.textPrimary}
                     />
                     <ThemedText accessibilityLiveRegion="polite" style={[styles.verdictText, tone === 'done' && styles.verdictTextDone]}>{message}</ThemedText>
                   </View>
@@ -315,6 +315,6 @@ const styles = StyleSheet.create({
   verdictLow: { backgroundColor: AppColors.surfaceMuted },
   verdictDone: { backgroundColor: AppColors.controlActive },
   verdictText: { ...AppType.callout, flex: 1, color: AppColors.textPrimary },
-  verdictTextDone: { color: AppColors.textOnLight },
+  verdictTextDone: { color: AppColors.controlOnActive },
   note: { ...AppType.caption, fontFamily: 'DMSans_400Regular', color: AppColors.textSecondary, textAlign: 'center' },
 });

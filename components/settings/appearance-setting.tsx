@@ -24,7 +24,7 @@ function Preview({ scheme }: { scheme: AppScheme }) {
   const palette = AppPalettes[scheme];
   return (
     <View style={[styles.preview, { backgroundColor: palette.canvas }]}>
-      <View style={[styles.previewCard, { backgroundColor: palette.surface }]}>
+      <View style={[styles.previewCard, { backgroundColor: palette.tile }]}>
         <View style={[styles.previewLine, { backgroundColor: palette.textPrimary }]} />
         <View style={[styles.previewLine, styles.previewLineShort, { backgroundColor: palette.textSecondary }]} />
       </View>

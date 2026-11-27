@@ -287,7 +287,7 @@ export default function AnniversaryScreen() {
                       style={({ pressed }) => [styles.deadline, index > 0 && styles.lineBorder, pressed && AppPressed]}
                     >
                       <View style={[styles.deadlineIcon, soon && styles.deadlineIconSoon]}>
-                        <Ionicons name="alarm-outline" size={18} color={soon ? AppColors.textOnLight : AppColors.textPrimary} />
+                        <Ionicons name="alarm-outline" size={18} color={soon ? AppColors.controlOnActive : AppColors.textPrimary} />
                       </View>
                       <View style={styles.deadlineText}>
                         <ThemedText style={styles.lineTitle}>{deadline.title}</ThemedText>

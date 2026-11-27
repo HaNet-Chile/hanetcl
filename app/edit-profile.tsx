@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   fontOptionSelected: {
     borderColor: AppColors.textOnLight,
-    backgroundColor: AppColors.surfaceSoft,
+    backgroundColor: AppColors.tile,
   },
   fontSample: {
     flex: 1,

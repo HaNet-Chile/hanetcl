@@ -62,38 +62,46 @@ const DARK = {
   // Hint text in the quieter fields (forms on a sheet), and on an active control.
   placeholderMuted: '#504F53',
   placeholderOnControl: 'rgba(40,40,41,0.6)',
+  // The big tiles and cards of the Home, ClassHall and the HaNet ID, the
+  // faint blocks drawn on them, and white text on a dark fill in both themes.
+  tile: '#C7C6CF',
+  onTile: 'rgba(40,40,41,0.12)',
+  textOnDark: '#F9F9FA',
 };
 
 /**
  * The light theme (an option in Configuraciones → Apariencia; dark stays the
- * default). Same roles, same pink: grey canvas, white cards, and the "light"
- * controls of the dark theme (active pills, soft tiles) turn near-black, so
- * text on them (`textOnLight`, `controlOnActive`) turns white.
+ * default). Chosen by muxp on 2026-11-26 (mockup "opción A", with Instagram's
+ * light UI as the reference): a soft grey canvas, white tiles with a faint
+ * lift (`AppTileLift`), crisp near-black text, quiet grey chips and hairline
+ * separators. Black is only for small active controls (pills, the tab bar's
+ * active button), with white on them; text on tiles (`textOnLight`) stays
+ * dark. Pink is the same.
  */
 const LIGHT: Palette = {
-  canvas: '#F2F2F5',
+  canvas: '#F2F1F5',
   surface: '#FFFFFF',
-  surfaceMuted: '#E4E3E9',
-  surfaceRaised: '#D8DEE7',
-  surfaceSoft: '#3C3B3E',
-  textPrimary: '#1F1F21',
-  textSecondary: '#5C5B61',
-  textOnLight: '#F9F9FA',
+  surfaceMuted: '#EFEFF2',
+  surfaceRaised: '#E3E7EE',
+  surfaceSoft: '#8E8D94',
+  textPrimary: '#121214',
+  textSecondary: '#6B6A70',
+  textOnLight: '#121214',
   accent: '#EF2274',
   errorText: '#B0124F',
   errorTextOnLight: '#B0124F',
-  primary: '#DCE1EA',
-  primaryStrong: '#C9D0DB',
-  controlContainer: '#E4E3E9',
-  controlActive: '#282829',
-  controlOnActive: '#F9F9FA',
+  primary: '#E3E7EE',
+  primaryStrong: '#CFD6E0',
+  controlContainer: '#EFEFF2',
+  controlActive: '#121214',
+  controlOnActive: '#FFFFFF',
   neutral2: '#3C3B3E',
   neutral3: '#504F53',
   neutral5: '#6E6D73',
   neutral8: '#C7C6CF',
-  neutral85: '#E4E3E9',
-  neutral9: '#F2F2F5',
-  neutral05: '#1F1F21',
+  neutral85: '#EFEFF2',
+  neutral9: '#F2F1F5',
+  neutral05: '#121214',
   success: '#4C5A6F',
   info: '#4C5A6F',
   dangerSurface: '#F6DCE6',
@@ -105,20 +113,23 @@ const LIGHT: Palette = {
   sunset: '#FFBF33',
   stripe: '#D81D68',
   accentTint: 'rgba(239,34,116,0.12)',
-  hairline: 'rgba(31,31,33,0.08)',
-  separator: 'rgba(31,31,33,0.12)',
+  hairline: 'rgba(18,18,20,0.06)',
+  separator: 'rgba(18,18,20,0.10)',
   scrim: 'rgba(0,0,0,0.35)',
-  paper: '#F2F2F5',
-  textOnPaper: '#282829',
+  paper: '#FFFFFF',
+  textOnPaper: '#121214',
   textOnPaperMuted: '#3C3B3E',
-  placeholder: 'rgba(31,31,33,0.35)',
-  overlay: 'rgba(31,31,33,0.06)',
-  glassFill: 'rgba(242,242,245,0.72)',
-  glassBorder: 'rgba(31,31,33,0.08)',
-  onControlOverlay: 'rgba(249,249,250,0.16)',
+  placeholder: 'rgba(18,18,20,0.38)',
+  overlay: 'rgba(18,18,20,0.05)',
+  glassFill: 'rgba(255,255,255,0.86)',
+  glassBorder: 'rgba(18,18,20,0.06)',
+  onControlOverlay: 'rgba(255,255,255,0.16)',
   cancelledSurface: '#F5E3E8',
   placeholderMuted: '#A3A2AA',
-  placeholderOnControl: 'rgba(249,249,250,0.6)',
+  placeholderOnControl: 'rgba(255,255,255,0.6)',
+  tile: '#FFFFFF',
+  onTile: 'rgba(18,18,20,0.06)',
+  textOnDark: '#F9F9FA',
 };
 
 type Palette = { [K in keyof typeof DARK]: string };
@@ -150,8 +161,19 @@ export function applyColorScheme(scheme: AppScheme) {
   AppTheme.scheme = scheme;
   AppTheme.blurTint = scheme === 'light' ? 'systemUltraThinMaterialLight' : 'systemUltraThinMaterialDark';
   AppTheme.chromeTint = scheme === 'light' ? 'systemChromeMaterialLight' : 'systemChromeMaterialDark';
-  AppRowPressed.backgroundColor = scheme === 'light' ? 'rgba(31,31,33,0.05)' : 'rgba(249,249,250,0.06)';
+  AppRowPressed.backgroundColor = scheme === 'light' ? 'rgba(18,18,20,0.05)' : 'rgba(249,249,250,0.06)';
+  if (scheme === 'light') {
+    AppTileLift.boxShadow = '0 1px 2px rgba(18,18,20,0.05), 0 6px 16px rgba(18,18,20,0.05)';
+  } else {
+    delete AppTileLift.boxShadow;
+  }
 }
+
+/**
+ * The faint lift under a tile in the light theme (nothing in the dark one).
+ * Spread it into a tile's style: `{ ...AppTileLift }`.
+ */
+export const AppTileLift: { boxShadow?: string } = {};
 
 export const AppSpacing = {
   xs: 4,

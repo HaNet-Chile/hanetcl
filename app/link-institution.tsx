@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
     gap: AppSpacing.md,
     borderRadius: AppRadii.xl,
     borderCurve: 'continuous',
-    backgroundColor: AppColors.surfaceSoft,
+    backgroundColor: AppColors.tile,
   },
   reviewTitle: {
     fontFamily: 'DMSans_700Bold',
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.35,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   reviewNote: {
     textAlign: 'center',

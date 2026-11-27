@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: AppSpacing.md,
     paddingHorizontal: AppSpacing.xl,
-    backgroundColor: AppColors.surfaceSoft,
+    backgroundColor: AppColors.tile,
   },
   gradeStrip: {
     backgroundColor: AppColors.accent,

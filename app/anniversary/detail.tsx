@@ -54,7 +54,7 @@ function DetailScreen() {
       <GradientCard colors={colors} style={styles.header}>
         <View style={styles.groupRow}>
           <View style={styles.groupTile}>
-            <GroupIcon group={activity.group} color={AppColors.textOnLight} animated={activity.flash} />
+            <GroupIcon group={activity.group} color={AppColors.controlOnActive} animated={activity.flash} />
           </View>
           <ThemedText style={styles.kicker}>{activity.flash ? t('common.pruebaFlash') : group}</ThemedText>
         </View>

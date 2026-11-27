@@ -136,7 +136,7 @@ function MotionTab({ active, back = false, icon, label, onPress, onBack }: { act
           <ThemedText numberOfLines={1} maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.motionLabel}>{label}</ThemedText>
         </Animated.View>
         <Animated.View pointerEvents="none" style={[styles.motionBackIcon, backIconStyle]}>
-          <CustomIcon name="chevron-left" size={20} color={AppColors.textOnLight} />
+          <CustomIcon name="chevron-left" size={20} color={AppColors.controlOnActive} />
         </Animated.View>
       </Animated.View>
     </Pressable>
@@ -416,7 +416,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
         search.onOpen();
       }}
     >
-      <CustomIcon name="search" size={20} color={AppColors.textOnLight} />
+      <CustomIcon name="search" size={20} color={AppColors.controlOnActive} />
       <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.searchText}>{t('components.appTabBar.buscar')}</ThemedText>
     </Pressable>
   ) : null;
@@ -471,7 +471,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
               style={({ pressed }) => [styles.backButton, styles.backButtonLabeled, pressed && styles.motionPressPressed]}
               onPress={onBack}
             >
-              <CustomIcon name="chevron-left" size={20} color={AppColors.textOnLight} />
+              <CustomIcon name="chevron-left" size={20} color={AppColors.controlOnActive} />
               <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.createText}>{t('common.volver')}</ThemedText>
             </Pressable>
           ) : null) : (
@@ -499,7 +499,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
 
         {search && (
           <Animated.View style={[styles.centerPill, styles.searchOpen, searchStyle]} pointerEvents={open ? 'auto' : 'none'}>
-            <CustomIcon name="search" size={20} color={AppColors.textOnLight} />
+            <CustomIcon name="search" size={20} color={AppColors.controlOnActive} />
             <Animated.View style={[styles.searchFieldWrap, fieldStyle]}>
               <TextInput
                 ref={input}
@@ -571,7 +571,7 @@ function VerbsDonePill({ onPress }: { onPress: () => void }) {
         onPress();
       }}
     >
-      <Ionicons name="checkmark" size={18} color={AppColors.textOnLight} />
+      <Ionicons name="checkmark" size={18} color={AppColors.controlOnActive} />
       <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.createText}>{none ? t('common.listo') : t('components.appTabBar.listoCountvalue', { countValue: count })}</ThemedText>
     </Pressable>
   );
@@ -644,7 +644,7 @@ export function GlobalTabBar() {
         style={({ pressed }) => [styles.centerPill, styles.optionsPill, none && styles.pillDisabled, pressed && styles.motionPressPressed]}
         onPress={options.open}
       >
-        <CustomIcon name="tag" size={18} color={AppColors.textOnLight} />
+        <CustomIcon name="tag" size={18} color={AppColors.controlOnActive} />
         <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.createText}>{t('components.appTabBar.opciones')}</ThemedText>
       </Pressable>
     );
@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
   },
   createText: {
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
     fontFamily: 'DMSans_700Bold',
     fontSize: 14,
   },

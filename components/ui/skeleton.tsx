@@ -45,9 +45,9 @@ const TONES: Record<Tone, string> = {
   surface: AppColors.surface,
   muted: AppColors.surfaceMuted,
   raised: AppColors.surfaceRaised,
-  soft: AppColors.surfaceSoft,
+  soft: AppColors.tile,
   // Blocks drawn on the light surfaces (Home tiles, the HaNet ID card).
-  onSoft: AppColors.onControlOverlay,
+  onSoft: AppColors.onTile,
 };
 
 type BlockProps = {

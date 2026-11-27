@@ -178,7 +178,7 @@ function JoinHallScreen() {
 const styles = StyleSheet.create({
   sheet: {
     flex: 1,
-    backgroundColor: AppColors.surfaceSoft,
+    backgroundColor: AppColors.tile,
   },
   content: {
     width: '100%',
@@ -305,4 +305,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default withSheetFrame(JoinHallScreen, AppColors.surfaceSoft);
+export default withSheetFrame(JoinHallScreen, AppColors.tile);

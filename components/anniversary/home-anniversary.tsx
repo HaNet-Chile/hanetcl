@@ -87,9 +87,9 @@ export function AnniversaryGlow({ alliances, width, waving }: { alliances: Pick<
             {colors.map((color, index) => <Stop key={index} offset={column(index)} stopColor={color} stopOpacity={0.45} />)}
           </LinearGradient>
           <LinearGradient id="home-glow-fade" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={AppColors.textOnLight} stopOpacity={0} />
-            <Stop offset="0.6" stopColor={AppColors.textOnLight} stopOpacity={0.35} />
-            <Stop offset="1" stopColor={AppColors.textOnLight} stopOpacity={1} />
+            <Stop offset="0" stopColor={AppColors.canvas} stopOpacity={0} />
+            <Stop offset="0.6" stopColor={AppColors.canvas} stopOpacity={0.35} />
+            <Stop offset="1" stopColor={AppColors.canvas} stopOpacity={1} />
           </LinearGradient>
         </Defs>
         <Rect x={0} y={0} width={width} height={center} fill="url(#home-glow-above)" />
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
     fontSize: 10,
     lineHeight: 13,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   ringName: {
     marginTop: 4,
