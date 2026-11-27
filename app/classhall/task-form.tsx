@@ -129,7 +129,7 @@ function TaskFormScreen() {
           value={form.title}
           onChangeText={title => update({ title })}
           placeholder={t('classhall.taskForm.guiaDeEjerciciosN2')}
-          placeholderTextColor={AppColors.surfaceMuted}
+          placeholderTextColor={AppColors.placeholderMuted}
           maxLength={80}
           editable={!submitting}
           autoFocus={!id}
@@ -145,7 +145,7 @@ function TaskFormScreen() {
           value={form.instructions}
           onChangeText={instructions => update({ instructions })}
           placeholder={t('classhall.taskForm.resolverLosEjercicios1Al')}
-          placeholderTextColor={AppColors.surfaceMuted}
+          placeholderTextColor={AppColors.placeholderMuted}
           multiline
           maxLength={MAX_INSTRUCTIONS}
           editable={!submitting}

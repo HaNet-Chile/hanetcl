@@ -1,4 +1,4 @@
-export const AppColors = {
+const DARK = {
   canvas: '#282829',
   surface: '#3C3B3E',
   surfaceMuted: '#504F53',
@@ -43,7 +43,151 @@ export const AppColors = {
   // The dividers between rows of a grouped list, and the dimming behind a sheet.
   separator: 'rgba(249,249,250,0.12)',
   scrim: 'rgba(0,0,0,0.55)',
-} as const;
+  // A light "paper" sheet (create an event, a day change, edit the profile)
+  // and the dark text on it, in both themes.
+  paper: '#E9E8EC',
+  textOnPaper: '#282829',
+  textOnPaperMuted: '#3C3B3E',
+  // Hint text inside an empty field.
+  placeholder: 'rgba(221,221,226,0.4)',
+  // A faint fill over a surface: a chip inside a card, a pressed row.
+  overlay: 'rgba(255,255,255,0.12)',
+  // Translucent canvas behind floating bars and pills, and its edge.
+  glassFill: 'rgba(40,40,41,0.6)',
+  glassBorder: 'rgba(255,255,255,0.15)',
+  // A faint fill on an active control (a field inside the open search pill).
+  onControlOverlay: 'rgba(40,40,41,0.12)',
+  // A cancelled class or event in the Calendar.
+  cancelledSurface: '#4A3535',
+  // Hint text in the quieter fields (forms on a sheet), and on an active control.
+  placeholderMuted: '#504F53',
+  placeholderOnControl: 'rgba(40,40,41,0.6)',
+  // The big tiles and cards of the Home, ClassHall and the HaNet ID, the
+  // faint blocks drawn on them, and white text on a dark fill in both themes.
+  tile: '#C7C6CF',
+  onTile: 'rgba(40,40,41,0.12)',
+  textOnDark: '#F9F9FA',
+  // An outlined card on the canvas (the Calendar's class blocks): no fill in
+  // the dark theme, white in the light one.
+  cardFill: 'transparent',
+  cardOutline: '#3C3B3E',
+  // The band between two posts of the Feed.
+  feedGap: 'rgba(0,0,0,0.28)',
+  // A pill inside such a card (a test inside a class block).
+  cardChip: '#3C3B3E',
+};
+
+/**
+ * The light theme (an option in Configuraciones → Apariencia; dark stays the
+ * default). Reworked on 2026-11-27 after muxp found
+ * the white-cards-on-grey version ugly (reviewed with the Apple and
+ * Impeccable guides, Instagram's light UI as the reference): a white canvas,
+ * no shadows, and the dark theme's figure-ground kept the other way round:
+ * the Home's tiles are solid misty-lilac blocks (`tile`), lists and cards a
+ * softer grey (`surface`). Near-black only for small active controls, with
+ * white on them; text on tiles (`textOnLight`) stays dark. Pink is the same.
+ */
+const LIGHT: Palette = {
+  canvas: '#FFFFFF',
+  surface: '#F3F2F7',
+  surfaceMuted: '#E6E5EC',
+  surfaceRaised: '#E6E5EC',
+  surfaceSoft: '#8E8D94',
+  textPrimary: '#111113',
+  textSecondary: '#5A5960',
+  textOnLight: '#111113',
+  accent: '#EF2274',
+  errorText: '#B0124F',
+  errorTextOnLight: '#B0124F',
+  primary: '#E6E5EC',
+  primaryStrong: '#D9D8DE',
+  controlContainer: '#F3F2F7',
+  controlActive: '#1C1C1E',
+  controlOnActive: '#FFFFFF',
+  neutral2: '#3C3B3E',
+  neutral3: '#504F53',
+  neutral5: '#6E6D73',
+  neutral8: '#C7C6CF',
+  neutral85: '#E6E5EC',
+  neutral9: '#FFFFFF',
+  neutral05: '#121214',
+  success: '#4C5A6F',
+  info: '#4C5A6F',
+  dangerSurface: '#F6DCE6',
+  warning: '#EF2274',
+  danger: '#262D37',
+  neutral: '#C7C6CF',
+  accentMint: '#00A896',
+  accentYellow: '#F5B700',
+  sunset: '#FFBF33',
+  stripe: '#D81D68',
+  accentTint: 'rgba(239,34,116,0.12)',
+  hairline: 'rgba(17,17,19,0.06)',
+  separator: 'rgba(17,17,19,0.08)',
+  scrim: 'rgba(0,0,0,0.35)',
+  paper: '#FFFFFF',
+  textOnPaper: '#121214',
+  textOnPaperMuted: '#3C3B3E',
+  placeholder: 'rgba(18,18,20,0.38)',
+  overlay: 'rgba(17,17,19,0.05)',
+  glassFill: 'rgba(255,255,255,0.78)',
+  glassBorder: 'rgba(17,17,19,0.08)',
+  onControlOverlay: 'rgba(255,255,255,0.16)',
+  cancelledSurface: '#F5E3E8',
+  placeholderMuted: '#A3A2AA',
+  placeholderOnControl: 'rgba(255,255,255,0.6)',
+  tile: '#ECEBF2',
+  onTile: 'rgba(17,17,19,0.06)',
+  textOnDark: '#F9F9FA',
+  cardFill: '#F3F2F7',
+  cardOutline: 'transparent',
+  feedGap: 'rgba(17,17,19,0.05)',
+  cardChip: '#E6E5EC',
+};
+
+type Palette = { [K in keyof typeof DARK]: string };
+
+export type AppScheme = 'dark' | 'light';
+
+/**
+ * The colors of the theme in use. They are filled in before any screen
+ * loads (see `index.tsx` and `applyColorScheme`), so module-level
+ * StyleSheets read the right theme; changing it restarts HaNet.
+ */
+export const AppColors: Palette = { ...DARK };
+
+/** Which theme `AppColors` holds, and the native materials that go with it. */
+export const AppTheme = {
+  scheme: 'dark' as AppScheme,
+  /** BlurView tint for bars and panels. */
+  blurTint: 'systemUltraThinMaterialDark' as 'systemUltraThinMaterialDark' | 'systemUltraThinMaterialLight',
+  /** BlurView tint for heavier chrome (sheets over content). */
+  chromeTint: 'systemChromeMaterialDark' as 'systemChromeMaterialDark' | 'systemChromeMaterialLight',
+  /** How strong the ambient color glows are (the Home's alianza light): soft on white. */
+  glow: 1,
+  /** The shadow under floating chrome (the tab bar). */
+  floatShadow: '0px 10px 20px rgba(0, 0, 0, 0.3)',
+};
+
+/** The fixed palettes, for previews of each theme. */
+export const AppPalettes: Record<AppScheme, Readonly<Palette>> = { dark: DARK, light: LIGHT };
+
+/** Fills `AppColors` with one theme. Call it before the screens load. */
+export function applyColorScheme(scheme: AppScheme) {
+  Object.assign(AppColors, scheme === 'light' ? LIGHT : DARK);
+  AppTheme.scheme = scheme;
+  AppTheme.blurTint = scheme === 'light' ? 'systemUltraThinMaterialLight' : 'systemUltraThinMaterialDark';
+  AppTheme.chromeTint = scheme === 'light' ? 'systemChromeMaterialLight' : 'systemChromeMaterialDark';
+  AppRowPressed.backgroundColor = scheme === 'light' ? 'rgba(18,18,20,0.05)' : 'rgba(249,249,250,0.06)';
+  AppTheme.glow = scheme === 'light' ? 0.4 : 1;
+  AppTheme.floatShadow = scheme === 'light' ? '0px 8px 24px rgba(17,17,19,0.10)' : '0px 10px 20px rgba(0, 0, 0, 0.3)';
+}
+
+/**
+ * A lift under a tile. Empty in both themes today (the light theme separates
+ * tiles by fill, not shadow); kept so a theme can add one in one place.
+ */
+export const AppTileLift: { boxShadow?: string } = {};
 
 export const AppSpacing = {
   xs: 4,
@@ -136,4 +280,4 @@ export const AppPressed = { opacity: 0.84, transform: [{ scale: 0.97 }] } as con
  * up in place, as in the phone's own lists, instead of shrinking (a row that
  * shrinks pulls away from its dividers).
  */
-export const AppRowPressed = { backgroundColor: 'rgba(249,249,250,0.06)' } as const;
+export const AppRowPressed = { backgroundColor: 'rgba(249,249,250,0.06)' };

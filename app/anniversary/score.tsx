@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
     fontSize: 10,
     lineHeight: 15,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   points: {
     ...AppDisplay.score,

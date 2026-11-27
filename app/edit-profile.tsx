@@ -147,7 +147,7 @@ function EditProfileScreen() {
   if (initializing || loading) {
     return (
       <SafeAreaView style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={AppColors.textOnLight} />
+        <ActivityIndicator size="large" color={AppColors.textOnPaper} />
       </SafeAreaView>
     );
   }
@@ -264,7 +264,7 @@ function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.neutral2,
+    backgroundColor: AppColors.paper,
     borderTopLeftRadius: Platform.OS === 'android' ? 50 : 0,
     borderTopRightRadius: Platform.OS === 'android' ? 50 : 0,
     overflow: 'hidden',
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
     fontSize: 13,
     lineHeight: 18,
-    color: AppColors.textOnLight,
+    color: AppColors.textOnPaper,
     opacity: 0.7,
   },
   title: {
@@ -289,12 +289,12 @@ const styles = StyleSheet.create({
     fontSize: 32,
     lineHeight: 38,
     letterSpacing: -1.2,
-    color: AppColors.textOnLight,
+    color: AppColors.textOnPaper,
     paddingBottom: 10,
   },
   separator: {
     height: 2,
-    backgroundColor: AppColors.textOnLight,
+    backgroundColor: AppColors.textOnPaper,
     marginBottom: 25,
   },
   section: {
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
     fontSize: 15,
     lineHeight: 20,
-    color: AppColors.textOnLight,
+    color: AppColors.textOnPaper,
   },
   photoRow: {
     flexDirection: 'row',
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   fontOptionSelected: {
     borderColor: AppColors.textOnLight,
-    backgroundColor: AppColors.surfaceSoft,
+    backgroundColor: AppColors.tile,
   },
   fontSample: {
     flex: 1,
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_500Medium',
     fontSize: 12,
     lineHeight: 16,
-    color: AppColors.textOnLight,
+    color: AppColors.textOnPaper,
     opacity: 0.7,
   },
   error: {
@@ -387,4 +387,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default withSheetFrame(EditProfileScreen, AppColors.neutral2);
+export default withSheetFrame(EditProfileScreen, AppColors.paper);

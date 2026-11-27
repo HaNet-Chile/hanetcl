@@ -58,10 +58,10 @@ export function CalendarViewPill({ view, open, onPress }: { view: CalendarView; 
       style={({ pressed }) => pressed && styles.pressed}
     >
       <Animated.View layout={reduceMotion ? undefined : LinearTransition.springify().stiffness(SPRING_SMOOTH.stiffness).damping(SPRING_SMOOTH.damping)} style={styles.pill}>
-        <CustomIcon name={VIEW_ICONS[view]} size={18} color={AppColors.textOnLight} />
+        <CustomIcon name={VIEW_ICONS[view]} size={18} color={AppColors.controlOnActive} />
         <ThemedText maxFontSizeMultiplier={MAX_SCALE} style={styles.pillText}>{viewLabel(view)}</ThemedText>
         <Animated.View style={chevronStyle}>
-          <CustomIcon name="chevron-right" size={14} color={AppColors.textOnLight} />
+          <CustomIcon name="chevron-right" size={14} color={AppColors.controlOnActive} />
         </Animated.View>
       </Animated.View>
     </Pressable>
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.controlActive,
   },
   pillText: {
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
     fontFamily: 'DMSans_700Bold',
     fontSize: 14,
   },
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     letterSpacing: 0.4,
     textTransform: 'uppercase',
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
     opacity: 0.6,
   },
   todayTitle: {
@@ -228,13 +228,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 28,
     letterSpacing: -0.8,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   todayMeta: {
     fontFamily: 'DMSans_500Medium',
     fontSize: 14,
     lineHeight: 20,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
     opacity: 0.7,
   },
   track: {
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     marginTop: AppSpacing.sm,
     borderRadius: 2,
     overflow: 'hidden',
-    backgroundColor: 'rgba(40, 40, 41, 0.15)',
+    backgroundColor: AppColors.onControlOverlay,
   },
   fill: {
     height: '100%',
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     borderRadius: AppRadii.md,
   },
   rowPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: AppColors.overlay,
   },
   rowText: {
     flex: 1,
@@ -285,6 +285,6 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     marginVertical: AppSpacing.xs,
     marginHorizontal: AppSpacing.md + 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: AppColors.overlay,
   },
 });

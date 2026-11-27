@@ -3,7 +3,7 @@ import { FLAG_GLOW_AVAILABLE, FlagGlow } from '@/components/anniversary/flag-sur
 import { GradientCard } from '@/components/anniversary/gradient-card';
 import { ThemedText } from '@/components/themed-text';
 import { CrownIcon } from '@/assets/animated-icons/crown';
-import { AppColors, AppFlexFonts, AppPressed } from '@/constants/design-tokens';
+import { AppColors, AppFlexFonts, AppPressed, AppTheme } from '@/constants/design-tokens';
 import { anniversaryDay, daysTo, formatPoints, movements, standings } from '@/services/anniversary-service';
 import type { Alliance, Anniversary, AnniversaryPhase, Standing } from '@/services/anniversary-service';
 import { feedWhen } from '@/services/feed-service';
@@ -87,9 +87,9 @@ export function AnniversaryGlow({ alliances, width, waving }: { alliances: Pick<
             {colors.map((color, index) => <Stop key={index} offset={column(index)} stopColor={color} stopOpacity={0.45} />)}
           </LinearGradient>
           <LinearGradient id="home-glow-fade" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={AppColors.textOnLight} stopOpacity={0} />
-            <Stop offset="0.6" stopColor={AppColors.textOnLight} stopOpacity={0.35} />
-            <Stop offset="1" stopColor={AppColors.textOnLight} stopOpacity={1} />
+            <Stop offset="0" stopColor={AppColors.canvas} stopOpacity={0} />
+            <Stop offset="0.6" stopColor={AppColors.canvas} stopOpacity={0.35} />
+            <Stop offset="1" stopColor={AppColors.canvas} stopOpacity={1} />
           </LinearGradient>
         </Defs>
         <Rect x={0} y={0} width={width} height={center} fill="url(#home-glow-above)" />
@@ -349,6 +349,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    opacity: AppTheme.glow,
   },
   carousel: {
     marginBottom: 24,
@@ -400,14 +401,15 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_500Medium',
     fontSize: 12,
     lineHeight: 15,
-    color: AppColors.textSecondary,
+    color: AppColors.textOnDark,
+    opacity: 0.85,
   },
   name: {
     fontFamily: AppFlexFonts.wide,
     fontSize: 24,
     lineHeight: 29,
     letterSpacing: -0.4,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   cardRight: {
     alignItems: 'flex-end',
@@ -416,21 +418,22 @@ const styles = StyleSheet.create({
     fontFamily: AppFlexFonts.numbers,
     fontSize: 34,
     lineHeight: 38,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
     fontVariant: ['tabular-nums'],
   },
   countdown: {
     fontFamily: AppFlexFonts.numbers,
     fontSize: 22,
     lineHeight: 26,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
     fontVariant: ['tabular-nums'],
   },
   unit: {
     fontFamily: 'DMSans_500Medium',
     fontSize: 12,
     lineHeight: 15,
-    color: AppColors.textSecondary,
+    color: AppColors.textOnDark,
+    opacity: 0.85,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
@@ -452,7 +455,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_500Medium',
     fontSize: 13,
     lineHeight: 17,
-    color: AppColors.textPrimary,
+    color: AppColors.textOnDark,
   },
   ring: {
     alignItems: 'center',
@@ -487,7 +490,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
     fontSize: 10,
     lineHeight: 13,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   ringName: {
     marginTop: 4,

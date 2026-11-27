@@ -3,7 +3,7 @@ import React, { createContext, useContext, useRef, useState, type ComponentRef }
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppColors } from '@/constants/design-tokens';
+import { AppColors, AppTheme } from '@/constants/design-tokens';
 
 type BlurTarget = ComponentRef<typeof View>;
 
@@ -85,7 +85,7 @@ export function FrostedFill({ target }: { target?: React.RefObject<BlurTarget | 
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <BlurView
         intensity={Platform.OS === 'android' ? 40 : 60}
-        tint="systemUltraThinMaterialDark"
+        tint={AppTheme.blurTint}
         {...(Platform.OS === 'android' && target ? { blurMethod: 'dimezisBlurViewSdk31Plus' as const, blurTarget: target } : {})}
         style={StyleSheet.absoluteFill}
       />

@@ -1,4 +1,4 @@
-import { AppColors, AppRadii, AppSpacing, AppTouch } from '@/constants/design-tokens';
+import { AppColors, AppRadii, AppSpacing, AppTileLift, AppTouch } from '@/constants/design-tokens';
 import { ThemedText } from '@/components/themed-text';
 import { HanetButton } from '@/components/ui/hanet-button';
 import { ProfileSkeleton } from '@/components/skeletons';
@@ -215,7 +215,7 @@ export default function ProfileScreen() {
                   <QRCode
                     value={qrValue ?? `hanet://id/${current.username ?? user.uid}`}
                     size={236}
-                    color={AppColors.surface}
+                    color={AppColors.textOnPaperMuted}
                     backgroundColor="transparent"
                   />
                   <ThemedText style={styles.qrHandle}>{handle ?? 'Tu HaNet ID'}</ThemedText>
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   brandId: { color: AppColors.textSecondary, fontFamily: 'DMSans_400Regular', fontSize: 11, lineHeight: 14, marginLeft: 4, alignSelf: 'flex-end', marginBottom: 3 },
   iconButton: { minWidth: 56, height: 40, borderRadius: AppRadii.pill, backgroundColor: AppColors.surface, alignItems: 'center', justifyContent: 'center' },
 
-  identityCard: { minHeight: 570, borderRadius: 30, borderCurve: 'continuous', overflow: 'hidden', backgroundColor: AppColors.surfaceSoft },
+  identityCard: { minHeight: 570, borderRadius: 30, borderCurve: 'continuous', overflow: 'hidden', backgroundColor: AppColors.tile, ...AppTileLift },
   cardMark: { position: 'absolute', right: -18, bottom: -34, width: 190, height: 282, opacity: 0.1 },
   portrait: { height: 356, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, borderCurve: 'continuous', backgroundColor: AppColors.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   portraitAlliance: { borderWidth: 4, borderTopWidth: 0 },

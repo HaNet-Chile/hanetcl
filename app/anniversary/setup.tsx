@@ -249,7 +249,7 @@ function SetupScreen() {
               value={alliance.emoji}
               onChangeText={emoji => updateAlliance(index, { emoji })}
               placeholder={t('anniversary.setup.oEscribeOtrosEmoji')}
-              placeholderTextColor={AppColors.surfaceMuted}
+              placeholderTextColor={AppColors.placeholderMuted}
               maxLength={40}
               editable={!submitting}
               autoCorrect={false}

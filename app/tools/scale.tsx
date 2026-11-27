@@ -173,7 +173,7 @@ export default function ScaleScreen() {
                     value={scoreText}
                     onChangeText={setScoreText}
                     placeholder={t('tools.scale.puntaje')}
-                    placeholderTextColor={AppColors.surfaceMuted}
+                    placeholderTextColor={AppColors.placeholderMuted}
                     keyboardType="decimal-pad"
                     maxLength={6}
                     selectionColor={AppColors.accent}
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   converterInput: { flex: 1 },
   gradeBadge: { minWidth: 84, height: 52, paddingHorizontal: AppSpacing.lg, borderRadius: AppRadii.pill, backgroundColor: AppColors.controlActive, alignItems: 'center', justifyContent: 'center' },
   gradeBadgeLow: { backgroundColor: AppColors.accent },
-  gradeBadgeText: { ...AppType.title2, color: AppColors.textOnLight },
+  gradeBadgeText: { ...AppType.title2, color: AppColors.controlOnActive },
   gradeBadgeTextLow: { color: AppColors.textPrimary },
   tableHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: -AppSpacing.sm },
   table: { flexDirection: 'row', borderRadius: AppRadii.lg, backgroundColor: AppColors.surface, paddingVertical: AppSpacing.sm, paddingHorizontal: AppSpacing.xs },

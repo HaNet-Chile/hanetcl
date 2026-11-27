@@ -6,7 +6,7 @@ import { HanetChip } from '@/components/ui/hanet-chip';
 import { useKeyboardOverlap } from '@/components/ui/keyboard';
 import { MessageCard } from '@/components/ui/message-card';
 import { GlassFill, LIQUID_GLASS, glassClear } from '@/components/ui/liquid-glass';
-import { AppColors, AppPressed, AppRadii, AppSpacing, AppTouch, AppType } from '@/constants/design-tokens';
+import { AppColors, AppTheme, AppPressed, AppRadii, AppSpacing, AppTouch, AppType } from '@/constants/design-tokens';
 import { SPRING_SMOOTH } from '@/constants/motion';
 import { useSideNav } from '@/hooks/use-desktop-layout';
 import { SEARCH_PLACEHOLDER, clearRecentSearches, recentSearches, rememberSearch, searchIndex, suggestionsFrom, useSearchIndex } from '@/services/search';
@@ -137,7 +137,7 @@ export default function SearchScreen() {
               placeholder={SEARCH_PLACEHOLDER}
               placeholderTextColor={PLACEHOLDER}
               selectionColor={AppColors.accent}
-              keyboardAppearance="dark"
+              keyboardAppearance={AppTheme.scheme}
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="search"
@@ -227,7 +227,7 @@ export default function SearchScreen() {
   );
 }
 
-const PLACEHOLDER = 'rgba(221,221,226,0.6)';
+const PLACEHOLDER = AppColors.placeholder;
 
 const styles = StyleSheet.create({
   screen: {

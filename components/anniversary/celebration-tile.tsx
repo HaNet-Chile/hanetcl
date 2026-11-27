@@ -71,7 +71,7 @@ export function CelebrationTile({ anniversary, day, height }: { anniversary: Ann
         <ThemedText numberOfLines={2} style={styles.title}>{t('anniversary.welcome.empezoElAniversario')}</ThemedText>
         <View style={styles.pill}>
           <ThemedText style={styles.pillText}>{t('components.anniversary.celebrationTile.tocaParaEntrar')}</ThemedText>
-          <Ionicons name="chevron-forward" size={14} color={AppColors.textOnLight} />
+          <Ionicons name="chevron-forward" size={14} color={AppColors.controlOnActive} />
         </View>
       </GradientCard>
     </Pressable>
@@ -143,6 +143,6 @@ const styles = StyleSheet.create({
   pillText: {
     ...AppType.caption,
     fontFamily: 'DMSans_700Bold',
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
 });

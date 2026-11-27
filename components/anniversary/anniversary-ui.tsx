@@ -178,7 +178,7 @@ export function InstagramButton({ handle, light = true }: { handle: string; ligh
       hitSlop={6}
       style={({ pressed }) => [styles.instagram, light ? styles.instagramLight : styles.instagramDark, pressed && AppPressed]}
     >
-      <Ionicons name="logo-instagram" size={16} color={light ? AppColors.textOnLight : AppColors.textPrimary} />
+      <Ionicons name="logo-instagram" size={16} color={light ? AppColors.controlOnActive : AppColors.textPrimary} />
       <ThemedText numberOfLines={1} style={[styles.instagramText, !light && styles.instagramTextDark]}>@{handle}</ThemedText>
     </Pressable>
   );
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     ...AppType.caption,
     fontFamily: 'DMSans_700Bold',
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   instagramTextDark: {
     color: AppColors.textPrimary,

@@ -860,7 +860,7 @@ const styles = StyleSheet.create({
     gap: AppSpacing.md,
     borderRadius: AppRadii.xl,
     borderCurve: 'continuous',
-    backgroundColor: AppColors.surfaceSoft,
+    backgroundColor: AppColors.tile,
   },
   modalTextSection: {
     gap: 6,

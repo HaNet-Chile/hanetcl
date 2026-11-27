@@ -126,7 +126,7 @@ export function AppStatusCard() {
         value={message}
         onChangeText={setMessage}
         placeholder={t('components.hnt.appStatusCard.mensajeOpcionalSiLoEscribes')}
-        placeholderTextColor="rgba(221,221,226,0.4)"
+        placeholderTextColor={AppColors.placeholder}
         maxLength={PAUSE_MESSAGE_MAX}
         multiline
         style={[styles.input, styles.multiline]}

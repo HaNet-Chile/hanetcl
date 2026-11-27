@@ -73,7 +73,7 @@ export function ScanPill({ eventId, ticketed }: { eventId: string; ticketed: boo
       style={({ pressed }) => pressed && styles.pressed}
     >
       <View style={styles.pill}>
-        <Ionicons name="scan-outline" size={18} color={AppColors.textOnLight} />
+        <Ionicons name="scan-outline" size={18} color={AppColors.controlOnActive} />
         <ThemedText maxFontSizeMultiplier={MAX_SCALE} style={styles.pillText}>{t('organize.escanear')}</ThemedText>
       </View>
     </Pressable>
@@ -102,10 +102,10 @@ export function CreatePill({ open }: { open: boolean }) {
       style={({ pressed }) => pressed && styles.pressed}
     >
       <View style={styles.pill}>
-        <CustomIcon name="plus" size={16} color={AppColors.textOnLight} />
+        <CustomIcon name="plus" size={16} color={AppColors.controlOnActive} />
         <ThemedText maxFontSizeMultiplier={MAX_SCALE} style={styles.pillText}>{t('organize.crear')}</ThemedText>
         <Animated.View style={chevronStyle}>
-          <CustomIcon name="chevron-right" size={14} color={AppColors.textOnLight} />
+          <CustomIcon name="chevron-right" size={14} color={AppColors.controlOnActive} />
         </Animated.View>
       </View>
     </Pressable>
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.controlActive,
   },
   pillText: {
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
     fontFamily: 'DMSans_700Bold',
     fontSize: 14,
   },

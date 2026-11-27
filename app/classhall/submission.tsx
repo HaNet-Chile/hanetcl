@@ -104,7 +104,7 @@ function SubmissionScreen() {
           value={feedback}
           onChangeText={text => { setFeedback(text); setError(null); }}
           placeholder={t('classhall.submission.bienResueltoRevisaElEjercicio')}
-          placeholderTextColor={AppColors.surfaceMuted}
+          placeholderTextColor={AppColors.placeholderMuted}
           multiline
           maxLength={MAX_FEEDBACK}
           editable={!saving}

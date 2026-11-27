@@ -311,7 +311,7 @@ function EventFormScreen() {
       value={String(form[key] ?? '')}
       onChangeText={text => update({ [key]: text } as Partial<Form>)}
       placeholder={placeholder}
-      placeholderTextColor={AppColors.surfaceMuted}
+      placeholderTextColor={AppColors.placeholderMuted}
       editable={!submitting}
       selectionColor={AppColors.accent}
       style={styles.input}
@@ -348,7 +348,7 @@ function EventFormScreen() {
               value={importUrl}
               onChangeText={setImportUrl}
               placeholder="https://ticketplus.cl/events/…"
-              placeholderTextColor={AppColors.surfaceMuted}
+              placeholderTextColor={AppColors.placeholderMuted}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"

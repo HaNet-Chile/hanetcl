@@ -4,7 +4,7 @@ import { TicketGlow } from '@/components/tickets/ticket-glow';
 import { Tilt } from '@/components/tickets/tilt';
 import { demoCount, demoGiftPreview, demoQr } from '@/components/showcase/ticket-demo';
 import { HanetButton } from '@/components/ui/hanet-button';
-import { AppColors, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
+import { AppColors, AppTheme, AppRadii, AppSpacing, AppType } from '@/constants/design-tokens';
 import { describeAuthError, useSession } from '@/services/auth-service';
 import { acceptGift, giftToken, openGuestTicket, previewGift, ticketQrValue } from '@/services/tickets-service';
 import type { GiftPreview, GuestTicket } from '@/services/tickets-service';
@@ -270,7 +270,7 @@ export default function ReceiveTicketScreen() {
         )}
       </View>
       <Animated.View style={[styles.sheet, !glass && styles.sheetSolid, { paddingBottom: insets.bottom + AppSpacing.lg }, sheetStyle]}>
-        {glass && <BlurView intensity={60} tint="systemChromeMaterialDark" style={StyleSheet.absoluteFill} />}
+        {glass && <BlurView intensity={60} tint={AppTheme.chromeTint} style={StyleSheet.absoluteFill} />}
         <View style={styles.grabber} />
         <View style={styles.sheetContent}>{sheetBody}</View>
       </Animated.View>

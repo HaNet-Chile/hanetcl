@@ -1,6 +1,6 @@
 import { Stripes } from '@/components/ui/stripes';
 import { ThemedText } from '@/components/themed-text';
-import { AppColors, AppPressed, AppType } from '@/constants/design-tokens';
+import { AppColors, AppPressed, AppTileLift, AppType } from '@/constants/design-tokens';
 import { useRole, useSession } from '@/services/auth-service';
 import { cached, useCached } from '@/services/cache';
 import { getMyNewGradesCount } from '@/services/classhall-service';
@@ -101,7 +101,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 24,
     borderCurve: 'continuous',
-    backgroundColor: AppColors.surfaceSoft,
+    ...AppTileLift,
+    backgroundColor: AppColors.tile,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
   subtitle: {
     ...AppType.footnote,
     fontFamily: 'DMSans_500Medium',
-    color: AppColors.surface,
+    color: AppColors.textOnPaperMuted,
   },
   badge: {
     width: 112,

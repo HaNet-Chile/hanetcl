@@ -200,7 +200,7 @@ function Celebration({ firstName, treatment, institutionName, onDone }: Omit<Pro
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(40, 40, 41, 0.94)',
+    backgroundColor: AppColors.canvas,
   },
   content: {
     flex: 1,

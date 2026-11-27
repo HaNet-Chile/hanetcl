@@ -138,7 +138,7 @@ export function BlockEditor(props: Props) {
             value={query}
             onChangeText={setQuery}
             placeholder={t('components.schedule.blockEditor.buscar')}
-            placeholderTextColor="rgba(221, 221, 226, 0.4)"
+            placeholderTextColor={AppColors.placeholder}
             autoCorrect={false}
             style={styles.input}
             selectionColor={AppColors.accent}
@@ -217,7 +217,7 @@ export function BlockEditor(props: Props) {
                 <CustomIcon name="chevron-right" size={18} color={AppColors.textSecondary} />
               </Pressable>
               {draft.subject === null && (
-                <TextInput accessibilityLabel={t('classhall.create.nombreDeLaAsignatura')} value={draft.customSubject} onChangeText={customSubject => setDraft({ ...draft, customSubject })} placeholder={t('classhall.create.nombreDeLaAsignatura')} placeholderTextColor="rgba(221, 221, 226, 0.4)" maxLength={40} style={styles.input} selectionColor={AppColors.accent} />
+                <TextInput accessibilityLabel={t('classhall.create.nombreDeLaAsignatura')} value={draft.customSubject} onChangeText={customSubject => setDraft({ ...draft, customSubject })} placeholder={t('classhall.create.nombreDeLaAsignatura')} placeholderTextColor={AppColors.placeholder} maxLength={40} style={styles.input} selectionColor={AppColors.accent} />
               )}
             </>
           ) : (
@@ -253,7 +253,7 @@ export function BlockEditor(props: Props) {
           </ThemedText>
 
           {draft.kind === 'class' && (
-            <TextInput accessibilityLabel={t('components.schedule.blockEditor.salaOpcional')} value={draft.room} onChangeText={room => setDraft({ ...draft, room })} placeholder={t('components.schedule.blockEditor.salaOpcional')} placeholderTextColor="rgba(221, 221, 226, 0.4)" maxLength={20} style={styles.input} selectionColor={AppColors.accent} />
+            <TextInput accessibilityLabel={t('components.schedule.blockEditor.salaOpcional')} value={draft.room} onChangeText={room => setDraft({ ...draft, room })} placeholder={t('components.schedule.blockEditor.salaOpcional')} placeholderTextColor={AppColors.placeholder} maxLength={20} style={styles.input} selectionColor={AppColors.accent} />
           )}
           {!!shownError && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{shownError}</ThemedText>}
           <HanetDialogActions>

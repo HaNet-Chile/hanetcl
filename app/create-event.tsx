@@ -388,7 +388,7 @@ function CreateEventScreen() {
               value={location}
               onChangeText={setLocation}
               placeholder={t('createEvent.salaOLugarOpcional')}
-              placeholderTextColor="rgba(250,250,249,0.5)"
+              placeholderTextColor={AppColors.placeholder}
             />
             <CustomIcon name="map-pin" size={20} color={AppColors.textSecondary} />
           </View>
@@ -427,9 +427,9 @@ function CreateEventScreen() {
             value={description}
             onChangeText={setDescription}
             onFocus={revealDescription}
-            style={{ fontSize: 16, color: AppColors.textOnLight, minHeight: 80, borderBottomWidth: 1.5, borderBottomColor: AppColors.textOnLight, fontFamily: 'DMSans_400Regular', outlineStyle: 'none' as any }}
+            style={{ fontSize: 16, color: AppColors.textOnPaper, minHeight: 80, borderBottomWidth: 1.5, borderBottomColor: AppColors.textOnPaper, fontFamily: 'DMSans_400Regular', outlineStyle: 'none' as any }}
           />
-          <ThemedText style={{ fontSize: 12, color: AppColors.surface, opacity: 0.8, marginTop: 10, lineHeight: 16 }}>
+          <ThemedText style={{ fontSize: 12, color: AppColors.textOnPaperMuted, opacity: 0.8, marginTop: 10, lineHeight: 16 }}>
             {t('createEvent.unDocentePuedeConfirmarCorregir')}
           </ThemedText>
         </View>
@@ -444,7 +444,7 @@ function CreateEventScreen() {
           <View style={{ width: 24, height: 24, borderRadius: 8, backgroundColor: requestVerification ? AppColors.accent : AppColors.surface, marginRight: 12, justifyContent: 'center', alignItems: 'center' }}>
             {requestVerification && <CustomIcon name="check-circle" size={16} color={AppColors.textPrimary} />}
           </View>
-          <ThemedText style={{ flex: 1, fontSize: 13, color: AppColors.surface, lineHeight: 18, fontFamily: 'DMSans_500Medium' }}>
+          <ThemedText style={{ flex: 1, fontSize: 13, color: AppColors.textOnPaperMuted, lineHeight: 18, fontFamily: 'DMSans_500Medium' }}>
             {t('createEvent.pedirQueElDocenteDe')}
           </ThemedText>
         </Pressable>
@@ -468,27 +468,27 @@ function CreateEventScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.neutral2,
+    backgroundColor: AppColors.paper,
     borderTopLeftRadius: Platform.OS === 'android' ? 50 : 0,
     borderTopRightRadius: Platform.OS === 'android' ? 50 : 0,
     overflow: 'hidden',
   },
   modalHeader: { paddingTop: 0, paddingBottom: 16 },
-  modalTitleInput: { fontSize: 32, fontFamily: 'DMSans_700Bold', letterSpacing: -2, color: AppColors.textOnLight, paddingBottom: 10, outlineStyle: 'none' as any },
-  separator: { height: 2, backgroundColor: AppColors.textOnLight, marginBottom: 25 },
+  modalTitleInput: { fontSize: 32, fontFamily: 'DMSans_700Bold', letterSpacing: -2, color: AppColors.textOnPaper, paddingBottom: 10, outlineStyle: 'none' as any },
+  separator: { height: 2, backgroundColor: AppColors.textOnPaper, marginBottom: 25 },
   separatorError: { backgroundColor: AppColors.accent, marginBottom: 8 },
   fieldError: { color: AppColors.errorTextOnLight, fontFamily: 'DMSans_700Bold', fontSize: 13, lineHeight: 18, marginBottom: 8 },
   titleError: { marginBottom: 17 },
   saveError: { color: AppColors.errorTextOnLight, fontFamily: 'DMSans_700Bold', fontSize: 14, lineHeight: 20, marginBottom: 12 },
   modalSection: { marginBottom: 20 },
-  modalLabel: { color: AppColors.textOnLight, fontFamily: 'DMSans_700Bold', fontSize: 15, marginBottom: 10 },
+  modalLabel: { color: AppColors.textOnPaper, fontFamily: 'DMSans_700Bold', fontSize: 15, marginBottom: 10 },
   datePickerBtn: { backgroundColor: AppColors.surface, borderRadius: 16, flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 16 },
   datePickerText: { fontFamily: 'DMSans_700Bold', color: AppColors.textPrimary, fontSize: 13 },
   modalFooter: { flexDirection: 'row', gap: 10, width: '100%' },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   blockRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
-  blockHint: { fontSize: 13, lineHeight: 18, color: AppColors.surface, fontFamily: 'DMSans_500Medium', marginTop: 10 },
+  blockHint: { fontSize: 13, lineHeight: 18, color: AppColors.textOnPaperMuted, fontFamily: 'DMSans_500Medium', marginTop: 10 },
   footerButton: { flex: 1 },
 });
 
-export default withSheetFrame(CreateEventScreen, AppColors.neutral2);
+export default withSheetFrame(CreateEventScreen, AppColors.paper);

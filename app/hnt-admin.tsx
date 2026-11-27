@@ -316,7 +316,7 @@ export default function HntAdminScreen() {
               value={institutionSearch}
               onChangeText={text => { setInstitutionSearch(text); setInstitutionLimit(INSTITUTIONS_PAGE); }}
               placeholder={t('hntAdmin.buscarInstitucion')}
-              placeholderTextColor="rgba(221,221,226,0.4)"
+              placeholderTextColor={AppColors.placeholder}
               autoCapitalize="none"
               autoCorrect={false}
               style={styles.search}
@@ -466,7 +466,7 @@ export default function HntAdminScreen() {
                       autoCorrect={false}
                       spellCheck={false}
                       placeholder={t('hntAdmin.n123456785Ana')}
-                      placeholderTextColor="rgba(221,221,226,0.35)"
+                      placeholderTextColor={AppColors.placeholder}
                       editable={!importing}
                       style={styles.rosterInput}
                     />

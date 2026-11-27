@@ -205,7 +205,7 @@ function SubmitScreen() {
           value={note}
           onChangeText={text => { setNote(text); setError(null); }}
           placeholder={t('classhall.submit.porEjemploQueParteTe')}
-          placeholderTextColor={AppColors.surfaceMuted}
+          placeholderTextColor={AppColors.placeholderMuted}
           multiline
           maxLength={MAX_NOTE}
           editable={!submitting}

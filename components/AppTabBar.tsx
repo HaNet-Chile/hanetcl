@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { CustomIcon } from '@/components/ui/custom-icon';
-import { AppColors } from '@/constants/design-tokens';
+import { AppColors, AppTheme } from '@/constants/design-tokens';
 import { SPRING_SMOOTH } from '@/constants/motion';
 import { eventBar, useEventBar } from '@/components/events/event-bar-store';
 import { useEventOptions } from '@/components/events/event-options';
@@ -136,7 +136,7 @@ function MotionTab({ active, back = false, icon, label, onPress, onBack }: { act
           <ThemedText numberOfLines={1} maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.motionLabel}>{label}</ThemedText>
         </Animated.View>
         <Animated.View pointerEvents="none" style={[styles.motionBackIcon, backIconStyle]}>
-          <CustomIcon name="chevron-left" size={20} color={AppColors.textOnLight} />
+          <CustomIcon name="chevron-left" size={20} color={AppColors.controlOnActive} />
         </Animated.View>
       </Animated.View>
     </Pressable>
@@ -198,7 +198,7 @@ const CENTER_OUT = new Keyframe({
 export function HanetLogo() {
   return (
     <Svg width="75" height="29" viewBox="0 0 75 29" fill="none">
-      <Path d="M0 0L6.87688 6.43605V13.1403L10.3153 13.5425V8.98366L19.3082 9.78816V19.1741L10.3153 19.9786V15.4197L6.87688 15.822V22.5262L0 28.9622V0Z" fill="#D9D9D9" />
+      <Path d="M0 0L6.87688 6.43605V13.1403L10.3153 13.5425V8.98366L19.3082 9.78816V19.1741L10.3153 19.9786V15.4197L6.87688 15.822V22.5262L0 28.9622V0Z" fill={AppColors.neutral3} />
       <Path d="M0 0L6.87688 6.43605V13.1403L10.3153 13.5425V8.98366L19.3082 9.78816V19.1741L10.3153 19.9786V15.4197L6.87688 15.822V22.5262L0 28.9622V0Z" fill={AppColors.accent} />
       <Path d="M35.8767 20.9172V7.40146H37.8075V20.9172H35.8767ZM27.2846 20.9172V7.40146H29.2154V20.9172H27.2846ZM28.8871 14.8158V13.2325H36.2822V14.8158H28.8871Z" fill={AppColors.textPrimary} />
       <Path d="M42.0633 21.1489C41.291 21.1489 40.6474 21.0201 40.1325 20.7627C39.6305 20.4924 39.2507 20.132 38.9933 19.6814C38.7487 19.2309 38.6265 18.7418 38.6265 18.214C38.6265 17.5833 38.7874 17.0427 39.1092 16.5921C39.4438 16.1416 39.9201 15.7941 40.538 15.5495C41.1687 15.3049 41.9217 15.1826 42.797 15.1826H45.3264C45.3264 14.6034 45.2363 14.1271 45.0561 13.7538C44.8887 13.3806 44.6377 13.1038 44.3031 12.9236C43.9684 12.7305 43.5629 12.634 43.0866 12.634C42.4945 12.634 41.9796 12.782 41.542 13.0781C41.1172 13.3612 40.8598 13.8053 40.7697 14.4103H38.8388C38.9161 13.7024 39.1478 13.1102 39.5339 12.634C39.9201 12.1448 40.4221 11.7715 41.04 11.5141C41.6578 11.2438 42.3401 11.1086 43.0866 11.1086C44.0006 11.1086 44.7664 11.2695 45.3843 11.5913C46.0022 11.9131 46.4656 12.3701 46.7745 12.9622C47.0963 13.5415 47.2572 14.2301 47.2572 15.0282V20.9172H45.6353L45.4422 19.3146H45.3843C45.217 19.6107 45.0175 19.8745 44.7858 20.1062C44.5669 20.3251 44.3159 20.5117 44.0327 20.6662C43.7495 20.8206 43.4406 20.9365 43.1059 21.0137C42.7841 21.1038 42.4366 21.1489 42.0633 21.1489ZM42.5074 19.5849C42.945 19.5849 43.3312 19.5012 43.6659 19.3339C44.0134 19.1666 44.3031 18.9413 44.5347 18.6581C44.7793 18.3621 44.9595 18.0338 45.0754 17.6734C45.2041 17.313 45.2749 16.9397 45.2878 16.5535H42.9901C42.4237 16.5535 41.9668 16.6179 41.6192 16.7466C41.2845 16.8753 41.04 17.0555 40.8855 17.2872C40.731 17.5189 40.6538 17.7892 40.6538 18.0982C40.6538 18.3942 40.7246 18.6581 40.8662 18.8898C41.0207 19.1086 41.2331 19.2824 41.5034 19.4111C41.7866 19.527 42.1212 19.5849 42.5074 19.5849Z" fill={AppColors.textPrimary} />
@@ -416,7 +416,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
         search.onOpen();
       }}
     >
-      <CustomIcon name="search" size={20} color={AppColors.textOnLight} />
+      <CustomIcon name="search" size={20} color={AppColors.controlOnActive} />
       <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.searchText}>{t('components.appTabBar.buscar')}</ThemedText>
     </Pressable>
   ) : null;
@@ -439,7 +439,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
           ? { colorScheme: 'dark', glassEffectStyle: 'regular', isInteractive: true }
           : {
               intensity: 60,
-              tint: 'systemUltraThinMaterialDark',
+              tint: AppTheme.blurTint,
               ...(Platform.OS === 'android' ? { blurMethod: 'dimezisBlurView' } : {}),
             })}
         style={styles.tabBarContainer}
@@ -456,7 +456,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
               {panel.content}
             </Animated.View>
             {Platform.OS === 'ios' && !reduceMotion && (
-              <AnimatedBlurView pointerEvents="none" tint="systemUltraThinMaterialDark" animatedProps={panelBlurProps} style={StyleSheet.absoluteFill} />
+              <AnimatedBlurView pointerEvents="none" tint={AppTheme.blurTint} animatedProps={panelBlurProps} style={StyleSheet.absoluteFill} />
             )}
           </View>
         )}
@@ -471,7 +471,7 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
               style={({ pressed }) => [styles.backButton, styles.backButtonLabeled, pressed && styles.motionPressPressed]}
               onPress={onBack}
             >
-              <CustomIcon name="chevron-left" size={20} color={AppColors.textOnLight} />
+              <CustomIcon name="chevron-left" size={20} color={AppColors.controlOnActive} />
               <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.createText}>{t('common.volver')}</ThemedText>
             </Pressable>
           ) : null) : (
@@ -499,14 +499,14 @@ export function AppTabBar({ onBack, onHome, onProfile, active = null, center, co
 
         {search && (
           <Animated.View style={[styles.centerPill, styles.searchOpen, searchStyle]} pointerEvents={open ? 'auto' : 'none'}>
-            <CustomIcon name="search" size={20} color={AppColors.textOnLight} />
+            <CustomIcon name="search" size={20} color={AppColors.controlOnActive} />
             <Animated.View style={[styles.searchFieldWrap, fieldStyle]}>
               <TextInput
                 ref={input}
                 value={search.value}
                 onChangeText={search.onChangeText}
                 placeholder={search.placeholder}
-                placeholderTextColor="rgba(40, 40, 41, 0.6)"
+                placeholderTextColor={AppColors.placeholderOnControl}
                 selectionColor={AppColors.accent}
                 returnKeyType="search"
                 autoCorrect={false}
@@ -571,7 +571,7 @@ function VerbsDonePill({ onPress }: { onPress: () => void }) {
         onPress();
       }}
     >
-      <Ionicons name="checkmark" size={18} color={AppColors.textOnLight} />
+      <Ionicons name="checkmark" size={18} color={AppColors.controlOnActive} />
       <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.createText}>{none ? t('common.listo') : t('components.appTabBar.listoCountvalue', { countValue: count })}</ThemedText>
     </Pressable>
   );
@@ -644,7 +644,7 @@ export function GlobalTabBar() {
         style={({ pressed }) => [styles.centerPill, styles.optionsPill, none && styles.pillDisabled, pressed && styles.motionPressPressed]}
         onPress={options.open}
       >
-        <CustomIcon name="tag" size={18} color={AppColors.textOnLight} />
+        <CustomIcon name="tag" size={18} color={AppColors.controlOnActive} />
         <ThemedText maxFontSizeMultiplier={TAB_TEXT_MAX_SCALE} style={styles.createText}>{t('components.appTabBar.opciones')}</ThemedText>
       </Pressable>
     );
@@ -725,8 +725,8 @@ const styles = StyleSheet.create({
     // flatten the fallback into an opaque dark surface.
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    boxShadow: '0px 10px 20px rgba(0, 0, 0, 0.3)',
+    borderColor: AppColors.glassBorder,
+    boxShadow: AppTheme.floatShadow,
     elevation: 8,
   },
   // As wide as the card: an open panel spreads the controls to its edges.
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: BAR_HEIGHT - 2,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: AppColors.glassBorder,
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 999,
-    backgroundColor: 'rgba(40, 40, 41, 0.12)',
+    backgroundColor: AppColors.onControlOverlay,
   },
   searchText: {
     color: AppColors.controlOnActive,
@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
   },
   createText: {
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
     fontFamily: 'DMSans_700Bold',
     fontSize: 14,
   },

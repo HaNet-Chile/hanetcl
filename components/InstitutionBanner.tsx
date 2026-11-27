@@ -102,6 +102,7 @@ const styles = StyleSheet.create({
     color: AppColors.textPrimary,
   },
   titleOverPhoto: {
+    color: AppColors.textOnDark,
     textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 5,

@@ -4,6 +4,7 @@ import { Platform, StyleSheet, type ColorValue } from 'react-native';
 import Animated, { withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 
 import { EASE_OUT_CUBIC, SPRING_SMOOTH } from '@/constants/motion';
+import { AppTheme } from '@/constants/design-tokens';
 
 /**
  * Liquid Glass (iOS 26 and later). Everywhere else (Android, the web, older
@@ -44,7 +45,7 @@ export function GlassFill({ radius, tintColor }: FillProps) {
     <GlassView
       pointerEvents="none"
       glassEffectStyle="regular"
-      colorScheme="dark"
+      colorScheme={AppTheme.scheme}
       tintColor={tintColor}
       style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
     />

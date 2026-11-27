@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   bannerButtonText: {
     ...AppType.headline,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   pill: {
     height: 22,

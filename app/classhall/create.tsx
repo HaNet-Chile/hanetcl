@@ -154,7 +154,7 @@ function CreateHallScreen() {
             value={otherSubject}
             onChangeText={(text) => { setOtherSubject(text); setError(null); }}
             placeholder={t('classhall.create.tallerDeRobotica')}
-            placeholderTextColor={AppColors.surfaceMuted}
+            placeholderTextColor={AppColors.placeholderMuted}
             maxLength={60}
             autoFocus
             editable={!submitting}

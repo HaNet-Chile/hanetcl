@@ -1,4 +1,5 @@
 import { useSecretTaps, VersionEasterEgg } from '@/components/settings/version-easter-egg';
+import { AppearanceSetting } from '@/components/settings/appearance-setting';
 import { HomeCalendarSetting } from '@/components/settings/home-calendar-setting';
 import { MorningTimeRow, morningLabel } from '@/components/settings/morning-time-row';
 import { SettingsGroup, SettingsLinkRow, SettingsNote, SettingsToggleRow } from '@/components/settings/settings-list';
@@ -386,6 +387,8 @@ export default function SettingsScreen() {
                   disabled={savingLock || !gradesLock.ready || !lockAvailable}
                 />
               </SettingsGroup>
+
+              <AppearanceSetting />
 
               <View style={styles.block}>
                 <ThemedText accessibilityRole="header" style={styles.groupTitle}>{t('settings.iconoDeLaApp')}</ThemedText>

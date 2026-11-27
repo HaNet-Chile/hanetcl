@@ -403,13 +403,13 @@ const styles = StyleSheet.create({
     fontFamily: 'DMSans_700Bold',
     fontSize: 13,
     lineHeight: 18,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   feedbackText: {
     fontFamily: 'DMSans_400Regular',
     fontSize: 14,
     lineHeight: 21,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   textButton: {
     alignSelf: 'center',

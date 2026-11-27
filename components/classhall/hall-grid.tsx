@@ -72,7 +72,7 @@ export function WideHallCard({ hall, next, now, onOpen }: { hall: Hall; next: st
             <ThemedText style={styles.nowText}>{t('common.ahora')}</ThemedText>
           </View>
         )}
-        <View style={styles.icon}><Ionicons name={subjectIcon(hall.subject)} size={22} color={AppColors.textOnLight} /></View>
+        <View style={styles.icon}><Ionicons name={subjectIcon(hall.subject)} size={22} color={AppColors.controlOnActive} /></View>
       </View>
       <View style={styles.body}>
         <ThemedText numberOfLines={1} style={styles.subject}>{hall.subject}</ThemedText>

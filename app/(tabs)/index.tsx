@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   },
   home: {
     flex: 1,
-    backgroundColor: AppColors.textOnLight,
+    backgroundColor: AppColors.canvas,
   },
   scrollContent: {
     width: '100%',

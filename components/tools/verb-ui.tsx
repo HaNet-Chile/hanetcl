@@ -70,7 +70,7 @@ export function VerbAnswerField({ ref, label, state = 'idle', style, onFocus, on
           autoComplete="off"
           textContentType="none"
           importantForAutofill="no"
-          placeholderTextColor={AppColors.surfaceMuted}
+          placeholderTextColor={AppColors.placeholderMuted}
           selectionColor={AppColors.accent}
           {...props}
           onFocus={event => { setFocused(true); onFocus?.(event); }}

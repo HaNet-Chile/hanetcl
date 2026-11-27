@@ -1,4 +1,4 @@
-import { AppColors, AppType } from '@/constants/design-tokens';
+import { AppColors, AppTheme, AppType } from '@/constants/design-tokens';
 import { APP_VERSION_LABEL, APP_VERSION_NUMBER } from '@/constants/app-version';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -93,7 +93,8 @@ const styles = StyleSheet.create({
   },
   titleText: {
     ...AppType.title3,
-    color: AppColors.textSecondary,
+    // Full black in the light theme; the dark one keeps its soft white.
+    color: AppTheme.scheme === 'light' ? AppColors.textPrimary : AppColors.textSecondary,
   },
   // Raised like an exponent: small, and near 0 tracking as small text wants.
   version: {

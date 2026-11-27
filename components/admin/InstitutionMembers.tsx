@@ -186,7 +186,7 @@ export function InstitutionMembers({ institutionId, institutionName, currentUid 
           value={search}
           onChangeText={text => { setSearch(text); setVisibleRows(PAGE_ROWS); }}
           placeholder={t('components.admin.institutionMembers.buscarPorNombreCursoO')}
-          placeholderTextColor="rgba(221,221,226,0.4)"
+          placeholderTextColor={AppColors.placeholder}
           autoCapitalize="none"
           autoCorrect={false}
           style={styles.search}

@@ -208,7 +208,7 @@ function ResultScreen() {
                 value={manual[alliance.id] ?? ''}
                 onChangeText={text => { setError(null); setManual(current => ({ ...current, [alliance.id]: digitsOnly(text) })); }}
                 placeholder="0"
-                placeholderTextColor={AppColors.surfaceMuted}
+                placeholderTextColor={AppColors.placeholderMuted}
                 keyboardType="number-pad"
                 editable={!submitting}
                 selectionColor={AppColors.accent}
@@ -239,7 +239,7 @@ function CountRow({ label, detail, value, onChange, disabled }: { label: string;
         value={value}
         onChangeText={onChange}
         placeholder="0"
-        placeholderTextColor={AppColors.surfaceMuted}
+        placeholderTextColor={AppColors.placeholderMuted}
         keyboardType="number-pad"
         editable={!disabled}
         selectionColor={AppColors.accent}

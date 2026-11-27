@@ -222,7 +222,7 @@ function pagesFor(anniversary: Anniversary, organizer: boolean, now: number): Pa
           <ThemedText style={styles.kicker}>{t('anniversary.welcome.tuOrganizas')}</ThemedText>
           <FlexText key={`org-${active}`} accessibilityRole="header" steps={TITLE_STEPS} style={styles.hero}>{t('anniversary.welcome.todoEstaEnLaBarra')}</FlexText>
           <View style={styles.organizePill}>
-            <Ionicons name="options-outline" size={18} color={AppColors.textOnLight} />
+            <Ionicons name="options-outline" size={18} color={AppColors.controlOnActive} />
             <ThemedText style={styles.organizePillText}>{t('anniversary.welcome.organizar')}</ThemedText>
           </View>
           <ThemedText style={styles.lead}>{t('anniversary.welcome.alCentroDeLaBarra')}</ThemedText>
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   organizePillText: {
     fontFamily: 'DMSans_700Bold',
     fontSize: 15,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
   top: {
     position: 'absolute',
@@ -593,6 +593,6 @@ const styles = StyleSheet.create({
   nextText: {
     ...AppType.headline,
     fontSize: 17,
-    color: AppColors.textOnLight,
+    color: AppColors.controlOnActive,
   },
 });
