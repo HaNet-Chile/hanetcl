@@ -33,7 +33,7 @@ function hashCode(uid, code) {
 
 function build(getAdminApp) {
   // Saves the profile of a freshly created account and reserves its username.
-  const completeSignUp = onCall(async (request) => {
+  const completeSignUp = onCall({ institutionGate: false }, async (request) => {
     const { uid } = requireAuth(request);
     const data = request.data || {};
 
@@ -85,7 +85,7 @@ function build(getAdminApp) {
   });
 
   // Emails a 4-digit code to the account's own address.
-  const sendEmailCode = onCall({ secrets: [RESEND_API_KEY] }, async (request) => {
+  const sendEmailCode = onCall({ institutionGate: false, secrets: [RESEND_API_KEY] }, async (request) => {
     const auth = requireAuth(request);
     const email = auth.token.email;
     if (!email) {
@@ -143,7 +143,7 @@ function build(getAdminApp) {
     return { sent: true, resendInSeconds: RESEND_WAIT_SECONDS };
   });
 
-  const verifyEmailCode = onCall(async (request) => {
+  const verifyEmailCode = onCall({ institutionGate: false }, async (request) => {
     const auth = requireAuth(request);
     const code = typeof request.data?.code === "string" ? request.data.code.trim() : "";
     if (!/^\d{4}$/.test(code)) {

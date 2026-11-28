@@ -5,6 +5,7 @@ const { sendPush } = require("./classhall-notify");
 const { subjectKey } = require("./subjects");
 const { loadChanges, changesForCourse, changeOn, minutesOf: changeMinutes } = require("./day-changes");
 const { weatherFor } = require("./weather");
+const { schoolYearOf } = require("./institutions");
 
 // The course's weekly timetable (Horario) and the morning summary.
 //
@@ -355,12 +356,23 @@ function build(getAdminApp) {
     const changesOf = new Map();
     const weatherOf = new Map();
     const todayDate = chileDay(now).date;
+    const institutionOf = new Map();
+    const institution = async (institutionId) => {
+      if (!institutionOf.has(institutionId)) {
+        institutionOf.set(institutionId, (await identity.collection("institutions").doc(institutionId).get()).data() || {});
+      }
+      return institutionOf.get(institutionId);
+    };
     const institutionWeather = async (institutionId) => {
       if (!weatherOf.has(institutionId)) {
-        const cityId = (await identity.collection("institutions").doc(institutionId).get()).get("cityId");
-        weatherOf.set(institutionId, await weatherFor(cityId, now));
+        weatherOf.set(institutionId, await weatherFor((await institution(institutionId)).cityId, now));
       }
       return weatherOf.get(institutionId);
+    };
+    // Outside the liceo's school year (when it set one) there is no summary.
+    const inSchoolYear = async (institutionId) => {
+      const year = schoolYearOf(await institution(institutionId));
+      return !year || (todayDate >= year.start && todayDate <= year.end);
     };
 
     let sent = 0;
@@ -372,7 +384,7 @@ function build(getAdminApp) {
           // At their own time, not at 7:00 as well.
           return notifications?.morning !== false && (morningTime(notifications?.morningAt) || MORNING_DEFAULT) === slot;
         });
-        if (!wanted.length) continue;
+        if (!wanted.length || !(await inSchoolYear(institutionId))) continue;
         if (!changesOf.has(institutionId)) changesOf.set(institutionId, await loadChanges(getAdminApp, institutionId));
         const change = changeOn(changesOf.get(institutionId), courseId, todayDate);
         const [scheduleDoc, events, weather] = await Promise.all([

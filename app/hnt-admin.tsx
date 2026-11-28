@@ -9,6 +9,8 @@ import { HanetButton } from '@/components/ui/hanet-button';
 import { HanetSelect } from '@/components/ui/hanet-select';
 import { CITIES } from '@/constants/cities';
 import { AppStatusCard } from '@/components/hnt/AppStatusCard';
+import { InstitutionClosureCard } from '@/components/hnt/InstitutionClosureCard';
+import { InstitutionSchoolYearCard } from '@/components/hnt/InstitutionSchoolYearCard';
 import { PushTestCard } from '@/components/hnt/PushTestCard';
 import { AppColors, AppPressed, AppRadii, AppSpacing } from '@/constants/design-tokens';
 import { describeAuthError, ensureClaims, useSession } from '@/services/auth-service';
@@ -22,6 +24,7 @@ import {
   parseRoster,
   rotateInviteCode,
   setInstitutionCity,
+  setInstitutionName,
 } from '@/services/hnt-admin-service';
 import type { AdminInstitution, BrandingKind, RosterImportResult } from '@/services/hnt-admin-service';
 import * as Clipboard from 'expo-clipboard';
@@ -103,6 +106,29 @@ export default function HntAdminScreen() {
       setCityError({ id: institution.id, message: describeAuthError(cityFailure, t('hntAdmin.noPudimosGuardarLaCiudad')) });
     } finally {
       setCityBusy(null);
+    }
+  };
+
+  // Renaming: the short name and the full one; the id stays.
+  const [rename, setRename] = useState<{ institution: AdminInstitution; name: string; fullName: string } | null>(null);
+  const [renaming, setRenaming] = useState(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const openRename = (institution: AdminInstitution) => {
+    setRenameError(null);
+    setRename({ institution, name: institution.name, fullName: institution.fullName });
+  };
+  const saveRename = async () => {
+    if (!rename || renaming) return;
+    setRenaming(true);
+    setRenameError(null);
+    try {
+      const saved = await setInstitutionName(rename.institution.id, rename.name.trim(), rename.fullName.trim());
+      setInstitutions(list => list.map(item => (item.id === rename.institution.id ? { ...item, ...saved } : item)));
+      setRename(null);
+    } catch (renameFailure) {
+      setRenameError(describeAuthError(renameFailure, t('hntAdmin.noPudimosCambiarElNombre')));
+    } finally {
+      setRenaming(false);
     }
   };
 
@@ -357,6 +383,9 @@ export default function HntAdminScreen() {
                 {expanded && (
                 <>
                 {!!institution.fullName && <ThemedText style={styles.muted}>{institution.fullName}</ThemedText>}
+                <Pressable accessibilityRole="button" onPress={() => openRename(institution)} hitSlop={8} style={({ pressed }) => [styles.renameLink, pressed && styles.pressed]}>
+                  <ThemedText style={styles.link}>{t('hntAdmin.cambiarNombre')}</ThemedText>
+                </Pressable>
 
                 {/* Identity shown in Home, the identity link and its emails. */}
                 <View style={styles.branding}>
@@ -416,6 +445,18 @@ export default function HntAdminScreen() {
                     <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{cityError.message}</ThemedText>
                   )}
                 </View>
+
+                {/* HaNet closed for this liceo only, and its school year. */}
+                <InstitutionClosureCard
+                  key={`closure-${institution.id}`}
+                  institution={institution}
+                  onChange={closure => setInstitutions(list => list.map(item => (item.id === institution.id ? { ...item, closure } : item)))}
+                />
+                <InstitutionSchoolYearCard
+                  key={`year-${institution.id}`}
+                  institution={institution}
+                  onChange={schoolYear => setInstitutions(list => list.map(item => (item.id === institution.id ? { ...item, schoolYear } : item)))}
+                />
 
                 <View style={styles.facts}>
                   <ThemedText style={styles.fact}>
@@ -582,6 +623,24 @@ export default function HntAdminScreen() {
           </>
         )}
       </HanetDialog>
+      <HanetDialog
+        visible={!!rename}
+        onRequestClose={() => { if (!renaming) setRename(null); }}
+        title={t('hntAdmin.cambiarNombre')}
+        body={t('hntAdmin.seVeEnElInicio2')}
+      >
+        {!!rename && (
+          <>
+            <HanetField label={t('hntAdmin.nombreCorto')} value={rename.name} onChangeText={value => setRename(current => current && { ...current, name: value })} placeholder={t('hntAdmin.lchTemuco')} editable={!renaming} />
+            <HanetField label={t('hntAdmin.nombreCompletoOpcional')} value={rename.fullName} onChangeText={value => setRename(current => current && { ...current, fullName: value })} placeholder={t('hntAdmin.liceoCamiloHenriquezDeTemuco')} editable={!renaming} />
+            {!!renameError && <ThemedText accessibilityLiveRegion="assertive" style={styles.error}>{renameError}</ThemedText>}
+            <HanetDialogActions>
+              <HanetButton label={t('common.cancelar')} variant="surface" onPress={() => setRename(null)} disabled={renaming} style={dialogStyles.action} />
+              <HanetButton label={renaming ? t('common.guardando') : t('common.guardar')} onPress={() => void saveRename()} disabled={renaming || rename.name.trim().length < 2} style={dialogStyles.action} />
+            </HanetDialogActions>
+          </>
+        )}
+      </HanetDialog>
       {discardDialog}
     </FrostedScreen>
   );
@@ -691,6 +750,9 @@ const styles = StyleSheet.create({
   brandingRemove: {
     flexDirection: 'row',
     gap: AppSpacing.xl,
+  },
+  renameLink: {
+    alignSelf: 'flex-start',
   },
   link: {
     fontFamily: 'DMSans_600SemiBold',

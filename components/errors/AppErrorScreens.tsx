@@ -184,6 +184,11 @@ function backAt(until: number) {
  */
 export function PausedScreen({ status, onRetry, retrying, signedIn, onDismiss, preview }: RetryProps & { status: AppStatus | null }) {
   const kind = status?.kind ?? 'maintenance';
+  // One liceo closed (services/app-status.ts): its own copy, and the status
+  // page doesn't help there, the liceo does.
+  if (status && typeof status.institutionName === 'string') {
+    return <InstitutionPausedScreen status={status} kind={kind} onRetry={onRetry} retrying={retrying} signedIn={signedIn} onDismiss={onDismiss} preview={preview} />;
+  }
   const titles = {
     maintenance: t('components.errors.appErrorScreens.estamosHaciendoMantencion'),
     incident: t('components.errors.appErrorScreens.algoNoAndaBienEn'),
@@ -213,6 +218,49 @@ export function PausedScreen({ status, onRetry, retrying, signedIn, onDismiss, p
         : signedIn
           ? { label: t('common.cerrarSesion'), onPress: () => endSession(onDismiss, preview) }
           : { label: t('components.errors.appErrorScreens.soyDelEquipo'), onPress: onDismiss }}
+    />
+  );
+}
+
+// When the liceo opens again: the time today, or the day and time.
+function opensAt(until: number) {
+  const date = new Date(until);
+  const time = date.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  if (date.toDateString() === new Date().toDateString()) return t('components.errors.appErrorScreens.abreHoyALasTime', { time });
+  const day = date.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
+  return t('components.errors.appErrorScreens.abreElDayALas', { day, time });
+}
+
+/**
+ * HaNet closed for one liceo only, for instance at the start of the year
+ * while its rosters and courses get ready. Same card as PausedScreen; the
+ * liceo's name in the copy, the real opening time if it set one.
+ */
+function InstitutionPausedScreen({ status, kind, onRetry, retrying, signedIn, onDismiss, preview }: RetryProps & { status: AppStatus; kind: NonNullable<AppStatus['kind']> }) {
+  const name = status.institutionName || '';
+  const titles = {
+    maintenance: name ? t('components.errors.appErrorScreens.estamosPreparandoHanetEnName', { name }) : t('components.errors.appErrorScreens.estamosPreparandoHanetEnTu'),
+    incident: name ? t('components.errors.appErrorScreens.algoNoAndaBienEn2', { name }) : t('components.errors.appErrorScreens.algoNoAndaBienEn3'),
+    closed: name ? t('components.errors.appErrorScreens.hanetEstaCerradoEnName', { name }) : t('components.errors.appErrorScreens.hanetEstaCerradoEnTu'),
+  };
+  const bodies = {
+    maintenance: t('components.errors.appErrorScreens.tuLiceoEstaDejandoListos'),
+    incident: t('components.errors.appErrorScreens.tuLiceoYaLoEsta'),
+    closed: t('components.errors.appErrorScreens.noTePreocupesLoTuyo2'),
+  };
+  return (
+    <ErrorScreen
+      icon={kind === 'closed' ? ERROR_ICONS.sunset : kind === 'incident' ? ':/' : ERROR_ICONS.server}
+      tone={kind === 'closed' ? 'sunset' : 'accent'}
+      title={titles[kind]}
+      body={status.message || bodies[kind]}
+      note={<>{status.until ? <>{opensAt(status.until)}{' '}</> : null}{t('components.errors.appErrorScreens.siTienesDudasPreguntaEn')}</>}
+      primary={{ label: retrying ? t('components.errors.appErrorScreens.probando') : t('common.reintentar'), onPress: onRetry, disabled: retrying }}
+      secondary={preview
+        ? { label: t('common.volver'), onPress: onDismiss }
+        : signedIn
+          ? { label: t('common.cerrarSesion'), onPress: () => endSession(onDismiss, preview) }
+          : undefined}
     />
   );
 }

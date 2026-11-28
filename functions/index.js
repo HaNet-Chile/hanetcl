@@ -97,7 +97,7 @@ Object.assign(exports, require("./link").build(getAdminApp));
 
 // Creates a pending identity-link request. Approval is intentionally separate
 // so knowing a RUT is never enough to claim an academic identity.
-exports.requestIdentityLink = onCall(async (request) => {
+exports.requestIdentityLink = onCall({ institutionGate: false }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
   }
@@ -150,7 +150,7 @@ const CLAIM_ROLES = ["Estudiante", "Directiva", "CEE", "Profesor", "Admin", "HNT
 // Copies role and courseId from users/{uid} into the caller's token. The
 // hn-calendar rules cannot read hn-enrollmentdata, so they rely on these
 // claims; only this backend can set them.
-exports.syncMyClaims = onCall(async (request) => {
+exports.syncMyClaims = onCall({ institutionGate: false }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
   }

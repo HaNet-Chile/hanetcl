@@ -3,7 +3,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 const { onCall, HttpsError } = require("./regions");
 const { recordInbox } = require("./inbox");
-const { appClosed } = require("./app-status");
+const { appClosed, withoutClosedInstitutions } = require("./app-status");
 
 // ClassHall's push notifications, sent through Expo's push service: a new
 // announcement, task or material reaches the Hall's students, the day before
@@ -175,6 +175,16 @@ async function sendPush(getAdminApp, tokens, message, { evenWhenClosed = false }
   if (!evenWhenClosed && await appClosed()) {
     return tokens.map(() => ({ status: "error", message: "HaNet está cerrado", details: { error: "AppClosed" } }));
   }
+  // Nor the members of a liceo closed for now (its Admin still is).
+  if (!evenWhenClosed) {
+    const open = new Set((await withoutClosedInstitutions(tokens)).map(item => item.id));
+    if (open.size < tokens.length) {
+      const held = { status: "error", message: "HaNet está cerrado en el liceo", details: { error: "InstitutionClosed" } };
+      const sent = await sendPush(getAdminApp, tokens.filter(item => open.has(item.id)), message, { evenWhenClosed: true });
+      let next = 0;
+      return tokens.map(item => (open.has(item.id) ? sent[next++] : held));
+    }
+  }
   const db = identityDb(getAdminApp);
   const web = [];
   const phones = [];
@@ -247,7 +257,7 @@ async function notifyHall(getAdminApp, { kind, hallId, hall, item, onlyUids }) {
 function build(getAdminApp) {
   // The app registers the device's token after the person allows
   // notifications, and again on each start (tokens can change).
-  const registerPushToken = onCall({ invoker: "public" }, async (request) => {
+  const registerPushToken = onCall({ institutionGate: false, invoker: "public" }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
     const token = typeof request.data?.token === "string" ? request.data.token.trim() : "";
     const platform = ["ios", "android", "web"].includes(request.data?.platform) ? request.data.platform : "unknown";
@@ -273,7 +283,7 @@ function build(getAdminApp) {
   });
 
   // Signing out takes the device off the account.
-  const unregisterPushToken = onCall({ invoker: "public" }, async (request) => {
+  const unregisterPushToken = onCall({ institutionGate: false, invoker: "public" }, async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
     const token = typeof request.data?.token === "string" ? request.data.token.trim() : "";
     if (!EXPO_TOKEN_PATTERN.test(token) && !WEB_TOKEN_PATTERN.test(token)) return { ok: true };

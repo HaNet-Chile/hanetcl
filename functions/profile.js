@@ -83,7 +83,7 @@ function build(getAdminApp) {
   // Everything the profile screen shows about the signed-in account. The
   // institution document also holds its invitation hash, so the client
   // cannot read it directly and gets the name from here instead.
-  const getMyProfile = onCall(async (request) => {
+  const getMyProfile = onCall({ institutionGate: false }, async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
     }

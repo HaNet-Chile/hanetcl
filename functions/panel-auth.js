@@ -183,7 +183,7 @@ function build(getAdminApp) {
   // What the panel needs to know right after the password: whether this
   // sign-in already passed the second step, which methods the person has,
   // and their institution (for the Administración area).
-  const getPanelAuth = onCall(async (request) => {
+  const getPanelAuth = onCall({ institutionGate: false }, async (request) => {
     const auth = requirePanelRole(request);
     const db = identityDb(getAdminApp);
     const now = Date.now();
@@ -212,7 +212,7 @@ function build(getAdminApp) {
   });
 
   // Emails a 6-digit code to the account's own address.
-  const sendPanelEmailCode = onCall({ secrets: [RESEND_API_KEY] }, async (request) => {
+  const sendPanelEmailCode = onCall({ institutionGate: false, secrets: [RESEND_API_KEY] }, async (request) => {
     const auth = requirePanelRole(request);
     const email = auth.token.email;
     if (!email) throw new HttpsError("failed-precondition", "Tu cuenta no tiene un correo asociado.");
@@ -258,7 +258,7 @@ function build(getAdminApp) {
   });
 
   // Checks the second step for this sign-in: method "email", "totp" or "backup".
-  const verifyPanelSignIn = onCall(async (request) => {
+  const verifyPanelSignIn = onCall({ institutionGate: false }, async (request) => {
     const auth = requirePanelRole(request);
     const method = request.data?.method;
     if (!["email", "totp", "backup"].includes(method)) {
@@ -357,7 +357,7 @@ function build(getAdminApp) {
 
   // Starts setting up an authenticator app. Only from a sign-in that already
   // passed the second step, so a stolen password cannot add its own app.
-  const startPanelTotp = onCall(async (request) => {
+  const startPanelTotp = onCall({ institutionGate: false }, async (request) => {
     const auth = await requirePanelSession(getAdminApp, request);
     const secret = base32Encode(crypto.randomBytes(20));
     await panelRef(getAdminApp, auth.uid).set({
@@ -370,7 +370,7 @@ function build(getAdminApp) {
   });
 
   // The first code from the app confirms it. Returns the backup codes, shown once.
-  const confirmPanelTotp = onCall(async (request) => {
+  const confirmPanelTotp = onCall({ institutionGate: false }, async (request) => {
     const auth = await requirePanelSession(getAdminApp, request);
     const code = cleanDigits(request.data?.code);
     const ref = panelRef(getAdminApp, auth.uid);
@@ -400,7 +400,7 @@ function build(getAdminApp) {
   });
 
   // Removes the authenticator app and its backup codes. The email code stays.
-  const disablePanelTotp = onCall(async (request) => {
+  const disablePanelTotp = onCall({ institutionGate: false }, async (request) => {
     const auth = await requirePanelSession(getAdminApp, request);
     await panelRef(getAdminApp, auth.uid).set({
       totp: FieldValue.delete(),
@@ -416,7 +416,7 @@ function build(getAdminApp) {
   });
 
   // New backup codes; the old ones stop working.
-  const newPanelBackupCodes = onCall(async (request) => {
+  const newPanelBackupCodes = onCall({ institutionGate: false }, async (request) => {
     const auth = await requirePanelSession(getAdminApp, request);
     const ref = panelRef(getAdminApp, auth.uid);
     const data = (await ref.get()).data() || {};
@@ -429,7 +429,7 @@ function build(getAdminApp) {
   });
 
   // On "Cerrar sesión": this sign-in stops counting as verified.
-  const endPanelSession = onCall(async (request) => {
+  const endPanelSession = onCall({ institutionGate: false }, async (request) => {
     const auth = requirePanelRole(request);
     const ref = panelRef(getAdminApp, auth.uid);
     const authTime = authTimeOf(auth);

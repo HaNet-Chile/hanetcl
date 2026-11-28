@@ -1,14 +1,17 @@
 {
   "releases": [
     {
-      "version": "0.17.1-beta",
+      "version": "0.18.0-beta",
       "date": "2026-11-27",
-      "title": "",
+      "title": "Año escolar y cierre por liceo",
       "items": [
-        "Si tu liceo te nombró en un rol (por ejemplo, administración o docente) antes de que te unieras, HaNet te lo da apenas te vinculas con tu correo institucional."
+        "Tu liceo ahora puede cerrar HaNet por un tiempo, por ejemplo al empezar el año mientras deja listos los cursos y las nóminas. Mientras tanto ves una pantalla que te avisa cuándo vuelve a abrir.",
+        "Tu liceo puede poner las fechas de su año escolar. Notas usa esas fechas para separar los semestres.",
+        "Fuera del año escolar no te llega el resumen del día."
       ],
       "highlights": [
-        "Si tu liceo ya te nombró en un rol, lo recibes apenas te unes."
+        "Tu liceo puede cerrar HaNet por un tiempo mientras prepara el año, y te avisa cuándo vuelve.",
+        "Notas separa los semestres con las fechas del año escolar de tu liceo."
       ]
     },
     {
