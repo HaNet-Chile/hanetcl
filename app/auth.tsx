@@ -4,14 +4,17 @@ import { OnboardingProgress } from '@/components/OnboardingProgress';
 import { HanetField, HanetSegmented } from '@/components/ui/hanet-auth-fields';
 import { AppColors, AppPressed, AppRadii, AppSpacing, AppTouch } from '@/constants/design-tokens';
 import {
+  completeProfile,
   describeAuthError,
   getOnboardingStep,
   resetPassword,
   routeForStep,
   signInWithEmail,
   signUpWithEmail,
+  suggestUsername,
   useSession,
 } from '@/services/auth-service';
+import { GoogleCancelled, continueWithGoogle, forgetPendingGoogle, googleAccountOf, pendingGoogleEmail } from '@/services/google-sign-in';
 import type { Treatment } from '@/services/auth-service';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -38,7 +41,8 @@ const ICONS = {
 
 const TERMS_URL = 'https://id.hanet.muxp.art/terminos';
 
-type Mode = 'login' | 'signup';
+// 'profile': signed in (with Google) but without a HaNet ID yet.
+type Mode = 'login' | 'signup' | 'profile';
 
 const USERNAME_PATTERN = /^[a-z0-9._]{3,24}$/;
 const MIN_PASSWORD = 8;
@@ -48,7 +52,7 @@ export default function AuthScreen() {
   // Beside the brand panel on a wide web window, the form sits in the middle.
   const wideEntry = useEntryAsideWidth() > 0;
   const router = useRouter();
-  const { user } = useSession();
+  const { user, signOut } = useSession();
   const [mode, setMode] = useState<Mode>('login');
 
   const [fullName, setFullName] = useState('');
@@ -60,6 +64,9 @@ export default function AuthScreen() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  // The address of a Google account to add after the password, if any.
+  const [pendingGoogle, setPendingGoogle] = useState<string | null>(() => pendingGoogleEmail());
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
@@ -86,7 +93,19 @@ export default function AuthScreen() {
     if (!user || submitting.current) return;
     let active = true;
     getOnboardingStep(user)
-      .then(step => { if (active) router.replace(routeForStep(step)); })
+      .then(step => {
+        if (!active) return;
+        if (step !== 'profile') {
+          router.replace(routeForStep(step));
+          return;
+        }
+        // Here already: the form asks only for what the account lacks.
+        setMode('profile');
+        setError(null);
+        setNotice(null);
+        setFullName(current => current || user.displayName || '');
+        setUsername(current => current || suggestUsername(user.email));
+      })
       .catch(() => { if (active) router.replace('/(tabs)'); });
     return () => { active = false; };
   }, [router, user]);
@@ -101,6 +120,8 @@ export default function AuthScreen() {
 
   const changeMode = (next: Mode) => {
     setMode(next);
+    forgetPendingGoogle();
+    setPendingGoogle(null);
     setError(null);
     setNotice(null);
     setShowErrors(false);
@@ -117,7 +138,9 @@ export default function AuthScreen() {
 
     setLoading(true);
     try {
+      // With a Google account waiting, it is added right after.
       await signInWithEmail(email, password);
+      setPendingGoogle(null);
     } catch (authError) {
       // A HaNet ID blocked from the HNT panel gets the blocked screen, with the appeal.
       if (isBlockedError(authError)) showAppError('blocked');
@@ -183,7 +206,71 @@ export default function AuthScreen() {
     }
   };
 
-  const isSignUp = mode === 'signup';
+  const handleGoogle = async () => {
+    setError(null);
+    setNotice(null);
+    setGoogleBusy(true);
+    try {
+      const result = await continueWithGoogle();
+      if (result.status === 'needs-password') {
+        setMode('login');
+        setShowErrors(false);
+        setTouched({});
+        setPendingGoogle(result.email ?? '');
+        if (result.email) setEmail(result.email);
+        setPassword('');
+      }
+      // Signed in: the effect above takes the account where it goes.
+    } catch (googleError) {
+      if (googleError instanceof GoogleCancelled) return;
+      if (isBlockedError(googleError)) showAppError('blocked');
+      setError(describeAuthError(googleError, t('auth.noPudimosEntrarConGoogle')));
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
+
+  const handleProfile = async () => {
+    setError(null);
+    setShowErrors(true);
+    if (invalid.fullName || invalid.username) {
+      setError(invalid.fullName ? t('auth.escribeTusNombresYApellidos') : t('auth.elHanetIdDebeTener'));
+      return;
+    }
+    if (!acceptedTerms) {
+      setError(t('auth.debesAceptarLosTerminosY'));
+      return;
+    }
+    if (!user) return;
+
+    setLoading(true);
+    submitting.current = true;
+    try {
+      await completeProfile({ fullName: fullName.trim(), username: cleanUsername, treatment, acceptedTerms });
+      router.replace(routeForStep(await getOnboardingStep(user).catch(() => 'join-beta' as const)));
+    } catch (profileError) {
+      setError(describeAuthError(profileError, t('auth.noPudimosCrearTuCuenta')));
+    } finally {
+      submitting.current = false;
+      setLoading(false);
+    }
+  };
+
+  // Another account: the one that came in leaves without a HaNet ID.
+  const switchAccount = async () => {
+    setLoading(true);
+    try {
+      await signOut();
+    } finally {
+      setLoading(false);
+      changeMode('login');
+    }
+  };
+
+  const isProfile = mode === 'profile';
+  const isSignUp = mode === 'signup' || isProfile;
+  const profileEmail = googleAccountOf(user)?.email ?? user?.email ?? null;
+  const busy = loading || googleBusy;
 
   const passwordToggle = (
     <Pressable
@@ -206,6 +293,23 @@ export default function AuthScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.card}>
+            {isProfile ? (
+              <Animated.View key="profile-account" entering={appear} exiting={vanish} layout={moveLayout} style={styles.profileAccount}>
+                <View style={styles.accountPill}>
+                  {!!googleAccountOf(user) && <Image source={ICONS.google} style={styles.smallIcon} contentFit="contain" />}
+                  <ThemedText numberOfLines={1} style={styles.accountPillText}>{profileEmail}</ThemedText>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => void switchAccount()}
+                  disabled={busy}
+                  hitSlop={8}
+                  style={({ pressed }) => pressed && styles.pressed}
+                >
+                  <ThemedText style={styles.forgotText}>{t('joinBeta.usarOtraCuenta')}</ThemedText>
+                </Pressable>
+              </Animated.View>
+            ) : (
             <Animated.View layout={moveLayout} style={styles.tabs}>
               <HanetSegmented
                 accessibilityLabel={t('auth.tipoDeCuenta')}
@@ -217,15 +321,27 @@ export default function AuthScreen() {
                 ]}
               />
             </Animated.View>
+            )}
 
             {isSignUp && (
               <Animated.View key="progress" entering={appear} exiting={vanish} layout={moveLayout}>
                 <OnboardingProgress step={1} />
               </Animated.View>
             )}
-            {!isSignUp && (
+            {!isSignUp && pendingGoogle === null && (
               <Animated.View key="welcome" entering={appear} exiting={vanish} layout={moveLayout}>
                 <ThemedText style={styles.welcome}>{t('auth.queBienQueVuelves')}</ThemedText>
+              </Animated.View>
+            )}
+            {!isSignUp && pendingGoogle !== null && (
+              <Animated.View key="pending-google" entering={appear} exiting={vanish} layout={moveLayout} style={styles.pendingGoogle}>
+                <ThemedText accessibilityRole="header" style={styles.pendingTitle}>{t('auth.yaTienesUnHanetId')}</ThemedText>
+                <ThemedText style={styles.pendingText}>{t('auth.entraConTuContrasenaUna')}</ThemedText>
+              </Animated.View>
+            )}
+            {isProfile && (
+              <Animated.View key="profile-intro" entering={appear} exiting={vanish} layout={moveLayout}>
+                <ThemedText style={styles.pendingText}>{t('auth.completaTuHanetIdTu')}</ThemedText>
               </Animated.View>
             )}
 
@@ -259,7 +375,7 @@ export default function AuthScreen() {
                   autoComplete="username-new"
                   textContentType="username"
                   returnKeyType="next"
-                  onSubmitEditing={() => emailRef.current?.focus()}
+                  onSubmitEditing={() => { if (!isProfile) emailRef.current?.focus(); }}
                   leading={<Image source={ICONS.at} style={styles.icon} contentFit="contain" />}
                   onBlur={() => leave('username')}
                   invalid={flag('username')}
@@ -269,6 +385,7 @@ export default function AuthScreen() {
               </Animated.View>
             )}
 
+            {!isProfile && (<>
             <Animated.View layout={moveLayout}>
             <HanetField
               ref={emailRef}
@@ -308,8 +425,9 @@ export default function AuthScreen() {
               editable={!loading}
             />
             </Animated.View>
+            </>)}
 
-            {isSignUp && (
+            {isSignUp && !isProfile && (
               <Animated.View key="password-hint" entering={appear} exiting={vanish} layout={moveLayout} style={styles.hintWrap}>
                 <ThemedText style={styles.hint}>{t('auth.minimoMinpasswordCaracteres', { minPassword: MIN_PASSWORD })}</ThemedText>
               </Animated.View>
@@ -386,36 +504,42 @@ export default function AuthScreen() {
             <Animated.View layout={moveLayout}>
             <Pressable
               accessibilityRole="button"
-              accessibilityState={{ disabled: loading, busy: loading }}
-              disabled={loading}
-              onPress={isSignUp ? handleSignUp : handleLogin}
+              accessibilityState={{ disabled: busy, busy: loading }}
+              disabled={busy}
+              onPress={isProfile ? handleProfile : isSignUp ? handleSignUp : handleLogin}
               style={({ pressed }) => [styles.submit, pressed && styles.pressed, loading && styles.submitBusy]}
             >
               <ThemedText style={styles.submitText}>
-                {loading ? (isSignUp ? t('auth.creandoTuCuenta') : t('auth.entrando')) : isSignUp ? t('auth.crearCuentaHanetId') : t('auth.iniciemos')}
+                {loading
+                  ? (isSignUp ? t('auth.creandoTuCuenta') : t('auth.entrando'))
+                  : isProfile ? t('tickets.detail.continuar')
+                    : isSignUp ? t('auth.crearCuentaHanetId')
+                      : pendingGoogle !== null ? t('auth.entrarYVincularGoogle') : t('auth.iniciemos')}
               </ThemedText>
               {!loading && <Image source={ICONS.arrow} style={styles.icon} contentFit="contain" />}
             </Pressable>
             </Animated.View>
           </View>
 
-          {/* Signing in with Google is paused in auth-service, so it says so. */}
+          {/* Google: the system's secure sheet on the phone, a popup on the web (services/google-sign-in.ts). */}
+          {!isProfile && (
           <Animated.View layout={moveLayout} style={styles.quick}>
             <View>
               <ThemedText style={styles.quickTitle}>{t('auth.otrasFormasDeEntrar')}</ThemedText>
               {isSignUp && <ThemedText style={styles.quickNote}>{t('auth.aceptasLosTerminosYCondiciones')}</ThemedText>}
             </View>
-            <View
-              accessible
+            <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t('auth.continuarConGoogleProximamente')}
-              accessibilityState={{ disabled: true }}
-              style={styles.quickButton}
+              accessibilityState={{ disabled: busy, busy: googleBusy }}
+              disabled={busy}
+              onPress={() => void handleGoogle()}
+              style={({ pressed }) => [styles.quickButton, pressed && styles.pressed, googleBusy && styles.submitBusy]}
             >
               <Image source={ICONS.google} style={styles.icon} contentFit="contain" />
-              <ThemedText style={styles.quickSoon}>{t('common.proximamente')}</ThemedText>
-            </View>
+              <ThemedText style={styles.quickLabel}>{googleBusy ? t('auth.conectandoConGoogle') : t('auth.continuarConGoogle')}</ThemedText>
+            </Pressable>
           </Animated.View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </FrostedScreen>
@@ -469,13 +593,55 @@ const styles = StyleSheet.create({
     borderRadius: AppRadii.pill,
     backgroundColor: AppColors.surface,
   },
-  quickSoon: {
+  quickLabel: {
     fontFamily: 'DMSans_600SemiBold',
-    fontSize: 14,
+    fontSize: 15,
     lineHeight: 21,
     letterSpacing: -0.35,
+    color: AppColors.textPrimary,
+  },
+  smallIcon: {
+    width: 16,
+    height: 16,
+  },
+  profileAccount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: AppSpacing.md,
+  },
+  accountPill: {
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: AppSpacing.sm,
+    paddingHorizontal: AppSpacing.md,
+    paddingVertical: AppSpacing.sm,
+    borderRadius: AppRadii.pill,
+    backgroundColor: AppColors.surface,
+  },
+  accountPillText: {
+    flexShrink: 1,
+    fontFamily: 'DMSans_600SemiBold',
+    fontSize: 13,
+    lineHeight: 18,
     color: AppColors.textSecondary,
-    opacity: 0.7,
+  },
+  pendingGoogle: {
+    gap: AppSpacing.xs,
+  },
+  pendingTitle: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 20,
+    lineHeight: 26,
+    letterSpacing: -0.6,
+    color: AppColors.textPrimary,
+  },
+  pendingText: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 14,
+    lineHeight: 20,
+    color: AppColors.textSecondary,
   },
   card: {
     padding: AppSpacing.xxl,

@@ -382,7 +382,9 @@
     "aceptoLosTerminosYCondiciones": "Acepto los Términos y Condiciones",
     "comoPrefieresQueTeTratemos": "¿Cómo prefieres que te tratemos?",
     "completaElCorreoYLa": "Completa el correo y la contraseña.",
-    "continuarConGoogleProximamente": "Continuar con Google, próximamente",
+    "completaTuHanetIdTu": "Completa tu HaNet ID. Tu correo ya está verificado por Google.",
+    "conectandoConGoogle": "Conectando con Google…",
+    "continuarConGoogle": "Continuar con Google",
     "contrasena": "Contraseña",
     "creandoTuCuenta": "Creando tu cuenta…",
     "crearCuentaHanetId": "Crear cuenta HaNet ID",
@@ -393,7 +395,9 @@
     "el": "Él",
     "elHanetIdDebeTener": "El HaNet ID debe tener entre 3 y 24 letras, números, puntos o guiones bajos.",
     "ella": "Ella",
+    "entraConTuContrasenaUna": "Entra con tu contraseña una vez. Google queda vinculado y la próxima vez entras con un toque.",
     "entrando": "Entrando…",
+    "entrarYVincularGoogle": "Entrar y vincular Google",
     "escribeTuCorreoParaEnviarte": "Escribe tu correo para enviarte el link de recuperación.",
     "escribeTusNombresYApellidos": "Escribe tus nombres y apellidos.",
     "eseCorreoNoPareceValido": "Ese correo no parece válido.",
@@ -407,6 +411,7 @@
     "noDecirloTratoNeutro": "No decirlo, trato neutro",
     "nombresYApellidos": "Nombres y apellidos",
     "noPudimosCrearTuCuenta": "No pudimos crear tu cuenta. Inténtalo nuevamente.",
+    "noPudimosEntrarConGoogle": "No pudimos entrar con Google. Inténtalo de nuevo.",
     "noPudimosEnviarElLink": "No pudimos enviar el link. Inténtalo nuevamente.",
     "noPudimosIniciarSesionIntentalo": "No pudimos iniciar sesión. Inténtalo nuevamente.",
     "ocultarContrasena": "Ocultar contraseña",
@@ -416,7 +421,8 @@
     "teEnviamosUnLinkPara": "Te enviamos un link para cambiar tu contraseña.",
     "terminosYCondiciones": "Términos y Condiciones",
     "tipoDeCuenta": "Tipo de cuenta",
-    "tratamiento": "Tratamiento"
+    "tratamiento": "Tratamiento",
+    "yaTienesUnHanetId": "Ya tienes un HaNet ID con este correo"
   },
   "calendar": {
     "abreElDetalle": "Abre el detalle",
@@ -1593,6 +1599,30 @@
       "deviceRow": {
         "esteDispositivo": "Este dispositivo",
         "ultimaActividadAge": "Última actividad: {{age}}"
+      },
+      "googleAccountSetting": {
+        "conectando": "Conectando…",
+        "crearContrasena": "Crear contraseña",
+        "desdeAhoraTambienPuedesEntrar": "Desde ahora también puedes entrar con {{email}}.",
+        "desdeAhoraTambienPuedesEntrar2": "Desde ahora también puedes entrar con Google.",
+        "entraAHanetConTu": "Entra a HaNet con tu cuenta de Google",
+        "entrasAHanetConEmail": "Entras a HaNet con {{email}}. Tu contraseña sigue funcionando.",
+        "entrasAHanetConEmail2": "Entras a HaNet con {{email}}.",
+        "google": "Google",
+        "googleEsTuUnicaForma": "Google es tu única forma de entrar",
+        "googleVinculado": "Google vinculado",
+        "intentaloDeNuevoEnUn": "Inténtalo de nuevo en un momento.",
+        "noPudimosMandarElCorreo": "No pudimos mandar el correo",
+        "noPudimosQuitarGoogle": "No pudimos quitar Google",
+        "noPudimosVincularGoogle": "No pudimos vincular Google",
+        "paraQuitarloPrimeroCreaUna": "Para quitarlo, primero crea una contraseña. Te mandamos un link a {{email}}.",
+        "quitarGoogle": "Quitar Google",
+        "quitarGoogle2": "¿Quitar Google?",
+        "revisaTuCorreo": "Revisa tu correo",
+        "teMandamosUnLinkA": "Te mandamos un link a {{email}} para crear tu contraseña. Después puedes quitar Google.",
+        "vinculada": "Vinculada",
+        "vincular": "Vincular",
+        "yaNoPodrasEntrarCon": "Ya no podrás entrar con {{email}}. Sigues entrando con tu correo y contraseña."
       },
       "homeCalendarSetting": {
         "apagado": "Apagado",
@@ -2779,12 +2809,16 @@
     },
     "authService": {
       "elCorreoOLaContrasena": "El correo o la contraseña no coinciden.",
+      "elNavegadorBloqueoLaVentana": "El navegador bloqueó la ventana de Google. Permite las ventanas emergentes e inténtalo de nuevo.",
+      "esaCuentaDeGoogleYa": "Esa cuenta de Google ya es la forma de entrar de otro HaNet ID.",
       "eseCorreoYaTieneUn": "Ese correo ya tiene un HaNet ID. Entra en \"Cuenta existente\".",
       "estaCuentaEstaBloqueada": "Esta cuenta está bloqueada.",
       "hanetEstaCerradoAlPublico": "HaNet está cerrado al público por ahora.",
       "huboDemasiadosIntentosEsperaUn": "Hubo demasiados intentos. Espera un momento e inténtalo nuevamente.",
       "laContrasenaDebeTenerAl": "La contraseña debe tener al menos 8 caracteres.",
-      "noPudimosConectarnosRevisaTu": "No pudimos conectarnos. Revisa tu conexión a internet."
+      "noPudimosConectarnosRevisaTu": "No pudimos conectarnos. Revisa tu conexión a internet.",
+      "paraQuitarGooglePrimeroCrea": "Para quitar Google, primero crea una contraseña.",
+      "porSeguridadCierraSesionY": "Por seguridad, cierra sesión y vuelve a entrar antes de hacer este cambio."
     },
     "calendarWidget": {
       "abreHanetParaCargarlo": "Abre HaNet para cargarlo",

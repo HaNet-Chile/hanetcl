@@ -1,4 +1,5 @@
 import { useSecretTaps, VersionEasterEgg } from '@/components/settings/version-easter-egg';
+import { GoogleAccountSetting } from '@/components/settings/google-account-setting';
 import { AppearanceSetting } from '@/components/settings/appearance-setting';
 import { HomeCalendarSetting } from '@/components/settings/home-calendar-setting';
 import { MorningTimeRow, morningLabel } from '@/components/settings/morning-time-row';
@@ -368,6 +369,7 @@ export default function SettingsScreen() {
 
               <SettingsGroup title={t('settings.cuenta')}>
                 <SettingsLinkRow icon="shield-checkmark-outline" label={t('security.seguridad')} detail={t('settings.dispositivosYAlertas')} onPress={() => router.push('/security')} />
+                <GoogleAccountSetting />
               </SettingsGroup>
 
               <SettingsGroup

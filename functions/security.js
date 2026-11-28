@@ -105,6 +105,15 @@ function changesBetween(before, after) {
       body: `Ahora también puedes entrar con ${PROVIDER_NAMES[provider] || provider}. Si no fuiste tú, revisa tu cuenta.`,
     });
   }
+  for (const provider of before.providers || []) {
+    if (after.providers.includes(provider) || provider === "password") continue;
+    const name = PROVIDER_NAMES[provider] || provider;
+    alerts.push({
+      kind: "account",
+      title: `Quitaste ${name} de tu cuenta`,
+      body: `Ya no puedes entrar con ${name}. Si no fuiste tú, revisa tu cuenta.`,
+    });
+  }
   // A password reset (or an email change, already told above) cuts every
   // session. HaNet's own cuts save the new time first, so they don't count.
   if (!emailChanged && after.tokensValidAfter > (before.tokensValidAfter || 0) + 1000) {
