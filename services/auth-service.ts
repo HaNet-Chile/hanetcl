@@ -1,11 +1,5 @@
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-import { Platform } from 'react-native';
-import { 
-  GoogleAuthProvider, 
-  signInWithCredential,
-  signInWithPopup,
-  onAuthStateChanged, 
+import {
+  onAuthStateChanged,
   User,
   signOut as firebaseSignOut,
   signInWithEmailAndPassword,
@@ -18,24 +12,19 @@ import { auth, db, functions } from './firebase';
 import { cached, clearCache } from './cache';
 import { unregisterDevice } from './push-service';
 import { forgetThisDevice, withSignInReport } from './security-service';
+import { forgetPendingGoogle, linkPendingGoogle } from './google-sign-in';
 import { useEffect, useState } from 'react';
 import { t } from '@/i18n';
 
-// Required for AuthSession to work in browser/modal (native only)
-if (Platform.OS !== 'web') {
-  WebBrowser.maybeCompleteAuthSession();
-}
-
-// ─── Web: uses Firebase's signInWithPopup ────────────────────────────────────
-export async function signInWithGoogleWeb(): Promise<void> {
-  const provider = new GoogleAuthProvider();
-  await withSignInReport(() => signInWithPopup(auth, provider));
-}
+// Signing in with Google lives in services/google-sign-in.ts.
 
 // ─── Email/Password Auth ─────────────────────────────────────────────────────
 export async function signInWithEmail(email: string, pass: string) {
   // The account's other devices hear about it (services/security-service.ts).
-  return withSignInReport(() => signInWithEmailAndPassword(auth, email.trim(), pass));
+  const result = await withSignInReport(() => signInWithEmailAndPassword(auth, email.trim(), pass));
+  // A Google account with this address was waiting for the password.
+  const linkedGoogle = await linkPendingGoogle(result.user);
+  return { ...result, linkedGoogle };
 }
 
 export async function resetPassword(email: string) {
@@ -63,6 +52,22 @@ export async function signUpWithEmail(email: string, pass: string, profile: Sign
   }
   await httpsCallable(functions, 'completeSignUp')(profile);
   await auth.currentUser?.reload();
+}
+
+/**
+ * An account that came in with Google: saves its profile (name, HaNet ID,
+ * treatment, terms). Google already verified the address, so no code.
+ */
+export async function completeProfile(profile: SignUpProfile) {
+  await httpsCallable(functions, 'completeSignUp')(profile);
+  await auth.currentUser?.reload();
+}
+
+/** A HaNet ID to suggest from the account's address ("camila.rojas"). */
+export function suggestUsername(email: string | null | undefined) {
+  const local = (email ?? '').split('@')[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const clean = local.replace(/[^a-z0-9._]/g, '').replace(/^[._]+|[._]+$/g, '').slice(0, 24);
+  return clean.length >= 3 ? clean : '';
 }
 
 export async function sendEmailCode() {
@@ -170,7 +175,7 @@ export async function getGreetingProfile(user: User): Promise<{ firstName: strin
 }
 
 // ─── Onboarding ──────────────────────────────────────────────────────────────
-export type OnboardingStep = 'verify-email' | 'join-beta' | 'link' | 'done';
+export type OnboardingStep = 'verify-email' | 'profile' | 'join-beta' | 'link' | 'done';
 
 /** Where an account stands on the way from sign-up to its institution. */
 // Accounts known to have finished: Home asks on every visit, and once an
@@ -194,12 +199,15 @@ export async function getOnboardingStep(user: User | null): Promise<OnboardingSt
     finishedUids.add(user.uid);
     return 'done';
   }
+  // An account that came in with Google has no HaNet ID yet.
+  if (!account.data()?.username) return 'profile';
   return account.data()?.institutionId ? 'link' : 'join-beta';
 }
 
 export function routeForStep(step: OnboardingStep) {
   switch (step) {
     case 'verify-email': return '/verify-email' as const;
+    case 'profile': return '/auth' as const;
     case 'join-beta': return '/join-beta' as const;
     case 'link': return '/link-institution' as const;
     case 'done': return '/(tabs)' as const;
@@ -230,6 +238,14 @@ export function describeAuthError(error: unknown, fallback: string) {
       return t('services.authService.huboDemasiadosIntentosEsperaUn');
     case 'auth/network-request-failed':
       return t('services.authService.noPudimosConectarnosRevisaTu');
+    case 'auth/credential-already-in-use':
+      return t('services.authService.esaCuentaDeGoogleYa');
+    case 'auth/requires-password':
+      return t('services.authService.paraQuitarGooglePrimeroCrea');
+    case 'auth/popup-blocked':
+      return t('services.authService.elNavegadorBloqueoLaVentana');
+    case 'auth/requires-recent-login':
+      return t('services.authService.porSeguridadCierraSesionY');
   }
 
   // Our callables already answer in Spanish; "internal" carries no message.
@@ -283,15 +299,6 @@ export async function claimedCourse(user: User): Promise<string | null> {
   return typeof claims.courseId === 'string' ? claims.courseId : null;
 }
 
-// ─── Native: uses expo-auth-session (PAUSED) ─────────────────────────────────
-export function useGoogleAuth() {
-  // Logic paused as per user request
-  return {
-    signIn: () => console.log("Google Sign-In is currently disabled"),
-    loading: false,
-  };
-}
-
 // ─── Session hook (shared for web and native) ────────────────────────────────
 export function useSession() {
   const [user, setUser] = useState<User | null>(null);
@@ -311,6 +318,7 @@ export function useSession() {
     // The device stops getting this account's notifications first, and
     // leaves the account's list of devices.
     signOut: async () => {
+      forgetPendingGoogle();
       await Promise.all([unregisterDevice(), forgetThisDevice()]);
       await firebaseSignOut(auth);
       await clearCache();

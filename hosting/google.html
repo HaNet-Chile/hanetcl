@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Entrar con Google · HaNet</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { height: 100%; }
+  body { margin: 0; background: #282829; color: #dddde2; font: 16px/1.5 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; }
+  main { box-sizing: border-box; min-height: 100%; max-width: 420px; margin: 0 auto; padding: 32px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; }
+  img { display: block; }
+  h1 { margin: 0; font-size: 24px; line-height: 1.2; letter-spacing: -0.03em; color: #f9f9fa; }
+  p { margin: 0; color: #c7c6cf; }
+  .spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #3c3b3e; border-top-color: #ef2274; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation-duration: 2.4s; } }
+  button { margin-top: 8px; height: 50px; padding: 0 28px; border: 0; border-radius: 999px; background: #c7c6cf; color: #282829; font: inherit; font-weight: 700; letter-spacing: -0.02em; cursor: pointer; }
+  button:focus-visible { outline: 2px solid #ef2274; outline-offset: 3px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <img src="/email/hanet-icon.png" alt="HaNet" width="48" height="48">
+  <h1 id="title">Conectando con Google</h1>
+  <div class="spin" id="spin" role="img" aria-label="Cargando"></div>
+  <p id="text">Elige tu cuenta de Google. Después vuelves a HaNet automáticamente.</p>
+  <button type="button" id="back" hidden>Volver a HaNet</button>
+</main>
+<script type="module">
+// The phone's way to sign in with Google (services/google-sign-in.ts). The
+// app opens this page in the system's secure browser sheet with, in the
+// fragment (never sent to a server): a one-time key, where to come back and
+// whether it signs in or links. The page signs in with Google here, on the
+// authDomain, and goes back to the app with the Google credential encrypted
+// with that key, so another app that catches the link learns nothing. The
+// session on this page is closed before going back.
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+import {
+  getAuth, setPersistence, browserSessionPersistence, GoogleAuthProvider,
+  signInWithRedirect, getRedirectResult, getAdditionalUserInfo, signOut,
+} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+
+const app = initializeApp({
+  apiKey: 'AIzaSyDK__CRF5iUlnGnRlembV9XUsnnajkFMaA',
+  authDomain: 'id.hanet.muxp.art',
+  projectId: 'hanet-edu',
+  appId: '1:283230293926:web:b4b085556dbc5599760967',
+});
+const auth = getAuth(app);
+auth.languageCode = 'es';
+
+const STORE = 'hanet.googleBridge';
+// Only back to the app: HaNet's own scheme, or Expo Go while testing.
+const RETURN = /^(hanetcl|exps?):\/\/[^\s#]*$/;
+
+const $ = id => document.getElementById(id);
+function show(title, text, { spin = false, back = false } = {}) {
+  $('title').textContent = title;
+  $('text').textContent = text;
+  $('spin').hidden = !spin;
+  $('back').hidden = !back;
+}
+
+function readRequest() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  if (params.get('k')) {
+    // The key leaves the address bar right away.
+    history.replaceState(null, '', location.pathname);
+    const request = { k: params.get('k'), r: params.get('r') || '', m: params.get('m') === 'link' ? 'link' : 'signin' };
+    if (!/^[A-Za-z0-9_-]{43}$/.test(request.k) || !RETURN.test(request.r)) return null;
+    sessionStorage.setItem(STORE, JSON.stringify(request));
+    return { request, fresh: true };
+  }
+  try {
+    const kept = JSON.parse(sessionStorage.getItem(STORE) || 'null');
+    return kept && RETURN.test(kept.r) ? { request: kept, fresh: false } : null;
+  } catch {
+    return null;
+  }
+}
+
+const fromBase64Url = text => Uint8Array.from(atob(text.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - text.length % 4) % 4)), c => c.charCodeAt(0));
+const toBase64Url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+// SHA-256 of key + block number, block after block: the same keystream the app builds.
+async function keystream(key, length) {
+  const out = new Uint8Array(length);
+  for (let offset = 0, block = 0; offset < length; offset += 32, block++) {
+    const input = new Uint8Array(key.length + 4);
+    input.set(key);
+    new DataView(input.buffer).setUint32(key.length, block);
+    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', input));
+    out.set(hash.subarray(0, Math.min(32, length - offset)), offset);
+  }
+  return out;
+}
+
+async function seal(key, payload) {
+  // Plain ASCII, so the app reads it back byte by byte.
+  const json = JSON.stringify(payload).replace(/[\u0080-￿]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
+  const bytes = Uint8Array.from(json, c => c.charCodeAt(0));
+  const stream = await keystream(key, bytes.length);
+  return toBase64Url(bytes.map((byte, i) => byte ^ stream[i]));
+}
+
+let returnTo = null;
+function goBack(fragment) {
+  returnTo = `${returnTo.split('#')[0]}#${fragment}`;
+  location.replace(returnTo);
+  // Some browsers only open the app after a tap.
+  setTimeout(() => show('Listo', 'Toca el botón para volver a HaNet.', { back: true }), 1500);
+}
+$('back').addEventListener('click', () => { if (returnTo) location.replace(returnTo); });
+
+async function finish(request, payload) {
+  sessionStorage.removeItem(STORE);
+  await signOut(auth).catch(() => undefined);
+  returnTo = request.r;
+  goBack(payload.error ? `e=${encodeURIComponent(payload.error)}` : `c=${await seal(fromBase64Url(request.k), payload)}`);
+}
+
+async function run() {
+  const state = readRequest();
+  if (!state) {
+    show('Abre esta página desde HaNet', 'Para entrar con Google, toca “Continuar con Google” en la app.');
+    return;
+  }
+  const { request, fresh } = state;
+  // Where "Volver a HaNet" goes if something fails on the way.
+  returnTo = `${request.r}#e=failed`;
+  await setPersistence(auth, browserSessionPersistence);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  if (fresh) {
+    await signInWithRedirect(auth, provider);
+    return;
+  }
+
+  let result;
+  try {
+    result = await getRedirectResult(auth);
+  } catch (error) {
+    // The address already has a HaNet ID with a password: the app asks for it
+    // and links Google after.
+    if (error?.code === 'auth/account-exists-with-different-credential') {
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      if (credential?.idToken || credential?.accessToken) {
+        await finish(request, { idToken: credential.idToken || null, accessToken: credential.accessToken || null, email: error.customData?.email || null, exists: true });
+        return;
+      }
+    }
+    await finish(request, { error: String(error?.code || 'unknown').replace(/^auth\//, '') });
+    return;
+  }
+
+  if (!result) {
+    // Came back without choosing an account.
+    sessionStorage.removeItem(STORE);
+    returnTo = `${request.r}#e=cancelled`;
+    show('No elegiste una cuenta', 'Vuelve a HaNet para intentarlo de nuevo.', { back: true });
+    return;
+  }
+
+  const credential = GoogleAuthProvider.credentialFromResult(result);
+  // Linking: a Google account new to HaNet got an empty account of its own
+  // here; it goes away so the app can add Google to the account in use.
+  if (request.m === 'link' && getAdditionalUserInfo(result)?.isNewUser) {
+    await result.user.delete().catch(() => undefined);
+  }
+  await finish(request, { idToken: credential?.idToken || null, accessToken: credential?.accessToken || null, email: result.user.email || null });
+}
+
+run().catch(() => show('No pudimos conectar con Google', 'Vuelve a HaNet e inténtalo de nuevo.', { back: !!returnTo, spin: false }));
+</script>
+</body>
+</html>

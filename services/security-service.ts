@@ -132,6 +132,18 @@ export async function withSignInReport<T>(signIn: () => Promise<T>): Promise<T> 
   }
 }
 
+/**
+ * After the account itself changes how it signs in (Google added or removed):
+ * reports this device now, so the account's other devices hear about it.
+ */
+export async function reportAccountChange() {
+  try {
+    await report(false);
+  } catch {
+    // The next regular report notices the change.
+  }
+}
+
 /** On opening the app with a session: reports this device every few hours. */
 export async function touchDevice(user: User) {
   if (signingIn) return;

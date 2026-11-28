@@ -38,6 +38,7 @@ export const DESKTOP_SCREENS: Record<string, DesktopScreen> = {
   'auth': { layout: 'entry' },
   'verify-email': { layout: 'entry' },
   'join-beta': { layout: 'entry' },
+  'google-auth': { layout: 'none' },
   'link-institution': { layout: 'entry' },
 
   // Calendar, Horario and events
