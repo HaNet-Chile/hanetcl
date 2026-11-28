@@ -72,7 +72,7 @@ ${form}
 }
 
 function build(getAdminApp) {
-  const startInstitutionalLink = onCall({ secrets: [RESEND_API_KEY] }, async (request) => {
+  const startInstitutionalLink = onCall({ institutionGate: false, secrets: [RESEND_API_KEY] }, async (request) => {
     const auth = requireVerified(request);
     const email = typeof request.data?.email === "string" ? request.data.email.trim().toLowerCase() : "";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 120) {
@@ -219,7 +219,7 @@ function build(getAdminApp) {
 
   // What the waiting screen polls. Roster data is only returned once the
   // institutional mailbox has confirmed.
-  const getInstitutionalLinkStatus = onCall(async (request) => {
+  const getInstitutionalLinkStatus = onCall({ institutionGate: false }, async (request) => {
     const auth = requireVerified(request);
     const db = identityDb(getAdminApp);
     const { institution } = await loadInstitution(db, auth.uid);
@@ -249,7 +249,7 @@ function build(getAdminApp) {
     };
   });
 
-  const completeInstitutionalLink = onCall(async (request) => {
+  const completeInstitutionalLink = onCall({ institutionGate: false }, async (request) => {
     const auth = requireVerified(request);
     const adminApp = getAdminApp();
     const db = identityDb(getAdminApp);

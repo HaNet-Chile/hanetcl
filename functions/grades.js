@@ -1,4 +1,5 @@
 const { onCall, HttpsError } = require("./regions");
+const { schoolYearOf } = require("./institutions");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { notifyHall, hallStudentUids } = require("./classhall-notify");
 
@@ -380,6 +381,8 @@ function build(getAdminApp) {
       on: true,
       courseId: profile.courseId || null,
       institutionName: institution.name || null,
+      // The liceo's school year, if it set one: Notas splits the semesters there.
+      schoolYear: schoolYearOf(institution),
       newGrades: subjects.reduce((sum, subject) => sum + subject.grades.filter(grade => !grade.seen).length, 0),
       subjects,
     };

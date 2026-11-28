@@ -12,8 +12,30 @@ function gradeTime(grade: MyGrade) {
   return grade.date ?? grade.publishedAt ?? 0;
 }
 
-/** Chilean school year: March to the winter break is the first semester, August on the second. */
+/**
+ * The liceo's school year, if it set one (institutions/{id}.schoolYear,
+ * dates "YYYY-MM-DD"): getMyGradeBook brings it and keeps it here.
+ */
+export type SchoolYearDates = { start: string; end: string; secondSemester: string | null };
+let schoolYear: SchoolYearDates | null = null;
+
+export function setGradeBookSchoolYear(year: SchoolYearDates | null | undefined) {
+  schoolYear = year ?? null;
+}
+
+// The start of that day (local time), or the end of it.
+function dayStart(day: string) {
+  const [year, month, date] = day.split('-').map(Number);
+  return new Date(year, month - 1, date).getTime();
+}
+
+/**
+ * The semester of a date. With the liceo's school year, the 2nd starts on its
+ * day; without, the Chilean calendar's: March to the winter break is the
+ * first, August on the second.
+ */
 export function semesterOf(time: number): 1 | 2 {
+  if (schoolYear?.secondSemester) return time < dayStart(schoolYear.secondSemester) ? 1 : 2;
   return new Date(time).getMonth() <= 6 ? 1 : 2;
 }
 
@@ -21,8 +43,13 @@ export function currentSemester(now = Date.now()): 1 | 2 {
   return semesterOf(now);
 }
 
-/** Only this school year's grades count. */
+/** Only this school year's grades count: the liceo's dates, else this calendar year. */
 export function thisYear(grades: MyGrade[], now = Date.now()) {
+  if (schoolYear) {
+    const from = dayStart(schoolYear.start);
+    const to = dayStart(schoolYear.end) + 86_400_000;
+    return grades.filter(grade => gradeTime(grade) >= from && gradeTime(grade) < to);
+  }
   const year = new Date(now).getFullYear();
   return grades.filter(grade => new Date(gradeTime(grade)).getFullYear() === year);
 }

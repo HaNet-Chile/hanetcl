@@ -9,6 +9,8 @@ import { auth, functions, storage } from './firebase';
 import type { HallPlan } from '@/constants/subjects';
 import type { ScheduleBlock } from './schedule-service';
 import { t } from '@/i18n';
+import { setGradeBookSchoolYear } from '@/services/grade-book';
+import type { SchoolYearDates } from '@/services/grade-book';
 
 export const HALL_CODE_LENGTH = 6;
 
@@ -630,10 +632,13 @@ export type GradeBookSubject = {
 /** Notas: every Hall of the student with its grades. `on` false: the module is off. */
 export type GradeBook =
   | { on: false }
-  | { on: true; courseId: string | null; institutionName: string | null; newGrades: number; subjects: GradeBookSubject[] };
+  | { on: true; courseId: string | null; institutionName: string | null; schoolYear?: SchoolYearDates | null; newGrades: number; subjects: GradeBookSubject[] };
 
 export async function getMyGradeBook() {
-  return (await httpsCallable<{ summary?: boolean }, GradeBook>(functions, 'getMyGradeBook')({})).data;
+  const book = (await httpsCallable<{ summary?: boolean }, GradeBook>(functions, 'getMyGradeBook')({})).data;
+  // The semesters split at the liceo's own date (services/grade-book.ts).
+  if (book.on) setGradeBookSchoolYear(book.schoolYear);
+  return book;
 }
 
 /** For the Home tile: whether Notas is on and how many grades wait to be uncovered. */

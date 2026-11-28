@@ -488,6 +488,7 @@ export default function UiShowcaseScreen() {
             <HanetButton label="Mantención" variant="surface" onPress={() => previewPausedScreen({ open: false, kind: 'maintenance', message: null, until: Date.now() + 3_600_000 })} />
             <HanetButton label="Un problema" variant="surface" onPress={() => previewPausedScreen({ open: false, kind: 'incident', message: null, until: null })} />
             <HanetButton label="Cerrado por ahora" variant="surface" onPress={() => previewPausedScreen({ open: false, kind: 'closed', message: null, until: null })} />
+            <HanetButton label="Cerrado en un liceo" variant="surface" onPress={() => previewPausedScreen({ open: false, kind: 'maintenance', message: null, until: Date.now() + 3 * 86_400_000, institutionName: 'Liceo Ejemplo' })} />
             <HanetButton label="Error fatal" variant="surface" onPress={() => setFatalVisible(true)} />
             <HanetButton label="Pantalla no encontrada" variant="surface" onPress={() => setNotFoundVisible(true)} />
           </View>

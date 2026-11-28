@@ -171,7 +171,7 @@ function cleanDevice(value) {
 function build(getAdminApp) {
   // { deviceId, signIn?, device: { kind, name, system, app } } → { alerts }
   // Right after signing in (signIn: true) and every few hours from the app.
-  const reportDevice = onCall({ invoker: "public" }, async (request) => {
+  const reportDevice = onCall({ institutionGate: false, invoker: "public" }, async (request) => {
     const { uid } = requireAuth(request);
     const deviceId = deviceIdOf(request.data?.deviceId);
     if (!deviceId) throw new HttpsError("invalid-argument", "Falta el dispositivo.");
@@ -217,7 +217,7 @@ function build(getAdminApp) {
   });
 
   // { deviceId } — signing out on this device takes it off the list.
-  const forgetMyDevice = onCall({ invoker: "public" }, async (request) => {
+  const forgetMyDevice = onCall({ institutionGate: false, invoker: "public" }, async (request) => {
     const { uid } = requireAuth(request);
     const deviceId = deviceIdOf(request.data?.deviceId);
     if (deviceId) await securityRef(getAdminApp, uid).collection("devices").doc(deviceId).delete();
@@ -225,7 +225,7 @@ function build(getAdminApp) {
   });
 
   // → { devices (most recent first), events (newest first) }
-  const getMySecurity = onCall({ invoker: "public" }, async (request) => {
+  const getMySecurity = onCall({ institutionGate: false, invoker: "public" }, async (request) => {
     const { uid } = requireAuth(request);
     const ref = securityRef(getAdminApp, uid);
     const db = identityDb(getAdminApp);
@@ -266,7 +266,7 @@ function build(getAdminApp) {
 
   // Cuts every session of the account, this one too: no device can renew its
   // session (the open ones end within the hour) and none gets notifications.
-  const signOutEverywhere = onCall({ invoker: "public" }, async (request) => {
+  const signOutEverywhere = onCall({ institutionGate: false, invoker: "public" }, async (request) => {
     const { uid } = requireAuth(request);
     const db = identityDb(getAdminApp);
     const ref = securityRef(getAdminApp, uid);

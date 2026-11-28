@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { httpsCallable } from 'firebase/functions';
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { functions, storage } from './firebase';
+import type { AppPauseKind } from '@/services/app-status';
 
 export type AdminInstitution = {
   id: string;
@@ -16,7 +17,29 @@ export type AdminInstitution = {
   bannerUrl: string | null;
   /** The city of the weather in the summary of the day (constants/cities.ts). */
   cityId?: string | null;
+  /** HaNet closed for this liceo only (now, or from `from`); null when open. */
+  closure?: InstitutionClosureInfo | null;
+  /** First and last day of classes, and where the 2nd semester starts. */
+  schoolYear?: SchoolYear | null;
 };
+
+export type InstitutionClosureInfo = {
+  kind: AppPauseKind;
+  message: string | null;
+  from: number | null;
+  until: number | null;
+  /** Its teachers still get in. */
+  teachers: boolean;
+  /** Whether it holds right now (false: it starts at `from`). */
+  active: boolean;
+};
+
+/** Dates as "YYYY-MM-DD", the liceo's own days. */
+export type SchoolYear = { start: string; end: string; secondSemester: string | null };
+
+export type InstitutionClosureInput =
+  | { closed: false }
+  | { closed: true; kind: AppPauseKind; message: string | null; from: number | null; until: number | null; teachers: boolean };
 
 export type BrandingKind = 'logo' | 'banner';
 
@@ -110,6 +133,24 @@ export async function joinInstitution(institutionId: string) {
 export async function listInstitutions() {
   const result = await httpsCallable<void, { institutions: AdminInstitution[] }>(functions, 'adminListInstitutions')();
   return result.data.institutions;
+}
+
+/** Closes HaNet for this liceo only, or opens it again (HNT; the Admin does it from the web panel). */
+export async function setInstitutionClosure(institutionId: string, input: InstitutionClosureInput) {
+  const result = await httpsCallable<{ institutionId: string } & InstitutionClosureInput, { closure: InstitutionClosureInfo | null }>(functions, 'setInstitutionClosure')({ institutionId, ...input });
+  return result.data.closure;
+}
+
+/** The liceo's school year; null clears it. */
+export async function setInstitutionSchoolYear(institutionId: string, schoolYear: SchoolYear | null) {
+  const result = await httpsCallable<{ institutionId: string; schoolYear: SchoolYear | null }, { schoolYear: SchoolYear | null }>(functions, 'setInstitutionSchoolYear')({ institutionId, schoolYear });
+  return result.data.schoolYear;
+}
+
+/** Renames the liceo (HNT only); its id stays. */
+export async function setInstitutionName(institutionId: string, name: string, fullName: string) {
+  const result = await httpsCallable<{ institutionId: string; name: string; fullName: string }, { name: string; fullName: string }>(functions, 'setInstitutionName')({ institutionId, name, fullName });
+  return result.data;
 }
 
 /** The institution's city, for the weather in the summary of the day; null clears it. */

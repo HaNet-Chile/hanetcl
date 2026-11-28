@@ -28,10 +28,13 @@ function inRegions(trigger) {
 }
 
 // Every callable first checks that HaNet is open (app-status.js): while it
-// is closed only HNT gets through.
-function gated(handler) {
+// is closed only HNT gets through, and while a liceo is closed its members
+// don't (but its Admin does). `institutionGate: false` lets a callable
+// through a liceo's closure: signing up, the identity link and the account's
+// own security, so whoever will prepare the liceo can still get there.
+function gated(handler, institution) {
   return async (request, response) => {
-    await assertAppOpen(request);
+    await assertAppOpen(request, { institution });
     return handler(request, response);
   };
 }
@@ -39,9 +42,9 @@ function gated(handler) {
 const callable = inRegions(https.onCall);
 
 function onCall(optionsOrHandler, handler) {
-  return typeof optionsOrHandler === "function"
-    ? callable(gated(optionsOrHandler))
-    : callable(optionsOrHandler, gated(handler));
+  if (typeof optionsOrHandler === "function") return callable(gated(optionsOrHandler, true));
+  const { institutionGate = true, ...options } = optionsOrHandler;
+  return callable(options, gated(handler, institutionGate));
 }
 
 module.exports = {

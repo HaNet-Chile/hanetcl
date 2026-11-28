@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "0.18.0-beta",
+      "date": "2026-11-27",
+      "title": "Año escolar y cierre por liceo",
+      "items": [
+        "Tu liceo ahora puede cerrar HaNet por un tiempo, por ejemplo al empezar el año mientras deja listos los cursos y las nóminas. Mientras tanto ves una pantalla que te avisa cuándo vuelve a abrir.",
+        "Tu liceo puede poner las fechas de su año escolar. Notas usa esas fechas para separar los semestres.",
+        "Fuera del año escolar no te llega el resumen del día."
+      ],
+      "highlights": [
+        "Tu liceo puede cerrar HaNet por un tiempo mientras prepara el año, y te avisa cuándo vuelve.",
+        "Notas separa los semestres con las fechas del año escolar de tu liceo."
+      ]
+    },
+    {
       "version": "0.17.0-beta",
       "date": "2026-11-26",
       "title": "Modo claro",
