@@ -25,8 +25,6 @@ type FrostedScreenProps = {
    * nothing covers the status bar: the content runs edge to edge.
    */
   header?: React.ReactNode;
-  /** Also keep the content off the home indicator, as `SafeAreaView` did. */
-  bottom?: boolean;
   /** Receives the bar's height, to pad the content that scrolls under it. */
   children: React.ReactNode | ((top: number) => React.ReactNode);
 };
@@ -37,7 +35,7 @@ type FrostedScreenProps = {
  * what scrolls under it shows through, blurred, so it never reads as a solid
  * band that chops the content.
  */
-export function FrostedScreen({ style, header, bottom, children }: FrostedScreenProps) {
+export function FrostedScreen({ style, header, children }: FrostedScreenProps) {
   const insets = useSafeAreaInsets();
   // Android blurs what a BlurTargetView draws; iOS and web blur what is behind.
   const target = useRef<BlurTarget>(null);
@@ -52,14 +50,14 @@ export function FrostedScreen({ style, header, bottom, children }: FrostedScreen
   // only for bars that stay put while the content scrolls.
   if (!header) {
     return (
-      <View style={[styles.screen, style, bottom && { paddingBottom: insets.bottom }]}>
+      <View style={[styles.screen, style]}>
         <FrostedInsetContext.Provider value={top}>{content}</FrostedInsetContext.Provider>
       </View>
     );
   }
 
   return (
-    <View style={[styles.screen, style, bottom && { paddingBottom: insets.bottom }]}>
+    <View style={[styles.screen, style]}>
       <FrostedInsetContext.Provider value={top}>
         <BlurTargetView ref={target} style={[styles.fill, { backgroundColor: background }]}>
           {content}
@@ -126,4 +124,17 @@ export function withTopInset(style: StyleProp<ViewStyle>, top: number): ViewStyl
   const flat = StyleSheet.flatten(style) ?? {};
   const own = flat.paddingTop ?? flat.paddingVertical ?? flat.padding ?? 0;
   return { ...flat, paddingTop: top + (typeof own === 'number' ? own : 0) };
+}
+
+/**
+ * Adds the home indicator's height to a scroll content's own bottom padding.
+ * The screen itself is never padded at the bottom: a padded screen cuts the
+ * scrolling content in a straight line above the home indicator, which reads
+ * as a band chopping the page (the sign-in screens had it until v0.18.1).
+ * The content runs to the bottom edge and only its end stays clear.
+ */
+export function withBottomInset(style: StyleProp<ViewStyle>, bottom: number): ViewStyle {
+  const flat = StyleSheet.flatten(style) ?? {};
+  const own = flat.paddingBottom ?? flat.paddingVertical ?? flat.padding ?? 0;
+  return { ...flat, paddingBottom: bottom + (typeof own === 'number' ? own : 0) };
 }

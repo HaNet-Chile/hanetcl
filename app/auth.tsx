@@ -19,7 +19,7 @@ import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View, type TextInputInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { FrostedScreen, withBottomInset, withTopInset } from '@/components/ui/frosted-screen';
 import { ENTRY_WIDE_CONTENT, useEntryAsideWidth } from '@/components/EntryAside';
 import Animated, { FadeIn, FadeOut, LinearTransition, useReducedMotion } from 'react-native-reanimated';
 import { EASE_OUT_CUBIC } from '@/constants/motion';
@@ -198,10 +198,10 @@ export default function AuthScreen() {
   );
 
   return (
-    <FrostedScreen style={styles.container} bottom>
+    <FrostedScreen style={styles.container}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          contentContainerStyle={withTopInset([styles.scrollContent, wideEntry && ENTRY_WIDE_CONTENT], insets.top)}
+          contentContainerStyle={withBottomInset(withTopInset([styles.scrollContent, wideEntry && ENTRY_WIDE_CONTENT], insets.top), insets.bottom)}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >

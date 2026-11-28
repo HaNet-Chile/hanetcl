@@ -314,7 +314,7 @@ export default function HntAdminScreen() {
   }
 
   return (
-    <FrostedScreen style={styles.container} bottom>
+    <FrostedScreen style={styles.container}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={withTopInset([styles.scrollContent, widePageStyle(wide, 'reading')], insets.top)} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.topBar}>

@@ -200,7 +200,7 @@ export default function ClassHallScreen() {
   const offline = useOfflineMode();
 
   return (
-    <FrostedScreen style={styles.container} bottom>
+    <FrostedScreen style={styles.container}>
       <ScrollView ref={pageScroll} contentContainerStyle={withTopInset([styles.content, wide && styles.contentWide], insets.top)} showsVerticalScrollIndicator={false}>
         {!wide && (
         <View style={styles.topBar}>
