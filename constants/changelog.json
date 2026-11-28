@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "0.18.1-beta",
+      "date": "2026-11-28",
+      "title": "",
+      "items": [
+        "Iniciar sesión, crear tu cuenta, el código del correo y unirte a tu liceo ya no se cortan con una franja abajo: la pantalla llega hasta el borde.",
+        "ClassHall tampoco se corta abajo al bajar hasta el final."
+      ],
+      "highlights": [
+        "Las pantallas para entrar a HaNet ya no se cortan abajo."
+      ]
+    },
+    {
       "version": "0.18.0-beta",
       "date": "2026-11-27",
       "title": "Año escolar y cierre por liceo",

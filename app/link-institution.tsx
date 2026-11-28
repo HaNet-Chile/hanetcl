@@ -22,7 +22,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FrostedScreen, withTopInset } from '@/components/ui/frosted-screen';
+import { FrostedScreen, withBottomInset, withTopInset } from '@/components/ui/frosted-screen';
 import { ENTRY_WIDE_CONTENT, useEntryAsideWidth } from '@/components/EntryAside';
 import { t } from '@/i18n';
 
@@ -218,9 +218,9 @@ export default function LinkInstitutionScreen() {
   );
 
   return (
-    <FrostedScreen style={styles.container} bottom>
+    <FrostedScreen style={styles.container}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={withTopInset([styles.scrollContent, wideEntry && ENTRY_WIDE_CONTENT], insets.top)} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={withBottomInset(withTopInset([styles.scrollContent, wideEntry && ENTRY_WIDE_CONTENT], insets.top), insets.bottom)} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.topBar}>
             {step === 'methods' ? (
               <View style={styles.backButton} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
