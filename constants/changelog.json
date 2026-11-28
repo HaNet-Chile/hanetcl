@@ -1,7 +1,7 @@
 {
   "releases": [
     {
-      "version": "0.18.1-beta",
+      "version": "0.18.2-beta",
       "date": "2026-11-28",
       "title": "",
       "items": [
@@ -10,6 +10,17 @@
       ],
       "highlights": [
         "Las pantallas para entrar a HaNet ya no se cortan abajo."
+      ]
+    },
+    {
+      "version": "0.18.1-beta",
+      "date": "2026-11-28",
+      "title": "",
+      "items": [
+        "Si tu liceo te nombró en un rol (por ejemplo, administración o docente) antes de que te unieras, HaNet te lo da apenas te vinculas con tu correo institucional."
+      ],
+      "highlights": [
+        "Si tu liceo ya te nombró en un rol, lo recibes apenas te unes."
       ]
     },
     {
